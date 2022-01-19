@@ -1,25 +1,28 @@
-﻿const version = "2.3.0";
+﻿const version = "2.4.0";
+
+// Debug level
+// Comment next line for production!
+// $.level = 1;
 
 //@include "helpers/JSON.jsx"
-
 //@include "helpers/Array.indexOf.polyfill.jsx"
-
 //@include "helpers/Array.fill.polyfill.jsx"
-
 //@include "helpers/PDFmultipage.jsx"
+//@include "rozkladka/RozkladkaCircles.jsx"
+//@include "rozkladka/RozkladkaRectangles.jsx"
+//@include "rozkladka/generateCutterMarks.jsx"
 
-var myPDFExportPreset;
-
+// Global constants
 const PREFERENCES = readJson(File($.fileName).path + "/preferences.json"); // preferences.json має бути в папці зі скриптом і містити всі налаштування
-
 const PRINTLayer = PREFERENCES.layers.PRINTLayer || "PRINT";
 const PLOTTERLayer = PREFERENCES.layers.PLOTTERLayer || "PLOTTER";
 const CUTLayer = PREFERENCES.layers.CUTLayer || "CUT";
 const TITLELayer = PREFERENCES.layers.TITLELayer || "TITLE";
-
 const CutterTypes = PREFERENCES.cutters;
-const PaperNames = new RegExp('(SRA3|SRA4|SRA3 Max\+|A4|A3)', 'g'); // Список можливих назв форматів паперу regex
+const PaperNames = new RegExp('(SRA[34]|SRA3 Max\+|A[34]|Ricoh ?X?L)', 'g'); // Список можливих назв форматів паперу regex
 
+// Global variables
+var myPDFExportPreset;
 var theFiles;
 var okFiles = new Array;
 var myImposing = "";
@@ -203,7 +206,7 @@ function DialogWindow() {
 					ImposingCustomLabel.text = "- / " + (totalPages ? totalPages : '-') + ' (!)';
 					break;
 			}
-			totalFieldsCheck();
+			totalFieldsCheckMain();
 		}
 		
 	var MultipageFileSave = ImposingMethodGroup.add("checkbox", undefined, undefined, {name: "MultipageFileSave"}); 
@@ -371,14 +374,14 @@ function DialogWindow() {
 		CreateDocBtn.text = "⚙";
 		CreateDocBtn.preferredSize.width = 30;
 		CreateDocBtn.onClick = function() {
-			var res = NewDocSettings();
+			var res = NewDocSettingsWindow();
 			if (res && (myCustomDoc.IsGetSizeFromFilename || myCustomDoc.title != "")) {
 				DocsList.items[0].text = myCustomDoc.title;
 				isOk.document = true;
 				myDocument = false;
 				myLayer = false;				
 			};
-			totalFieldsCheck();
+			totalFieldsCheckMain();
 		}
 
 	// PRESETGROUP
@@ -492,7 +495,7 @@ function DialogWindow() {
 		};
 		
 		checkValidImposingCustom();
-		totalFieldsCheck();
+		totalFieldsCheckMain();
 	}	
 	
 	function checkValidImposingCustom() {
@@ -520,7 +523,7 @@ function DialogWindow() {
 				ImposingCustomLabel.text = "- / " + (totalPages ? totalPages : '-')  + ' (!)';
 			}
 		}
-		totalFieldsCheck();	
+		totalFieldsCheckMain();	
 	}
 	
 	function isValidImposingCustom(cText) {
@@ -542,7 +545,7 @@ function DialogWindow() {
 			isOk.folder = true;
 		}
 		
-		totalFieldsCheck();
+		totalFieldsCheckMain();
 	}
 	
 	function checkValidFileName() {
@@ -563,7 +566,7 @@ function DialogWindow() {
 				if (!isOk.filename) alert("Недопустимі символи в назві файлу!");
 			}
 		}
-		totalFieldsCheck();
+		totalFieldsCheckMain();
 	}
 
 	function isValidFileName(fname) {
@@ -581,14 +584,14 @@ function DialogWindow() {
 						myLayer = false;
 						isOk.document = false;
 					}
-					totalFieldsCheck();	
+					totalFieldsCheckMain();	
 					CreateDocBtn.show();
 				} else {
 					isOk.document = true;				
 					myDocument = app.documents.itemByName(DocsList.items[i].text);						
 					myLayer = myDocument.layers.itemByName(PRINTLayer);
 					CreateDocBtn.hide();
-					totalFieldsCheck();						
+					totalFieldsCheckMain();						
 				}
 				break;
 			}
@@ -599,10 +602,10 @@ function DialogWindow() {
 		for (i = 0; i < PresetsList.items.length; i++) {
 			if (PresetsList.items[i].selected) myPDFExportPreset = app.pdfExportPresets.item(i);
 		}
-		totalFieldsCheck();
+		totalFieldsCheckMain();
 	}	
 
-	function totalFieldsCheck() {
+	function totalFieldsCheckMain() {
 		Start.enabled = isOk.files && isOk.folder && isOk.filename && isOk.document && isOk.preset && isOk.Imposing;
 	}
 	
@@ -619,7 +622,7 @@ function DialogWindow() {
 }
 
 // Налаштування параметрів нової розкладки
-function NewDocSettings() {
+function NewDocSettingsWindow() {
 	
 	var Params = false;
 	var VariantsRozkladka = [];
@@ -653,7 +656,6 @@ function NewDocSettings() {
 		FigureSelector.alignment = ["fill","top"]; 
 		
 	// ---------------CIRCLES-----------------
-
 	// CIRCLESSETTINGS
 	// ===============
 	var CirclesSettings = FigureSelector.add("tab", undefined, undefined, {name: "CirclesSettings"}); 
@@ -693,8 +695,7 @@ function NewDocSettings() {
 		GetCircleSizeFromFilenameDisclaimer.enabled = false;		
 		
 	// CIRCLESIZEGROUP
-	// =========			
-	
+	// =========				
 	var CircleSizeGroup = CircleDocParamsGroup.add("group", undefined, {name: "CircleSizeGroup"}); 
 		CircleSizeGroup.orientation = "row"; 
 		CircleSizeGroup.alignChildren = ["left","center"]; 
@@ -715,7 +716,6 @@ function NewDocSettings() {
 		DiameterUnits.text = "мм";
 
 	// ---------------RECTANGLES-----------------
-
 	// RECTANGLESSETTINGS
 	// ===============
 	var RectanglesSettings = FigureSelector.add("tab", undefined, undefined, {name: "RectanglesSettings"}); 
@@ -757,8 +757,7 @@ function NewDocSettings() {
 		GetRectangleSizeFromFilenameDisclaimer.preferredSize.height = 45;		
 		
 	// RECTANGLESIZEGROUP
-	// =========			
-	
+	// =========	
 	var RectangleSizeGroup = RectangleDocParamsGroup.add("group", undefined, {name: "RectangleSizeGroup"}); 
 		RectangleSizeGroup.orientation = "row"; 
 		RectangleSizeGroup.alignChildren = ["left","center"]; 
@@ -791,8 +790,7 @@ function NewDocSettings() {
 		HeightUnits.text = "мм";
 
 	// ROUNDCORNERSGROUP
-	// =========			
-	
+	// =========	
 	var RoundCornersGroup = RectangleDocParamsGroup.add("group", undefined, {name: "RoundCornersGroup"}); 
 		RoundCornersGroup.orientation = "row"; 
 		RoundCornersGroup.alignChildren = ["left","center"]; 
@@ -817,7 +815,6 @@ function NewDocSettings() {
 		CornersUnits.text = "мм";
 		
 	// ---------------MIXED-----------------
-
 	// MIXEDSETTINGS
 	// ===============
 	var MixedSettings = FigureSelector.add("tab", undefined, undefined, {name: "MixedSettings"}); 
@@ -1091,8 +1088,6 @@ function NewDocSettings() {
 			NewCustomDocSettings.close(1);			
 		};
 
-	totalFieldsCheck(myCustomDoc.Params);
-
 	function CircleCheckBoxClick() {
 		IsGetSizeFromFilename = GetCircleSizeFromFilename.value;
 		if (IsGetSizeFromFilename) {
@@ -1154,7 +1149,7 @@ function NewDocSettings() {
 		isOk.Size = true;
 	}	
 	
-	function checkValidRoundCornersValue() {
+	function checkValidRoundCornersValue() {	
 		if (RoundCornersGroup.enabled) {
 			RoundCornersValue.text = RoundCornersValue.text.replace(',','.');
 			var maxRadius = +RectWidth.text > +RectHeight.text ? +RectHeight.text / 2 : +RectWidth.text / 2;			
@@ -1164,7 +1159,7 @@ function NewDocSettings() {
 		}
 	}
 	
-	function checkValidSpaceBetween() {
+	function checkValidSpaceBetween() {	
 		if (FigureSelector.selection.text == "Прямокутники" || FigureSelector.selection.text == "Мікс") {
 			specialText = IsRoundedCorners ? "" : ", а також 0.";
 			minSpaceBetween = IsRoundedCorners ? CutterTypes[CutterType.selection.index].minSpaceBetween : 0;
@@ -1191,7 +1186,7 @@ function NewDocSettings() {
 	  return rg2.test(cText);
 	}
 
-	function totalFieldsCheck(preselected) {
+	function totalFieldsCheck(preselected) {	
 		if (FigureSelector.selection.text == "Кола") checkValidDiameter();
 		if (FigureSelector.selection.text == "Прямокутники") checkValidSize();
 		if (FigureSelector.selection.text == "Мікс") checkMixed();
@@ -1273,6 +1268,8 @@ function NewDocSettings() {
 		SaveDocBtn.enabled = true;
 	}
 
+	totalFieldsCheck(myCustomDoc.Params);		
+
 	var myResult = NewCustomDocSettings.show();
 
 	if (myResult == true) {
@@ -1283,447 +1280,6 @@ function NewDocSettings() {
 
 	return myResult;
 	
-}
-
-/**
-	Прорахування параметрів розкладки кружечків.
-	@param {string|number} thisDiameter Діаметр кола в мм
-	@param {Object} selectedCutter Об'єкт, який посилається на обраний плоттер
-	@param {string|number} thisSpaceBetween Відстань між контурами порізки в мм
-	@param {boolean} returnBestOnly Якщо true, то функція поверне лише найкращий (= де більша кількість елементів) варіант
-	@returns {Array} Список об'єктів, які містять прораховані параметри для розкладки
-*/
-function RozkladkaCircles(thisDiameter, selectedCutter, thisSpaceBetween, returnBestOnly) {
-
-	var Rozkladka_;
-	var VariantsRozkladka = [];
-	var Best;
-	
-	thisDiameter = parseFloat(thisDiameter);
-	thisSpaceBetween = parseFloat(thisSpaceBetween);
-
-	// №1 Прорахунок варіанту розкладки "Рівними рядами"
-	
-	Rozkladka_ = SimpleCirclesRozkladka(selectedCutter.widthFrame, selectedCutter.heightFrame, thisDiameter, thisSpaceBetween);
-	if (Rozkladka_.total > 0) {
-		Rozkladka_.widthSheet = selectedCutter.widthSheet;
-		Rozkladka_.heightSheet = selectedCutter.heightSheet;
-		Rozkladka_.method = 1;
-		Rozkladka_.listItem = CreateListItem(Rozkladka_);		
-		VariantsRozkladka.push(Rozkladka_);
-	}
-	
-	// №2 Прорахунок варіанту розкладки "Перекладом"
-	// (лист в заданій орієнтації)
-	
-	Rozkladka_ = PerekladomCirclesRozkladka(selectedCutter.widthFrame, selectedCutter.heightFrame, thisDiameter, thisSpaceBetween);
-	if (Rozkladka_.total > 0) {
-		Rozkladka_.widthSheet = selectedCutter.widthSheet;
-		Rozkladka_.heightSheet = selectedCutter.heightSheet;
-		Rozkladka_.method = 2;		
-		Rozkladka_.listItem = CreateListItem(Rozkladka_);
-		VariantsRozkladka.push(Rozkladka_);
-	}
-	
-	// (лист повернуто на 90 градусів)
-	
-	Rozkladka_ = PerekladomCirclesRozkladka(selectedCutter.heightFrame, selectedCutter.widthFrame, thisDiameter, thisSpaceBetween);
-	if (Rozkladka_.total > 0) {
-		Rozkladka_.widthSheet = selectedCutter.heightSheet;
-		Rozkladka_.heightSheet = selectedCutter.widthSheet;
-		Rozkladka_.method = 2;		
-		Rozkladka_.listItem = CreateListItem(Rozkladka_);		
-		VariantsRozkladka.push(Rozkladka_);
-		
-	}
-	
-	// №3 Прорахунок варіанту розкладки "Перекладом + рівними рядами"
-	// (лист в заданій орієнтації)
-	
-	Rozkladka_ = PerekladomComplexCirclesRozkladka(selectedCutter.widthFrame, selectedCutter.heightFrame, thisDiameter, thisSpaceBetween);
-	if (Rozkladka_.total > 0) {
-		Rozkladka_.widthSheet = selectedCutter.widthSheet;
-		Rozkladka_.heightSheet = selectedCutter.heightSheet;
-		Rozkladka_.method = 3;
-		Rozkladka_.listItem = CreateListItem(Rozkladka_);		
-		VariantsRozkladka.push(Rozkladka_);
-	}
-	
-	// (лист повернуто на 90 градусів)
-	
-	Rozkladka_ = PerekladomComplexCirclesRozkladka(selectedCutter.heightFrame, selectedCutter.widthFrame, thisDiameter, thisSpaceBetween);
-	if (Rozkladka_.total > 0) {
-		Rozkladka_.widthSheet = selectedCutter.heightSheet;
-		Rozkladka_.heightSheet = selectedCutter.widthSheet;
-		Rozkladka_.method = 3;
-		Rozkladka_.listItem = CreateListItem(Rozkladka_);		
-		VariantsRozkladka.push(Rozkladka_);
-	}	
-	
-	// Метод "Рівними рядами"
-
-	function SimpleCirclesRozkladka(wF, hF, D, Sb) {
-		var Params = {};
-		Params.Diameter = D;
-		Params.widthFrame = wF;
-		Params.heightFrame = hF;
-		Params.countXSmall = 0;
-		Params.countYSmall = 0;
-		Params.overflowSize = 0;
-		Params.countXBig = Math.floor((wF + Sb) / (D + Sb));
-		Params.countYBigRivni = Math.floor((hF + Sb) / (D + Sb));
-		Params.DistanceXCenters = D + Sb;
-		Params.DistanceYCenters = D + Sb;
-		Params.SpaceBetween = Sb;
-		Params.TriangleHypothenuse = Math.sqrt(Math.pow(Params.DistanceXCenters, 2) + Math.pow(Params.DistanceYCenters, 2));
-		Params.total = Params.countXBig * Params.countYBigRivni;
-		return Params;
-	}	
-	
-	// Метод "Перекладом"
-
-	function PerekladomCirclesRozkladka(wF, hF, D, Sb) {
-		var Params = {};
-		var count;
-		var freeSpace = 0;
-		var groupBigSmallHeight, groupBigSmallDistanceY;
-
-		// Вираховуємо кількість кружечків, яка поміщається по ширині (великий ряд)
-		Params.countXBig = Math.floor((wF + Sb) / (D + Sb));
-		// Гіпотенузою для даного випадку буде відстань між центрами кіл великого і малого рядів (два радіуси + роздвижка)
-		Params.TriangleHypothenuse = D + Sb;
-		// Відстань між центрами кружчеків великого ряду
-		if (Params.countXBig > 1) {
-			// Якщо великий ряд має від 2 кружечків, то ділимо ширину на кількість кружечків і залишок ділимо на кількість проміжків
-			Params.DistanceXCenters = D + (wF - (Params.countXBig * D)) / (Params.countXBig - 1);
-			// Малий ряд на 1 шт менше
-			Params.countXSmall = Params.countXBig - 1;
-		} else if (Params.countXBig == 1) {
-			// Інакше розглядаємо ситуацію, коли великий вміщує 1 кружечок, але його партнер знаходиться частково за межами області порізки
-			// Для цього беремо за основу ширину поля порізки і залишок вільного місця, щоб можна було вмістити ще один ряд,
-			// який ймовірно буде теж з 1 шт (рідкісний випадок, але можливий - напр. діаметр більший за половину розміря поля порізки)
-			Params.DistanceXCenters = (wF - D) * 2;
-			// Малий ряд приймаємо як 1 шт
-			Params.countXSmall = 1;
-		} else {
-			Params.countXSmall = 0;
-		};
-		if (Params.countXBig > 0) {
-			// За формуловю висоти рівнобедреного трикутника
-			Params.DistanceYCenters = Math.sqrt(Math.pow(Params.TriangleHypothenuse, 2) - Math.pow(Params.DistanceXCenters, 2) / 4);
-			// Висота групи з великого та малого рядів
-			groupBigSmallHeight = D + Params.DistanceYCenters;
-			
-			// Вертикальна відстань між центрами двох великих рядів за формулою сторони прямокутного трикутника
-			groupBigSmallDistanceY = 2 * Math.sqrt(Math.pow(Params.TriangleHypothenuse, 2) - Math.pow(Params.DistanceXCenters / 2, 2));
-			
-			Params.overflowSize = D - groupBigSmallDistanceY / 2;
-		
-			Params.countYBigPerekladom = 0;
-			Params.countYSmall = 0;
-			count = 0;
-			
-			freeSpace = hF - D;
-			
-			if (freeSpace > 0) {
-				Params.countYBigPerekladom = 1;
-				count = 1;
-			};
-			
-			if (Params.DistanceYCenters > D / 2 + Sb) {
-				// Якщо центр крежечків малого ряду виступає вище верхньої лінії великого ряду кружечків
-				while (freeSpace >= (D - Params.overflowSize)) {
-				  count++;
-				  freeSpace = freeSpace - (D - Params.overflowSize);
-				  if (count % 2 == 0) {
-					Params.countYSmall = +Params.countYSmall + 1;
-				  } else {
-					Params.countYBigPerekladom = +Params.countYBigPerekladom + 1;
-				  }
-				}
-			} else {
-				// Якщо центр крежечків малого ряду знаходиться нижче верхньої лінії великого ряду кружечків
-				while (freeSpace >= Params.DistanceYCenters) {
-				  count++;
-				  if (count % 2 == 0) {
-					  if (freeSpace >= Params.DistanceYCenters) {
-						  Params.countYSmall = +Params.countYSmall + 1;
-						  freeSpace = hF - (Params.countYBigPerekladom * (D + Sb) + Params.DistanceYCenters);
-					  }
-					  if (freeSpace < Params.overflowSize) break;
-				  } else {
-					if (freeSpace >= Params.overflowSize) {
-					  Params.countYBigPerekladom = +Params.countYBigPerekladom + 1;
-					  freeSpace = hF - (Params.countYBigPerekladom * (D + Sb) - Sb);
-					};
-					if (freeSpace < Params.DistanceYCenters) break;
-				  }
-				}
-			}
-		
-		} else {
-			Params.DistanceXCenters = 0;
-			Params.DistanceYCenters = 0;
-			Params.countYSmall = 0;
-			Params.countYBigPerekladom = 0;
-			Params.total = 0;
-		}
-		
-		Params.Diameter = D;
-		Params.widthFrame = wF;
-		Params.heightFrame = hF;		
-		
-		Params.total = Params.countYBigPerekladom * Params.countYSmall > 0 ? Params.countXBig * Params.countYBigPerekladom + Params.countXSmall * Params.countYSmall : 0;
-		
-		return Params;
-	}
-
-	// Метод "Перекладом + рівними рядами"
-	
-	function PerekladomComplexCirclesRozkladka(wF, hF, D, Sb) {
-		
-		var Params = {};
-		
-		var total = 0, count, count_Rivni, count_Perekladom;
-		var freeSpace;
-
-		var Rozkladka_perekladom, Rozdladka_rivni;
-		
-		Rozkladka_perekladom = PerekladomCirclesRozkladka(wF, hF, D, Sb);
-		
-		Params.total = 0;
-		
-		count = Rozkladka_perekladom.countYBigPerekladom + Rozkladka_perekladom.countYSmall || 0;
-		
-		while (count > 0) {
-			count--;
-			
-			if (Rozkladka_perekladom.DistanceYCenters > D / 2 + Sb) {
-				freeSpace = hF - (count * Rozkladka_perekladom.DistanceYCenters + D);
-			} else {
-				if (count % 2 == 0) {
-					freeSpace = hF - ((count / 2) * (D + Sb) + Rozkladka_perekladom.DistanceYCenters - Sb);
-				} else {
-					freeSpace = hF - ((parseInt(count / 2) + 1) * (D + Sb) - Sb);
-				}
-			}			
-			
-			Rozkladka_perekladom = PerekladomCirclesRozkladka(wF, hF - freeSpace, D, Sb);
-			Rozdladka_rivni = SimpleCirclesRozkladka(wF, freeSpace - Sb, D, Sb);
-			
-			total = Rozkladka_perekladom.total + Rozdladka_rivni.total;
-			
-			if (total > Params.total && Rozkladka_perekladom.total > 0 && Rozdladka_rivni.total > 0) {
-				Params.Diameter = D;
-				Params.widthFrame = wF;
-				Params.heightFrame = hF;
-				Params.TriangleHypothenuse = Rozkladka_perekladom.TriangleHypothenuse;
-				Params.DistanceXCenters = Rozkladka_perekladom.DistanceXCenters;
-				Params.DistanceYCenters = Rozkladka_perekladom.DistanceYCenters;
-				Params.countXBig = Rozkladka_perekladom.countXBig;
-				Params.countYBigRivni = Rozdladka_rivni.countYBigRivni;
-				Params.countYBigPerekladom = Rozkladka_perekladom.countYBigPerekladom;
-				Params.countXSmall = Rozkladka_perekladom.countXSmall;
-				Params.countYSmall = Rozkladka_perekladom.countYSmall;
-				Params.overflowSize = Rozkladka_perekladom.overflowSize;
-				Params.total = total;
-			}
-			
-		}
-		
-		return Params;
-		
-	}
-	
-	// Створюємо читабельний елемент списку для діалогово вікна
-
-	function CreateListItem(variant) {
-		var ListItem = variant.widthFrame + "х" + variant.heightFrame + " >> ";
-		switch (variant.method) {
-			case 1:
-				ListItem += variant.countYBigRivni + " \u2237 " + variant.countXBig + "\u2299";
-				break;
-			case 2:
-				ListItem += variant.countYBigPerekladom + " \u00D7 " + variant.countXBig + "\u2299 \u2234 " + variant.countYSmall + " \u00D7 " + variant.countXSmall + "\u2299";
-				break;
-			case 3:
-				ListItem += variant.countYBigRivni + " \u2237 " + variant.countXBig + "\u2299 + " + variant.countYBigPerekladom + " \u00D7 " + variant.countXBig + "\u2299 \u2234 ";
-				ListItem += variant.countYSmall + " \u00D7 " + variant.countXSmall + "\u2299";
-				break;
-		}
-		return variant.total + " @ " + ListItem.replace(",", ".");
-	}	
-	
-	if (returnBestOnly) {
-		for (var i = 0; i < VariantsRozkladka.length; i++) {
-			if (i == 0) Best = 0;
-			if (i != 0 && VariantsRozkladka[Best].total < VariantsRozkladka[i].total) Best = i;
-		}
-		
-		if (Best >= 0) return [].push(VariantsRozkladka[Best]);
-		
-		return [];
-		
-	}
-		
-	return VariantsRozkladka;
-
-}
-
-/**
-	Прорахування параметрів розкладки прямокутників.
-	@param {string|number} thisWidth Ширина в мм
-	@param {string|number} thisHeight Висота в мм
-	@param {Object} selectedCutter Об'єкт, який посилається на обраний плоттер
-	@param {string|number} thisSpaceBetween Відстань між контурами порізки в мм
-	@param {boolean} addComplex Якщо true, то функція рахуватиме складні варіанти розкладки (з поворотом макету на 90 градусів)
-	@param {boolean} returnBestOnly Якщо true, то функція поверне лише найкращий (= де більша кількість елементів) варіант
-	@returns {Array} Список об'єктів, які містять прораховані параметри для розкладки
-*/
-function RozkladkaRectangles(thisWidth, thisHeight, selectedCutter, thisSpaceBetween, addComplex, returnBestOnly) {
- 
-    var Rozkladka_;
-	var VariantsRozkladka = [];
-    var Best;
-	
-	thisWidth = parseFloat(thisWidth);
-	thisHeight = parseFloat(thisHeight);
-	thisSpaceBetween = parseFloat(thisSpaceBetween);
-    
-    // Розкладка виробу різними способами
-    
-    // Спосіб №1 - простий (лист портретний: ширина < висота листа)
-    Rozkladka_ = SimpleRozkladka(selectedCutter.widthFrame, selectedCutter.heightFrame, thisWidth, thisHeight, thisSpaceBetween);
-	if (Rozkladka_.total > 0) {
-		Rozkladka_.widthSheet = selectedCutter.widthSheet;
-		Rozkladka_.heightSheet = selectedCutter.heightSheet;
-		Rozkladka_.method = 1;
-		Rozkladka_.listItem = CreateListItem(Rozkladka_);		
-		VariantsRozkladka.push(Rozkladka_);
-	}	
-
-    // Спосіб №2 - простий (лист альбомний: ширина > висота листа)
-    Rozkladka_ = SimpleRozkladka(selectedCutter.heightFrame, selectedCutter.widthFrame, thisWidth, thisHeight, thisSpaceBetween);
-	if (Rozkladka_.total > 0) {
-		Rozkladka_.widthSheet = selectedCutter.heightSheet;
-		Rozkladka_.heightSheet = selectedCutter.widthSheet;
-		Rozkladka_.method = 1;
-		Rozkladka_.listItem = CreateListItem(Rozkladka_);		
-		VariantsRozkladka.push(Rozkladka_);
-	}
-	
-	if (addComplex) {
-		// Спосіб №3 - складний (лист портретний: ширина < висота листа)
-		Rozkladka_ = SimpleRozkladka(selectedCutter.widthFrame, selectedCutter.heightFrame, thisWidth, thisHeight, thisSpaceBetween);
-		Rozkladka_ = ComplexRozkladka(Rozkladka_, selectedCutter.widthFrame, selectedCutter.heightFrame, thisWidth, thisHeight, thisSpaceBetween)
-		if (Rozkladka_.total > 0) {
-			Rozkladka_.widthSheet = selectedCutter.widthSheet;
-			Rozkladka_.heightSheet = selectedCutter.heightSheet;
-			Rozkladka_.method = 2;
-			Rozkladka_.listItem = CreateListItem(Rozkladka_);		
-			VariantsRozkladka.push(Rozkladka_);
-		}
-		
-		// Спосіб №4 - складний (лист альбомний: ширина > висота листа)
-		Rozkladka_ = SimpleRozkladka(selectedCutter.heightFrame, selectedCutter.widthFrame, thisWidth, thisHeight, thisSpaceBetween);
-		Rozkladka_ = ComplexRozkladka(Rozkladka_, selectedCutter.heightFrame, selectedCutter.widthFrame, thisWidth, thisHeight, thisSpaceBetween)
-		if (Rozkladka_.total > 0) {
-			Rozkladka_.widthSheet = selectedCutter.heightSheet;
-			Rozkladka_.heightSheet = selectedCutter.widthSheet;
-			Rozkladka_.method = 2;
-			Rozkladka_.listItem = CreateListItem(Rozkladka_);
-			VariantsRozkladka.push(Rozkladka_);
-		}
-	}
-
-	// Метод розкладки сіткою
-	
-	function SimpleRozkladka(wF, hF, wI, hI, Sb) {	
-		var Params = {};
-		Params.widthItem = wI;
-		Params.heightItem = hI;
-		Params.widthFrame = wF;
-		Params.heightFrame = hF;
-		Params.countX = Math.floor((wF + Sb) / (wI + Sb));
-		Params.countY = Math.floor((hF + Sb) / (hI + Sb));		
-		Params.countRotatedX = 0;
-		Params.countRotatedY = 0;
-		Params.SpaceBetween = Sb;
-		Params.total = Params.countX * Params.countY;
-		return Params;		
-	}
-
-	// Метод розкладки сіткою з поворотом частини макетів для оптимального заповнення
-	
-	function ComplexRozkladka(simpleVar, wF, hF, wI, hI, Sb) {
-		
-		var Params = {
-			total: 0
-		};
-
-		var i = simpleVar.countY;
-		
-		while (i > 0) {
-			var widthSheetPartial = wF;
-			var heightSheetPartial = hF - i * (hI + Sb);
-			var countRotatedX = Math.floor((widthSheetPartial + Sb) / (hI + Sb));
-			var countRotatedY = Math.floor((heightSheetPartial + Sb) / (wI + Sb));
-			if (countRotatedX * countRotatedY > 0) {
-				var total = simpleVar.countX * i + countRotatedX * countRotatedY;
-				if (total > Params.total) {
-					Params.widthItem = wI;
-					Params.heightItem = hI;
-					Params.widthFrame = wF;
-					Params.heightFrame = hF;
-					Params.countX = simpleVar.countX;
-					Params.countY = i;		
-					Params.countRotatedX = countRotatedX;
-					Params.countRotatedY = countRotatedY;
-					Params.SpaceBetween = Sb;
-					Params.total = total;
-				}
-			};
-			i--;
-		}
-		
-		return Params;
-		
-	}	
-
-	// Створюємо читабельний елемент списку для діалогово вікна
-	
-	function CreateListItem(variant) {
-		var ListItem = variant.widthFrame + "х" + variant.heightFrame + " >> ";
-		switch (variant.method) {
-			case 1:
-				ListItem += variant.countX + "x" + variant.countY + " [" + variant.widthItem + "x" + variant.heightItem  + "]";
-				break;
-			case 2:
-				if (variant.countX >= variant.countRotatedX) {
-					ListItem += variant.countX + "x" + variant.countY + " [" + variant.widthItem + "x" + variant.heightItem  + "] + ";	
-					ListItem += variant.countRotatedX + "x" + variant.countRotatedY + " [" + variant.heightItem + "x" + variant.widthItem  + "]";					
-				} else {
-					ListItem += variant.countRotatedX + "x" + variant.countRotatedY + " [" + variant.heightItem + "x" + variant.widthItem  + "] + ";
-					ListItem += variant.countX + "x" + variant.countY + " [" + variant.widthItem + "x" + variant.heightItem  + "]";						
-				}				
-				break;
-		}
-		return variant.total + " @ " + ListItem.replace(",", ".");
-	}	
-    
-	if (returnBestOnly) {
-		for (var i = 0; i < VariantsRozkladka.length; i++) {
-			if (i == 0) Best = 0;
-			if (i != 0 && VariantsRozkladka[Best].total < VariantsRozkladka[i].total) Best = i;
-		}
-		
-		if (Best >= 0) return [].push(VariantsRozkladka[Best]);
-		
-		return [];
-		
-	}
-		
-	return VariantsRozkladka;
 }
 
 function PlacePDF(){
@@ -1802,13 +1358,14 @@ function PlacePDF(){
 					for (var i = 0; i < okDiameters.length; i++) {
 						if (okDiameters[i] !== 0) {
 							myCurrentDoc.Diameter = okDiameters[i];
-							myCurrentDoc.Params = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, myCurrentDoc.SpaceBetween, true);
-							okFilesCurrent = okFilesDiameters[okDiameters[i]];				
-							totalPages = 0;
-							for (var j = 0; j < okFilesCurrent.length; j++) {
-								totalPages = totalPages + okFilesCurrent[j].pgCount;
-							};				
-							if (myCurrentDoc.Params.length) {
+							var thisFileParams = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, myCurrentDoc.SpaceBetween, true);			
+							if (thisFileParams.length) {
+								myCurrentDoc.Params = thisFileParams[0];
+								okFilesCurrent = okFilesDiameters[okDiameters[i]];				
+								totalPages = 0;
+								for (var j = 0; j < okFilesCurrent.length; j++) {
+									totalPages = totalPages + okFilesCurrent[j].pgCount;
+								};									
 								CreateCustomDocCircles(myCurrentDoc);
 								ProcessCircles(okFilesCurrent, totalOkFilesLength);				
 							} else {
@@ -1862,13 +1419,14 @@ function PlacePDF(){
 								badFiles = okFilesSizes[okSizes[i]];
 								continue;
 							} else {
-								myCurrentDoc.Params = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);
-								okFilesCurrent = okFilesSizes[okSizes[i]];				
-								totalPages = 0;
-								for (var j = 0; j < okFilesCurrent.length; j++) {
-									totalPages = totalPages + okFilesCurrent[j].pgCount;
-								};				
-								if (myCurrentDoc.Params.length) {
+								var thisFileParams = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);
+								if (thisFileParams.length) {
+									myCurrentDoc.Params = thisFileParams[0];
+									okFilesCurrent = okFilesSizes[okSizes[i]];				
+									totalPages = 0;
+									for (var j = 0; j < okFilesCurrent.length; j++) {
+										totalPages = totalPages + okFilesCurrent[j].pgCount;
+									};										
 									CreateCustomDocRectangles(myCurrentDoc, thisRadius > 0 ? thisRadius : false, thisRadius > 0 ? thisSpaceBetween : false);
 									ProcessRectangles(okFilesCurrent, totalOkFilesLength, thisRadius > 0 ? thisRadius : false, thisRadius > 0 ? thisSpaceBetween : false);				
 								} else {
@@ -1933,13 +1491,14 @@ function PlacePDF(){
 				if (okDiameters[i] !== 0) {
 					myCurrentDoc.Diameter = okDiameters[i];
 					var thisSpaceBetween = myCurrentDoc.SpaceBetween > myCurrentDoc.CutterType.minSpaceBetween ? myCurrentDoc.SpaceBetween : myCurrentDoc.CutterType.minSpaceBetween;
-					myCurrentDoc.Params = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, thisSpaceBetween, true);
-					okFilesCurrent = okFilesDiameters[okDiameters[i]];				
-					totalPages = 0;
-					for (var j = 0; j < okFilesCurrent.length; j++) {
-						totalPages = totalPages + okFilesCurrent[j].pgCount;
-					};				
-					if (myCurrentDoc.Params.length) {
+					var thisFileParams = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, thisSpaceBetween, true);			
+					if (thisFileParams.length) {
+						myCurrentDoc.Params = thisFileParams[0];
+						okFilesCurrent = okFilesDiameters[okDiameters[i]];				
+						totalPages = 0;
+						for (var j = 0; j < okFilesCurrent.length; j++) {
+							totalPages = totalPages + okFilesCurrent[j].pgCount;
+						};							
 						CreateCustomDocCircles(myCurrentDoc, thisSpaceBetween);
 						ProcessCircles(okFilesCurrent, totalOkFilesLength, thisSpaceBetween);				
 					} else {
@@ -1959,13 +1518,14 @@ function PlacePDF(){
 						badFiles = okFilesSizes[okSizes[i]];
 						continue;
 					} else {
-						myCurrentDoc.Params = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);
-						okFilesCurrent = okFilesSizes[okSizes[i]];				
-						totalPages = 0;
-						for (var j = 0; j < okFilesCurrent.length; j++) {
-							totalPages = totalPages + okFilesCurrent[j].pgCount;
-						};				
-						if (myCurrentDoc.Params.length) {
+						var thisFileParams = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);			
+						if (thisFileParams.length) {
+							myCurrentDoc.Params = thisFileParams[0];
+							okFilesCurrent = okFilesSizes[okSizes[i]];				
+							totalPages = 0;
+							for (var j = 0; j < okFilesCurrent.length; j++) {
+								totalPages = totalPages + okFilesCurrent[j].pgCount;
+							};								
 							myCurrentDoc.RoundCornersValue = thisRadius;
 							myCurrentDoc.IsRoundedCorners = thisRadius > 0;
 							CreateCustomDocRectangles(myCurrentDoc, thisRadius, thisSpaceBetween);
@@ -3564,9 +3124,9 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	
 	progress.increment();
 	
-	var OvalsGroup = myDocument.layers.itemByName("PRINT").pageItems.length > 1 ? myDocument.groups.add(myDocument.layers.itemByName(PRINTLayer).pageItems) : myDocument.layers.itemByName(PRINTLayer);
+	var OvalsGroup = myDocument.layers.itemByName("PRINT").pageItems.count() > 1 ? myDocument.groups.add(myDocument.layers.itemByName(PRINTLayer).pageItems) : myDocument.layers.itemByName(PRINTLayer);
 	
-	var contoursBounds = myDocument.layers.itemByName("PRINT").pageItems.length > 1 ? OvalsGroup.geometricBounds : OvalsGroup.ovals.firstItem().geometricBounds;		
+	var contoursBounds = OvalsGroup.rectangles.count() > 1 ? OvalsGroup.geometricBounds : OvalsGroup.ovals.firstItem().geometricBounds;			
 	
 	if (myCurrentDoc.CutterType.marksGenerate == true) {
 		
@@ -3682,8 +3242,6 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	var Bleeds = myCurrentDoc.IsZeroBleeds ? 0 : myCurrentDoc.CutterType.minSpaceBetween / 2;
 	var RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
 	var IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;
-	
-	// alert(myCurrentDoc.SpaceBetween + ', ' + SpaceBetween + ', ' + RoundCornersValue + ', ' + IsRoundedCorners);
 	
 	const documentRotated = Params.widthSheet != myCurrentDoc.CutterType.widthSheet;
 	
@@ -3976,7 +3534,9 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	
 	progress.increment();
 	
-	var RectGroup = myDocument.layers.itemByName(PRINTLayer).pageItems.length > 1 ? myDocument.groups.add(myDocument.layers.itemByName(PRINTLayer).pageItems) : myDocument.layers.itemByName(PRINTLayer);
+	var RectGroup = myDocument.layers.itemByName(PRINTLayer).pageItems.count() > 1 ? myDocument.groups.add(myDocument.layers.itemByName(PRINTLayer).pageItems) : myDocument.layers.itemByName(PRINTLayer);
+
+    var contoursBounds = RectGroup.rectangles.count() > 1 ? RectGroup.geometricBounds : RectGroup.rectangles.firstItem().geometricBounds;
 	
 	if (IsRoundedCorners) {
 		RectGroup.rectangles.everyItem().properties = {
@@ -3989,9 +3549,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 			'topRightCornerOption': CornerOptions.ROUNDED_CORNER,
 			'topRightCornerRadius': RoundCornersValue || 0				
 		};
-	}	
-
-	var contoursBounds = myDocument.layers.itemByName(PRINTLayer).pageItems.length > 1 ? RectGroup.geometricBounds : RectGroup.rectangles.firstItem().geometricBounds;
+	}
 
 	if (myCurrentDoc.CutterType.marksGenerate == true) {
 		
@@ -4206,178 +3764,6 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	progress.close();
 }
 
-// Генерація міток порізки, якщо така опція прописана в налаштуваннях плоттера
-
-function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBounds) {
-	
-	var marksCoordinates = [];
-	
-	var firstPage = myDocument.pages.firstItem();
-	
-	try {
-		
-		for (var i = 0, props = myCurrentDoc.CutterType.marksProperties; i < props.length; i++) {
-			var side = props[i].position.split("-")[0] || null;
-			var alignment = props[i].position.split("-")[1] || null;
-			switch (side) {
-				case "left":
-					switch (alignment) {
-						case "top":
-							marksCoordinates.push([
-								contoursBounds[0],
-								contoursBounds[1] - props[i].margins[1] - props[i].width,
-								contoursBounds[0] + props[i].height,
-								contoursBounds[1] - props[i].margins[1]
-							]);
-							break;
-						case "middle":
-							marksCoordinates.push([
-								(contoursBounds[2] + contoursBounds[0]) / 2 - props[i].height / 2,
-								contoursBounds[1] - props[i].margins[1] - props[i].width,
-								(contoursBounds[2] + contoursBounds[0]) / 2 + props[i].height / 2,
-								contoursBounds[1] - props[i].margins[1]
-							]);						
-							break;
-						case "bottom":
-							marksCoordinates.push([
-								contoursBounds[2] - props[i].height,
-								contoursBounds[1] - props[i].margins[1] - props[i].width,
-								contoursBounds[2],
-								contoursBounds[1] - props[i].margins[1]
-							]);					
-							break;
-						default:
-							throw("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
-					};
-					break;
-				case "right":
-					switch (alignment) {
-						case "top":
-							marksCoordinates.push([
-								contoursBounds[0],
-								contoursBounds[3] + props[i].margins[3],
-								contoursBounds[0] + props[i].height,
-								contoursBounds[3] + props[i].margins[3] + props[i].width
-							]);
-							break;
-						case "middle":
-							marksCoordinates.push([
-								(contoursBounds[2] + contoursBounds[0]) / 2 - props[i].height / 2,
-								contoursBounds[3] + props[i].margins[3],
-								(contoursBounds[2] + contoursBounds[0]) / 2 + props[i].height / 2,
-								contoursBounds[3] + props[i].margins[3] + props[i].width
-							]);						
-							break;
-						case "bottom":
-							marksCoordinates.push([
-								contoursBounds[2] - props[i].height,
-								contoursBounds[3] + props[i].margins[3],
-								contoursBounds[2],
-								contoursBounds[3] + props[i].margins[3] + props[i].width
-							]);					
-							break;
-						default:
-							throw("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
-					};
-					break;
-				case "top":
-					switch (alignment) {
-						case "left":
-							marksCoordinates.push([
-								contoursBounds[0] - props[i].margins[0] - props[i].height,
-								contoursBounds[1],
-								contoursBounds[0] - props[i].margins[0],
-								contoursBounds[1] + props[i].width
-							]);
-							break;
-						case "middle":
-							marksCoordinates.push([
-								contoursBounds[0] - props[i].margins[0] - props[i].height,
-								(contoursBounds[3] + contoursBounds[1]) / 2 - props[i].width / 2,
-								contoursBounds[0] - props[i].margins[0],
-								(contoursBounds[3] + contoursBounds[1]) / 2 + props[i].width / 2
-							]);						
-							break;
-						case "right":
-							marksCoordinates.push([
-								contoursBounds[0] - props[i].margins[0] - props[i].height,
-								contoursBounds[3] - props[i].width,
-								contoursBounds[0] - props[i].margins[0],
-								contoursBounds[3]
-							]);					
-							break;
-						default:
-							throw("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
-					};
-					break;
-				case "bottom":
-					switch (alignment) {
-						case "left":
-							marksCoordinates.push([
-								contoursBounds[2] + props[i].margins[2],
-								contoursBounds[1],
-								contoursBounds[2] + props[i].margins[2] + props[i].height,
-								contoursBounds[1] + props[i].width
-							]);
-							break;
-						case "middle":
-							marksCoordinates.push([
-								contoursBounds[2] + props[i].margins[2],
-								(contoursBounds[3] + contoursBounds[1]) / 2 - props[i].width / 2,
-								contoursBounds[2] + props[i].margins[2] + props[i].height,
-								(contoursBounds[3] + contoursBounds[1]) / 2 + props[i].width / 2
-							]);						
-							break;
-						case "right":
-							marksCoordinates.push([
-								contoursBounds[2] + props[i].margins[2],
-								contoursBounds[3] - props[i].width,
-								contoursBounds[2] + props[i].margins[2] + props[i].height,
-								contoursBounds[3]
-							]);					
-							break;
-						default:
-							throw("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
-					};
-					break;					
-				default:
-					throw("Помилка при створенні міток для порізки - невідомий параметр позиції для мітки №" + (i + 1) + ": " + pos);
-			}
-		};
-		
-		for (var i = 0, props = myCurrentDoc.CutterType.marksProperties; i < props.length; i++) {
-			
-			var markShape = props[i].shape;
-			
-			switch (markShape) {
-				case "oval": 
-					firstPage.ovals.add(MarksLayer, LocationOptions.AT_END, {
-						'strokeWeight': props[i].strokeWeight,
-						'strokeColor': props[i].strokeColor,							
-						'fillColor': props[i].fillColor,						
-						'geometricBounds': marksCoordinates[i]
-					});	
-					break;
-				case "rectangle": 
-					firstPage.rectangles.add(MarksLayer, LocationOptions.AT_END, {
-						'strokeWeight': props[i].strokeWeight,
-						'strokeColor': props[i].strokeColor,							
-						'fillColor': props[i].fillColor,						
-						'geometricBounds': marksCoordinates[i]
-					});	
-					break;
-				default:
-					throw("Помилка при створенні міток для порізки - невідома форма мітки №" + (i + 1) + ": " + markShape);
-			}
-			
-		};
-		
-	} catch (err) {
-		alert(err);
-		exit();
-	};
-}
-
 // Читаємо файл налаштувань
 
 function readJson(fileName) {
@@ -4398,8 +3784,8 @@ function readJson(fileName) {
 		try {
 			var parsedJson = JSON.parse(jsonStuff);
 			for (var i = 0, cutters = parsedJson.cutters; i < cutters.length; i++) {
-				if (cutters[i].pageOrientation == "PageOrientation.PORTRAIT") cutters[i].pageOrientation = PageOrientation.PORTRAIT;
-				if (cutters[i].pageOrientation == "PageOrientation.LANDSCAPE") cutters[i].pageOrientation = PageOrientation.LANDSCAPE;
+				if (cutters[i].widthSheet <= cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.PORTRAIT;
+				if (cutters[i].widthSheet > cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.LANDSCAPE;
 			};
 			return parsedJson;				
 		} catch (err) {
@@ -4408,5 +3794,4 @@ function readJson(fileName) {
 		}
 	
 	}
-}	
-
+}

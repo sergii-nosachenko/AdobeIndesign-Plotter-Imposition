@@ -13,7 +13,7 @@
 //@include "rozkladka/generateCutterMarks.jsx"
 
 // Global constants
-const PREFERENCES = readJson(File($.fileName).path + "/preferences.json"); // preferences.json має бути в папці зі скриптом і містити всі налаштування
+const PREFERENCES = parsePreferencesJSON(File($.fileName).path + "/preferences.json"); // preferences.json має бути в папці зі скриптом і містити всі налаштування
 const PRINTLayer = PREFERENCES.layers.PRINTLayer || "PRINT";
 const PLOTTERLayer = PREFERENCES.layers.PLOTTERLayer || "PLOTTER";
 const CUTLayer = PREFERENCES.layers.CUTLayer || "CUT";
@@ -3160,7 +3160,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		var outputFile = outputFolder + '/' + 'D=' + Params.Diameter + "(" + SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + cutLength + "mm_" + Params.total + " sht";
            
 		if (OvalsGroup.ovals.length > 0) {
-			if (myCurrentDoc.CutterType.label == "GT") {
+			if (myCurrentDoc.CutterType.plotterCutFormat == "AI") {
 				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
                   // Виклик Ілюстратора для перезбереження файлу до 8 версії AI
                   var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
@@ -3168,7 +3168,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 						if (!res.success) alert(res.err);
 				  }
 				  
-			} else if (myCurrentDoc.CutterType.label == "IE") {
+			} else if (myCurrentDoc.CutterType.plotterCutFormat == "DXF") {
 				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
                   // Виклик Ілюстратора для перезбереження файлу до формату DXF
 				  var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
@@ -3694,14 +3694,14 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		var outputFile = outputFolder + '/' + Params.widthItem + "x" + Params.heightItem + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + cutLength + "mm_" + Params.total + " sht";
            
 		if (RectGroup.rectangles.length > 0) {
-			if (myCurrentDoc.CutterType.label == "GT") {
+			if (myCurrentDoc.CutterType.plotterCutFormat == "AI") {
 				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
                   // Виклик Ілюстратора для перезбереження файлу до 8 версії AI
                   var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
                   if (res) {
 						if (!res.success) alert(res.err);
 				  }
-			} else if (myCurrentDoc.CutterType.label == "IE") {
+			} else if (myCurrentDoc.CutterType.plotterCutFormat == "DXF") {
 				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
                   // Виклик Ілюстратора для перезбереження файлу до формату DXF
                   var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
@@ -3764,9 +3764,9 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	progress.close();
 }
 
-// Читаємо файл налаштувань
+// Читаємо і готуємо файл налаштувань
 
-function readJson(fileName) {
+function parsePreferencesJSON(fileName) {
     var currentLine;
     var jsonStuff = [];
 	var file = File(fileName);
@@ -3786,6 +3786,8 @@ function readJson(fileName) {
 			for (var i = 0, cutters = parsedJson.cutters; i < cutters.length; i++) {
 				if (cutters[i].widthSheet <= cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.PORTRAIT;
 				if (cutters[i].widthSheet > cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.LANDSCAPE;
+				cutters[i].widthFrame = cutters[i].widthSheet - (cutters[i].marginLeft + cutters[i].marginRight);
+				cutters[i].heightFrame = cutters[i].heightSheet - (cutters[i].marginTop + cutters[i].marginBottom);
 			};
 			return parsedJson;				
 		} catch (err) {

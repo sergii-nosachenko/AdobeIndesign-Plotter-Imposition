@@ -54,21 +54,21 @@ preferences.jsbin
 */
 
 illustrator.openIllustratorToConvertAI = function (files) {
-	if (BridgeTalk.appName == illustrator.appName) {
+  if (BridgeTalk.appName == illustrator.appName) {
 
         BridgeTalk.bringToFront(illustrator.targetName);
 
-		var fileArray = new Array;
-		if (files instanceof File)
-			fileArray.push(files);
-		else 
-			fileArray = files.concat(fileArray);
-		
-		var reply = {
-			success: true
-		};
+    var fileArray = new Array;
+    if (files instanceof File)
+      fileArray.push(files);
+    else 
+      fileArray = files.concat(fileArray);
+    
+    var reply = {
+      success: true
+    };
 
-		for (var i = 0; i < fileArray.length; i++) {
+    for (var i = 0; i < fileArray.length; i++) {
             try {
                 app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 
@@ -94,25 +94,25 @@ illustrator.openIllustratorToConvertAI = function (files) {
                 app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
 
                 w.close();
-			} catch (err) {
-				reply = {
-					success: false,
-					err: "Error on open(): " + (err.number & 0xFFFF) + ", " + err.description + ", " + fileArray[i].toString()
-				};
-			}
-		}
-		indesign15.activate();
-		return reply;
-	} else {
-		// create a BridgeTalk message for Illustrator to invoke open
-		var filesString = illustrator.fileArrayToString ( files );
+      } catch (err) {
+        reply = {
+          success: false,
+          err: "Error on open(): " + (err.number & 0xFFFF) + ", " + err.description + ", " + fileArray[i].toString()
+        };
+      }
+    }
+    indesign15.activate();
+    return reply;
+  } else {
+    // create a BridgeTalk message for Illustrator to invoke open
+    var filesString = illustrator.fileArrayToString ( files );
 
-		var btMessage = new BridgeTalk;
-		btMessage.target = illustrator.targetName;
-		btMessage.body = "illustrator.openIllustratorToConvertAI (" + filesString + ");";
-		btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender);}
-		btMessage.send();
-	}
+    var btMessage = new BridgeTalk;
+    btMessage.target = illustrator.targetName;
+    btMessage.body = "illustrator.openIllustratorToConvertAI (" + filesString + ");";
+    btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender);}
+    btMessage.send();
+  }
 }
 
 /**
@@ -122,22 +122,22 @@ illustrator.openIllustratorToConvertAI = function (files) {
 */
 
 illustrator.openIllustratorToConvertDXF = function (files) {
-	if (BridgeTalk.appName == illustrator.appName) {
+  if (BridgeTalk.appName == illustrator.appName) {
 
-		BridgeTalk.bringToFront(illustrator.targetName);
+    BridgeTalk.bringToFront(illustrator.targetName);
 
-		var fileArray = new Array;
-		if (files instanceof File)
-			fileArray.push(files);
-		else 
-			fileArray = files.concat(fileArray);
-		
-		var reply = {
-			success: true
-		};
+    var fileArray = new Array;
+    if (files instanceof File)
+      fileArray.push(files);
+    else 
+      fileArray = files.concat(fileArray);
+    
+    var reply = {
+      success: true
+    };
 
-		for (var i = 0; i < fileArray.length; i++) {
-			try {
+    for (var i = 0; i < fileArray.length; i++) {
+      try {
                 app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 
                 var w = new Window("window", "Зачекай, обробляю файл", undefined, {closeButton: false});
@@ -157,7 +157,7 @@ illustrator.openIllustratorToConvertDXF = function (files) {
                 for (var i = 0, items = app.activeDocument.pathItems; i < items.length; i++) {
                     if (!(items[i].fillColor instanceof NoColor)) {
                         items[i].strokeColor = items[i].fillColor;
-                        items[i].fillColor = new NoColor();		
+                        items[i].fillColor = new NoColor();    
                     };
                 };
 
@@ -166,25 +166,25 @@ illustrator.openIllustratorToConvertDXF = function (files) {
                 app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
 
                 w.close();
-			} catch (err) {
-				reply = {
-					success: false,
-					err: "Error on open(): " + (err.number & 0xFFFF) + ", " + err.description + ", " + fileArray[i].toString()
-				};
-			}
-		}
-		indesign15.activate();
-		return reply;
-	} else {
-		// create a BridgeTalk message for Illustrator to invoke open
-		var filesString = illustrator.fileArrayToString ( files );
+      } catch (err) {
+        reply = {
+          success: false,
+          err: "Error on open(): " + (err.number & 0xFFFF) + ", " + err.description + ", " + fileArray[i].toString()
+        };
+      }
+    }
+    indesign15.activate();
+    return reply;
+  } else {
+    // create a BridgeTalk message for Illustrator to invoke open
+    var filesString = illustrator.fileArrayToString ( files );
 
-		var btMessage = new BridgeTalk;
-		btMessage.target = illustrator.targetName;
-		btMessage.body = "illustrator.openIllustratorToConvertDXF (" + filesString + ");";
-		btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender);}
-		btMessage.send();
-	}
+    var btMessage = new BridgeTalk;
+    btMessage.target = illustrator.targetName;
+    btMessage.body = "illustrator.openIllustratorToConvertDXF (" + filesString + ");";
+    btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender);}
+    btMessage.send();
+  }
 }
 
 ```
@@ -207,93 +207,93 @@ illustrator.openIllustratorToConvertDXF = function (files) {
 
 ```javascript
 {
-	// Службові назви для шарів (опціонально)	
-	// Дані налаштування потрібні лише тоді, якщо розкладка буде в документ, підготовлений вручну (він має бути підготовлений і відкритий завчасно)
-	"layers": {
-		// Шар для розміщення розкладки макетів
-		"PRINTLayer": "PRINT",
-		// Шар для розміщення міток
-		"PLOTTERLayer": "PLOTTER",
-		// Шар для розміщення контурів порізки
-		"CUTLayer": "CUT",
-		// Шар для розміщення назви файлу
-		"TITLELayer": "TITLE"
-	},
-	// Масив параметрів для плоттерів
-	"cutters": [
-		{
-			// Назва плоттера для відображення в меню
-			"text": "", 
-			// Мітка плоттера (буде розміщена в назві файлу)
-			"label": "",
-			// Назва формату паперу (буде розміщена в назві файлу)						
-			"paperName": "",
-			// Ширина листа в мм
-			"widthSheet": 0,
-			// Висота листа в мм
-			"heightSheet": 0,
-			// Службовий відступ від лівого краю листа (там не будуть розміщуватись макети при розкладці)
-			"marginLeft": 0,
-			// Службовий відступ від правого краю листа (там не будуть розміщуватись макети при розкладці)
-			"marginRight": 0,
-			// Службовий відступ від верхнього краю листа (там не будуть розміщуватись макети при розкладці)
-			"marginTop": 0,	
-			// Службовий відступ від нижнього краю листа (там не будуть розміщуватись макети при розкладці)
-			"marginBottom": 0,
-			// Мінімальний дозволений відступ в мм між контурами (АЛЕ! 0 мм буде доступним автоматично для прямокутників без скругління)
-			"minSpaceBetween": 0,
-			// Максимальний дозволений відступ в мм між контурами
-			"maxSpaceBetween": 0,
-			// Колір ліній порізки, масив значень від 0 до 100 в палітрі [C,M,Y,K] або стандартний колір з палітри InDesign, напр. "Black", "None"
-			"contourColor": [0, 0, 0, 0],
-			// Додатковий вихід лінії за межі контуру в мм (для порізки встик, щоб плоттер дорізав лінію в кінці)
-			"contourOffset": 0.0,
-			// Формат файлу зі згенерованим контуром порізки (залежить від моделі плоттера)
-			// Доступні формати: "PDF", "AI" або "DXF"
-			"plotterCutFormat": "",			
-			// Якщо false - скрипт шукатиме файл з міткам порізки в параметрі "marksFile", якщо true - братиме дані з параметру "marksProperties"
-			"marksGenerate": false,
-			// Шлях до файлу з мітками порізки для цього формату та плоттеру (якщо "marksGenerate": false)
-			"marksFile": "//path/to/marks/marks.pdf",
-			// Масив налаштувань для кожної мітки (якщо "marksGenerate": true)
-			"marksProperties": [
-				{
-					// Розміщення мітки відносно робочої області (обмежена службовими відступами)
-					// Може бути одним із:
-					// "left-top", "left-middle", "left-bottom" (на лівій службовій зоні зверху, по центру або знизу)
-					// "right-top", "right-middle", "right-bottom" (на правій службовій зоні зверху, по центру або знизу)
-					// "top-left", "top-middle", "top-right" (на верхній службовій зоні зліва, по центру або справа)
-					// "bottom-left", "bottom-middle", "bottom-right" (на нижній службовій зоні зліва, по центру або справа)
-					"position": "",
-					// Форма мітки
-					// Може бути одним із:
-					// "oval" - овал/коло
-					// "rectangle" - прямокутник
-					// "line" - лінія
-					"shape": "",
-					// Товщина лінії обводки
-					"strokeWeight": 0,
-					// Колір лінії обводки по [C, M, Y, K] або стандартне значення, напр. "Black", "None"
-					"strokeColor": [],
-					// Колір заливки по [C, M, Y, K] або стандартне значення, напр. "Black", "None"
-					"fillColor": [],
-					// Ширина в мм
-					"width": 0,
-					// Висота в мм
-					"height": 0,
-					// Масив відступів в мм [зверху, справа, знизу, зліва]
-					"margins": [0, 0, 0, 0],
-					// Напрям лінії (лише для "shape": "line")
-					// Може бути:
-					// "vertical" - для вертикальної лінії (параметр "width" буде проігноровано)
-					// "horizontal" - для горизонтальної лінії (параметр "height" буде проігноровано)
-					// "top-bottom" - для діагональної лінії з лівого верхнього в правий нижній кут прямокутника з параметрами "width" та "height"
-					// "bottom-top" - для діагональної лінії з лівого нижнього в правий верхній кут прямокутника з параметрами "width" та "height"
-					"lineDirection": ""
-				}			
-			]
-		}			
-	]
+  // Службові назви для шарів (опціонально)  
+  // Дані налаштування потрібні лише тоді, якщо розкладка буде в документ, підготовлений вручну (він має бути підготовлений і відкритий завчасно)
+  "layers": {
+    // Шар для розміщення розкладки макетів
+    "PRINTLayer": "PRINT",
+    // Шар для розміщення міток
+    "PLOTTERLayer": "PLOTTER",
+    // Шар для розміщення контурів порізки
+    "CUTLayer": "CUT",
+    // Шар для розміщення назви файлу
+    "TITLELayer": "TITLE"
+  },
+  // Масив параметрів для плоттерів
+  "cutters": [
+    {
+      // Назва плоттера для відображення в меню
+      "text": "", 
+      // Мітка плоттера (буде розміщена в назві файлу)
+      "label": "",
+      // Назва формату паперу (буде розміщена в назві файлу)            
+      "paperName": "",
+      // Ширина листа в мм
+      "widthSheet": 0,
+      // Висота листа в мм
+      "heightSheet": 0,
+      // Службовий відступ від лівого краю листа (там не будуть розміщуватись макети при розкладці)
+      "marginLeft": 0,
+      // Службовий відступ від правого краю листа (там не будуть розміщуватись макети при розкладці)
+      "marginRight": 0,
+      // Службовий відступ від верхнього краю листа (там не будуть розміщуватись макети при розкладці)
+      "marginTop": 0,  
+      // Службовий відступ від нижнього краю листа (там не будуть розміщуватись макети при розкладці)
+      "marginBottom": 0,
+      // Мінімальний дозволений відступ в мм між контурами (АЛЕ! 0 мм буде доступним автоматично для прямокутників без скругління)
+      "minSpaceBetween": 0,
+      // Максимальний дозволений відступ в мм між контурами
+      "maxSpaceBetween": 0,
+      // Колір ліній порізки, масив значень від 0 до 100 в палітрі [C,M,Y,K] або стандартний колір з палітри InDesign, напр. "Black", "None"
+      "contourColor": [0, 0, 0, 0],
+      // Додатковий вихід лінії за межі контуру в мм (для порізки встик, щоб плоттер дорізав лінію в кінці)
+      "contourOffset": 0.0,
+      // Формат файлу зі згенерованим контуром порізки (залежить від моделі плоттера)
+      // Доступні формати: "PDF", "AI" або "DXF"
+      "plotterCutFormat": "",      
+      // Якщо false - скрипт шукатиме файл з міткам порізки в параметрі "marksFile", якщо true - братиме дані з параметру "marksProperties"
+      "marksGenerate": false,
+      // Шлях до файлу з мітками порізки для цього формату та плоттеру (якщо "marksGenerate": false)
+      "marksFile": "//path/to/marks/marks.pdf",
+      // Масив налаштувань для кожної мітки (якщо "marksGenerate": true)
+      "marksProperties": [
+        {
+          // Розміщення мітки відносно робочої області (обмежена службовими відступами)
+          // Може бути одним із:
+          // "left-top", "left-middle", "left-bottom" (на лівій службовій зоні зверху, по центру або знизу)
+          // "right-top", "right-middle", "right-bottom" (на правій службовій зоні зверху, по центру або знизу)
+          // "top-left", "top-middle", "top-right" (на верхній службовій зоні зліва, по центру або справа)
+          // "bottom-left", "bottom-middle", "bottom-right" (на нижній службовій зоні зліва, по центру або справа)
+          "position": "",
+          // Форма мітки
+          // Може бути одним із:
+          // "oval" - овал/коло
+          // "rectangle" - прямокутник
+          // "line" - лінія
+          "shape": "",
+          // Товщина лінії обводки
+          "strokeWeight": 0,
+          // Колір лінії обводки по [C, M, Y, K] або стандартне значення, напр. "Black", "None"
+          "strokeColor": [],
+          // Колір заливки по [C, M, Y, K] або стандартне значення, напр. "Black", "None"
+          "fillColor": [],
+          // Ширина в мм
+          "width": 0,
+          // Висота в мм
+          "height": 0,
+          // Масив відступів в мм [зверху, справа, знизу, зліва]
+          "margins": [0, 0, 0, 0],
+          // Напрям лінії (лише для "shape": "line")
+          // Може бути:
+          // "vertical" - для вертикальної лінії (параметр "width" буде проігноровано)
+          // "horizontal" - для горизонтальної лінії (параметр "height" буде проігноровано)
+          // "top-bottom" - для діагональної лінії з лівого верхнього в правий нижній кут прямокутника з параметрами "width" та "height"
+          // "bottom-top" - для діагональної лінії з лівого нижнього в правий верхній кут прямокутника з параметрами "width" та "height"
+          "lineDirection": ""
+        }      
+      ]
+    }      
+  ]
 }
 ```
 

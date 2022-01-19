@@ -7,10 +7,14 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
 	var firstPage = myDocument.pages.firstItem();
 	
 	try {
+
+        // Обчислюємо координати міток
 		
 		for (var i = 0, props = myCurrentDoc.CutterType.marksProperties; i < props.length; i++) {
 			var side = props[i].position.split("-")[0] || null;
 			var alignment = props[i].position.split("-")[1] || null;
+            props[i].width = props[i].width || 0;
+            props[i].height = props[i].height || 0;
 			switch (side) {
 				case "left":
 					switch (alignment) {
@@ -135,7 +139,9 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
 				default:
 					throw("Помилка при створенні міток для порізки - невідомий параметр позиції для мітки №" + (i + 1) + ": " + pos);
 			}
-		};
+		}
+
+        // Розміщуємо мітки на листі
 		
 		for (var i = 0, props = myCurrentDoc.CutterType.marksProperties; i < props.length; i++) {
 			
@@ -145,27 +151,54 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
 				case "oval": 
 					firstPage.ovals.add(MarksLayer, LocationOptions.AT_END, {
 						'strokeWeight': props[i].strokeWeight,
-						'strokeColor': props[i].strokeColor,							
-						'fillColor': props[i].fillColor,						
+						'strokeColor': props[i].strokeColor,
+						'fillColor': props[i].fillColor,
 						'geometricBounds': marksCoordinates[i]
 					});	
 					break;
 				case "rectangle": 
 					firstPage.rectangles.add(MarksLayer, LocationOptions.AT_END, {
 						'strokeWeight': props[i].strokeWeight,
-						'strokeColor': props[i].strokeColor,							
-						'fillColor': props[i].fillColor,						
+						'strokeColor': props[i].strokeColor,
+						'fillColor': props[i].fillColor,
 						'geometricBounds': marksCoordinates[i]
 					});	
 					break;
+				case "line": 
+
+                    switch (props[i].lineDirection) {
+                        case "vertical":
+                        case "horizontal":
+                        case "top-bottom":
+                            break;
+                        case "bottom-top":
+                            var newMarksCoordinates = [
+                                marksCoordinates[i][2],
+                                marksCoordinates[i][1],
+                                marksCoordinates[i][0],
+                                marksCoordinates[i][3]
+                            ];
+                            marksCoordinates[i] = newMarksCoordinates;
+                            break;
+                        default:
+                            throw("Помилка при створенні міток для порізки - невідомий напрямок мітки №" + (i + 1) + ": " + props[i].lineDirection);
+                    }
+
+					firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, {
+						'strokeWeight': props[i].strokeWeight,
+						'strokeColor': props[i].strokeColor,
+						'fillColor': props[i].fillColor,
+						'geometricBounds': marksCoordinates[i]
+					});	
+					break;                    
 				default:
 					throw("Помилка при створенні міток для порізки - невідома форма мітки №" + (i + 1) + ": " + markShape);
 			}
-			
-		};
+
+		}
 		
 	} catch (err) {
 		alert(err);
 		exit();
-	};
+	}
 }

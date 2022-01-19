@@ -315,8 +315,7 @@
 					"fillColor": "Black",
 					"width": 6,
 					"height": 6,
-					"margins": [5.5, 5.5, 5.5, 5.5],
-					"paddings": [0, 0, 0, 0]					
+					"margins": [5.5, 5.5, 5.5, 5.5]				
 				},
 				{
 					"position": "right-bottom",

@@ -4,6 +4,7 @@
   "description": "Script for imposign designs for plotter cutting",
   "main": "Rozkladka na plotter.jsx",
   "scripts": {
+    "dist": "compile-jsbin.bat"
   },
   "author": "Sergii Nosachenko",
   "license": "ISC"

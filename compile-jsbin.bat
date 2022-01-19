@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Adobe\Adobe ExtendScript Toolkit CC\ExtendScript Toolkit.exe" -cmd "tools\jsx2jsxbin.jsx"

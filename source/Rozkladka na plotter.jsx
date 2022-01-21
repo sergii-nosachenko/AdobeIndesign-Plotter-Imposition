@@ -471,7 +471,7 @@ function DialogWindow() {
 		isOk.files = false;	
 		steps = 0;		
 		
-		var askIt = "Обери один або декілька PDF або PDF-сумісних AI файлів";
+		var askIt = "Обери один або декілька PDF, AI або TIF файлів";
 		theFiles = File.openDialog(askIt, "*.pdf;*.ai;*.tif", true);
 
 		if (theFiles != null) {

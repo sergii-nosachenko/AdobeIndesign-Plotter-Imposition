@@ -1,8 +1,8 @@
-﻿const version = "2.4.0";
+﻿const version = "2.5.0";
 
 // Debug level
 // Comment next line for production!
-// $.level = 1;
+// $.level = 2;
 
 //@include "helpers/JSON.jsx"
 //@include "helpers/Array.indexOf.polyfill.jsx"
@@ -1327,7 +1327,7 @@ function PlacePDF(){
 	};
 
 	var badFiles;
-	
+
 	switch (myCustomDoc.Figure) {
 		case "Кола":
 			if (myCustomDoc.Diameter || myCustomDoc.IsGetSizeFromFilename) {
@@ -1340,7 +1340,7 @@ function PlacePDF(){
 					for (var i = 0; i < okFiles.length; i++) {
 						var theFile = okFiles[i].theFile;				
 						var fileName = File.decode(theFile.name).split('.').slice(0, -1).join('.');
-						var diameterMatch = fileName.match(/(_d=)(\d+(,\d+)?)/i);
+						var diameterMatch = fileName.match(/(_d=|^d=)(\d+(,\d+)?)/i);
 						var diameter = diameterMatch ? +diameterMatch[2] : 0;
 						var files = okFilesDiameters[diameter] || [];
 						files.push(okFiles[i]);
@@ -1456,7 +1456,7 @@ function PlacePDF(){
 			for (var i = 0; i < okFiles.length; i++) {
 				var theFile = okFiles[i].theFile;				
 				var fileName = File.decode(theFile.name).split('.').slice(0, -1).join('.');
-				var diameterMatch = fileName.match(/(_d=)(\d+(,\d+)?)/i);
+				var diameterMatch = fileName.match(/(_d=|^d=)(\d+(,\d+)?)/i);
 				var diameter = diameterMatch ? +diameterMatch[2] : 0;
 				var files = okFilesDiameters[diameter] || [];
 				files.push(okFiles[i]);
@@ -1543,8 +1543,10 @@ function PlacePDF(){
 	}
 	
 	function ProcessCircles(okFilesCurrent, totalFilesLength, customSpaceBetween) {
+
+		myLayer = myDocument.layers.itemByName(PRINTLayer);
 		
-		if (myLayer.allPageItems.length == 0) {
+		if (!myCurrentDoc.Params && myLayer.allPageItems.length == 0) {
 			alert("В документі відсутні лінки, до яких можна приєднати сторінки PDF!");
 			exit();
 		} else {
@@ -1555,7 +1557,7 @@ function PlacePDF(){
 			switch (myImposingMethod) {
 				case 0: // Кожен вид на окремий лист
 					
-					var itemsCopies = myCurrentDoc.Params.total ? myCurrentDoc.Params.total : 0;
+					var itemsCopies = myCurrentDoc.Params.total || 0;
 					
 					if (!itemsCopies) {
 						for (var e = 0; e < myDocument.allPageItems.length; e++) {
@@ -1571,11 +1573,13 @@ function PlacePDF(){
 					progress(totalPages * itemsCopies, "Триває розкладка кружечків " + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? myCurrentDoc.Diameter + " мм" : ""));
 					
 					for (var i = 0; i < okFilesCurrent.length; i++, fileCounter++) {
-						var docPagesCount = myDocument.pages.count();						
+
+						var docPagesCount = myDocument.pages.count();
+												
 						progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength);
 						var theFile = File(okFilesCurrent[i].theFile);
 						var fileName = File.decode(okFilesCurrent[i].theFile.name).split('.').slice(0, -1).join('.');					
-						fileName = fileName.replace(/(_?d=)(\d+(,\d+)?) ?(мм|mm)?/i, '');
+						fileName = fileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '');
 						if (myFileName.match(PaperNames)) {
 							myFileName = myFileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
 						} else {
@@ -1584,15 +1588,16 @@ function PlacePDF(){
 								myFileName = myFileName.replace(fileNumber, fileNumber + '_' + myCurrentDoc.CutterType.paperName);
 							} else {
 								myFileName = myCurrentDoc.CutterType.paperName + '_' + myFileName;
-							}						
-						}						
-						var pgCount = okFilesCurrent[i].pgCount;
-						
+							}
+						}
+						var pgCount = okFilesCurrent[i].pgCount;						
 						
 						// Прибираємо всі сторінки, окрім першої
 						if (docPagesCount != 1) {
 							myDocument.pages.itemByRange(myDocument.pages.item(1), myDocument.pages.lastItem()).remove();
 						}
+
+						myLayer.pageItems.everyItem().remove();
 						
 						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++) {
 							
@@ -1601,48 +1606,67 @@ function PlacePDF(){
 
 							// Додаємо сторінку, якщо вибрано опцію "Зберегти багатосторінковий файл"
 							if (currentPage > 1 && SaveMultipageFilesAsOneFile) {
-								progress.details("Додаю сторінку...", false);	
-								myDocument.pages.lastItem().duplicate(LocationOptions.AT_END);
-							}
-							
-							var hasLinks = (currentPage > 1) || (myDocument.links.count() - (myCurrentDoc.CutterType.marksGenerate ? 0 : 1) == itemsCopies);										
-							
-							for (var b = 0, current = -1, allItems = myDocument.pages.lastItem().allPageItems; b < allItems.length; b++) {									
-								
-								if (allItems[b].isValid && allItems[b].itemLayer == myLayer) {
-									
-									if (hasLinks && allItems[b] instanceof Graphic) {
-										// Якщо на сторінці присутні лінки або це вже 2 сторінка (вона 100% буде з лінками) - перелінковуємо
-										countDone++;
-                                        current++;
-										progress.details("Елемент " + countDone + "/" + total, true);	
-										
-										allItems[b].relink(theFile);
-
-										progress.increment();
-										
-									} else if (allItems[b] instanceof Oval) {
-										// Якщо на сторінці немає лінків - розміщуємо їх
-										countDone++;
-										current++;                                        
-										progress.details("Елемент " + countDone + "/" + total, true);
-										
-										allItems[b].place(theFile)[0];
-										allItems[b].fit(FitOptions.CONTENT_TO_FRAME);
-										
-										progress.increment();
-										
+								progress.details("Додаю сторінку...", false);
+								myDocument.pages.add(LocationOptions.AT_END);
+								myDocument.pages.lastItem().marginPreferences.properties = {
+									'top': myCurrentDoc.CutterType.marginTop,
+									'bottom': myCurrentDoc.CutterType.marginBottom,
+									'left': myCurrentDoc.CutterType.marginLeft,
+									'right': myCurrentDoc.CutterType.marginRight	
+								};
+								for (var pi = 0, pageItems = myDocument.layers.itemByName(PLOTTERLayer).allPageItems; pi < pageItems.length; pi++) {
+									if (pageItems[pi].isValid && pageItems[pi].parentPage == myDocument.pages.firstItem()) {
+										pageItems[pi].duplicate(myDocument.pages.lastItem());
 									}
+								};
+							}
 
-									if (current == itemsCopies - 1) break;
-									
-								}										
+							app.activeWindow.activePage = myDocument.pages.lastItem();
+
+							var origin;
+
+							for (var b = 0; b < itemsCopies; b++) {
+
+								countDone++;
+
+								progress.details("Елемент " + countDone + "/" + total, true);
+
+								if (b == 0) {
+
+									// Перший елемент - плейсхолдер
+									origin = myDocument.pages.lastItem().ovals.add(myLayer, LocationOptions.AT_END, {
+										'contentType': ContentType.GRAPHIC_TYPE,			
+										'strokeWeight': 0,
+										'strokeColor': 'None',
+										'frameFittingOptions': {
+											'properties': {
+												'fittingAlignment': AnchorPoint.CENTER_ANCHOR,
+												'fittingOnEmptyFrame': EmptyFrameFittingOptions.CONTENT_TO_FRAME
+											}
+										},			
+										'geometricBounds': [
+											myCurrentDoc.Params.GeometricBounds[b][0],
+											myCurrentDoc.Params.GeometricBounds[b][1],
+											myCurrentDoc.Params.GeometricBounds[b][2],
+											myCurrentDoc.Params.GeometricBounds[b][3]
+										]
+									});									
+									origin.place(theFile)[0];
+									origin.fit(FitOptions.CONTENT_TO_FRAME);
+								} else {
+									origin.duplicate([
+										myCurrentDoc.Params.GeometricBounds[b][1], // x
+										myCurrentDoc.Params.GeometricBounds[b][0]  // y
+									]) 
+								}
+
+								progress.increment();
 							}
 							
 							// Якщо не вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо лише поточну сторінку
 							if (!SaveMultipageFilesAsOneFile) {
 								progress.details("Експортую PDF...", false);								
-								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_#' + currentPage : "") + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? "_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
+								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? "_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 								addDocTitle(outputFile);
 								myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset);
 							}
@@ -1784,78 +1808,85 @@ function PlacePDF(){
 			
 			progress(itemsCount, "Триває розкладка кружечків " + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? myCurrentDoc.Diameter + " мм" : ""));
 			
-			for (var i = 0, current = -1, itemIndex = 0, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
+			for (var i = 0, itemIndex = 0, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
 				// Parse the PDF file and extract needed info
 				var theFile = File(okFilesCurrent[i].theFile);
 				var pgCount = okFilesCurrent[i].pgCount;
+
+				var origin;				
 				
 				for (var page = 1; page <= pgCount; page++, itemIndex++) {
 					
 					progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + page + " з " + pgCount + ")");
 					
-					for (var j = 1; j <= itemsCopies[itemIndex]; j++) {
-						
-						var hasLinks = (currentPage > 1) || (myDocument.links.count() - (myCurrentDoc.CutterType.marksGenerate ? 0 : 1) == (itemsCount / pagesCount));						
-						
-						for (var b = lastItem + 1, allItems = myDocument.pages.lastItem().allPageItems; b < allItems.length; b++) {
+					for (var j = 1, b = lastItem + 1; j <= itemsCopies[itemIndex]; j++, b++) {
 
-                            lastItem = b;
-							
-							if (allItems[b].isValid && allItems[b].itemLayer == myLayer) {
-                                
-                                var isValid = false;
-								
-								if (hasLinks && allItems[b] instanceof Graphic) {
-                                        
-									// Якщо на сторінці присутні лінки або це вже 2 сторінка (вона 100% буде з лінками) - перелінковуємо
-									countDone++;
-									current++;                                    
-									progress.details("Елемент " + countDone + "/" + itemsCount, true);	
-									
-                                    app.pdfPlacePreferences.pageNumber = page;
-									allItems[b].relink(theFile);
-								
-									progress.increment();
-                                    
-                                    isValid = true;
-									
-								} else if (allItems[b] instanceof Oval) {
-									// Якщо на сторінці немає лінків - розміщуємо їх
-                                    
-									countDone++;
-									current++;                                    
-									progress.details("Елемент " + countDone + "/" + itemsCount, true);
-									
-                                    app.pdfPlacePreferences.pageNumber = page;
-									allItems[b].place(theFile)[0];                                    
-									allItems[b].fit(FitOptions.CONTENT_TO_FRAME);
-									
-									progress.increment();
-                                    
-                                    isValid = true;
-									
-								}
+						lastItem = b;
 
-								if ((current == (itemsCount / pagesCount) - 1) && (currentPage != pagesCount)) {
-									// Додаємо сторінку
-									progress.details("Додаю сторінку...", false);
-									currentPage++;
-                                    current = -1;
-									lastItem = -1;
-									myDocument.pages.lastItem().duplicate(LocationOptions.AT_END);
-									bleedsCompensated = true;
-								}
-								
-								if (isValid) break;
-								
-							}										
+						countDone++;
+
+						progress.details("Елемент " + countDone + "/" + itemsCount, true);
+
+						if (b == 0 || j == 1) {
+
+							// Базовий елемент
+							origin = myDocument.pages.lastItem().ovals.add(myLayer, LocationOptions.AT_END, {
+								'contentType': ContentType.GRAPHIC_TYPE,			
+								'strokeWeight': 0,
+								'strokeColor': 'None',
+								'frameFittingOptions': {
+									'properties': {
+										'fittingAlignment': AnchorPoint.CENTER_ANCHOR,
+										'fittingOnEmptyFrame': EmptyFrameFittingOptions.CONTENT_TO_FRAME
+									}
+								},			
+								'geometricBounds': [
+									myCurrentDoc.Params.GeometricBounds[b][0],
+									myCurrentDoc.Params.GeometricBounds[b][1],
+									myCurrentDoc.Params.GeometricBounds[b][2],
+									myCurrentDoc.Params.GeometricBounds[b][3]
+								]
+							});
+							app.pdfPlacePreferences.pageNumber = page;
+							origin.place(theFile)[0];
+							origin.fit(FitOptions.CONTENT_TO_FRAME);
+						} else {
+							origin.duplicate([
+								myCurrentDoc.Params.GeometricBounds[b][1], // x
+								myCurrentDoc.Params.GeometricBounds[b][0]  // y
+							]) 
 						}
-					}							
+
+						progress.increment();
+
+						if ((b == (itemsCount / pagesCount) - 1) && (currentPage != pagesCount)) {
+							// Додаємо сторінку
+							progress.details("Додаю сторінку...", false);
+							currentPage++;
+							lastItem = -1;
+							b = -1;
+
+							myDocument.pages.add(LocationOptions.AT_END);
+							myDocument.pages.lastItem().marginPreferences.properties = {
+								'top': myCurrentDoc.CutterType.marginTop,
+								'bottom': myCurrentDoc.CutterType.marginBottom,
+								'left': myCurrentDoc.CutterType.marginLeft,
+								'right': myCurrentDoc.CutterType.marginRight	
+							};
+							for (var pi = 0, pageItems = myDocument.layers.itemByName(PLOTTERLayer).allPageItems; pi < pageItems.length; pi++) {
+								if (pageItems[pi].isValid && pageItems[pi].parentPage == myDocument.pages.firstItem()) {
+									pageItems[pi].duplicate(myDocument.pages.lastItem());
+								}
+							};
+
+							app.activeWindow.activePage = myDocument.pages.lastItem();
+						}
+					}
 				}
 			}
 			
 			progress.details("Експортую PDF...", false);			
-			var fileName = myFileName.replace(/(_?d=)(\d+(,\d+)?) ?(мм|mm)?/i, '');
+			var fileName = myFileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '');
 			if (fileName.match(PaperNames)) {
 				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
 			} else {
@@ -1878,15 +1909,6 @@ function PlacePDF(){
 		
 		app.waitForAllTasks();
 		
-		// var tasks = app.backgroundTasks;
-		// var tasksList = "";
-		// var thisTask = tasks.firstItem();
-		// while (thisTask.isValid) {
-			// tasksList = tasksList + thisTask.name + ": " + thisTask.status + " | ";
-			// thisTask = tasks.nextItem(thisTask);
-		// };
-		// if (tasksList != "") alert(tasksList);
-		
 		progress.close();	
 		myDocument.close(SaveOptions.NO);		
 	}
@@ -1897,17 +1919,18 @@ function PlacePDF(){
 		var IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;
 		var SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 
-		if (myLayer.allPageItems.length == 0) {
+		myLayer = myDocument.layers.itemByName(PRINTLayer);
+
+		if (!myCurrentDoc.Params && myLayer.allPageItems.length == 0) {
 			alert("В документі відсутні лінки, до яких можна приєднати сторінки PDF!");
 			exit();
 		} else {
-			app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
-			var bleedsCompensated = false;			
+			app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;		
 			
 			switch (myImposingMethod) {
 				case 0: // Кожен вид на окремий лист
 				
-					var itemsCopies = myCurrentDoc.Params.total ? myCurrentDoc.Params.total : 0;
+					var itemsCopies = myCurrentDoc.Params.total || 0;
 					
 					if (!itemsCopies) {
 						for (var e = 0; e < myDocument.allPageItems.length; e++) {
@@ -1923,7 +1946,9 @@ function PlacePDF(){
 					progress(totalPages * itemsCopies, "Триває розкладка прямокутників " + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + " мм" : "") + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
 								
 					for (var i = 0; i < okFilesCurrent.length; i++, fileCounter++) {
-						var docPagesCount = myDocument.pages.count();						
+
+						var docPagesCount = myDocument.pages.count();	
+
 						progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength);
 						var theFile = File(okFilesCurrent[i].theFile);
 						var fileName = File.decode(okFilesCurrent[i].theFile.name).split('.').slice(0, -1).join('.');	
@@ -1944,6 +1969,8 @@ function PlacePDF(){
 						if (docPagesCount != 1) {
 							myDocument.pages.itemByRange(myDocument.pages.item(1), myDocument.pages.lastItem()).remove();
 						}
+
+						myLayer.pageItems.everyItem().remove();
 						
 						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++) {
 							
@@ -1953,70 +1980,117 @@ function PlacePDF(){
 							// Додаємо сторінку, якщо вибрано опцію "Зберегти багатосторінковий файл"
 							if (currentPage > 1 && SaveMultipageFilesAsOneFile) {
 								progress.details("Додаю сторінку...", false);	
-								myDocument.pages.lastItem().duplicate(LocationOptions.AT_END);
+								myDocument.pages.add(LocationOptions.AT_END);
+								myDocument.pages.lastItem().marginPreferences.properties = {
+									'top': myCurrentDoc.CutterType.marginTop,
+									'bottom': myCurrentDoc.CutterType.marginBottom,
+									'left': myCurrentDoc.CutterType.marginLeft,
+									'right': myCurrentDoc.CutterType.marginRight	
+								};
+								for (var pi = 0, pageItems = myDocument.layers.itemByName(PLOTTERLayer).allPageItems; pi < pageItems.length; pi++) {
+									if (pageItems[pi].isValid && pageItems[pi].parentPage == myDocument.pages.firstItem()) {
+										pageItems[pi].duplicate(myDocument.pages.lastItem());
+									}
+								};
 							}
 							
-							var hasLinks = (currentPage > 1) || (myDocument.links.count() - (myCurrentDoc.CutterType.marksGenerate ? 0 : 1) == itemsCopies);										
-							
-							for (var b = 0, current = -1, allItems = myDocument.pages.lastItem().allPageItems; b < allItems.length; b++) {									
-								
-								if (allItems[b].isValid && allItems[b].itemLayer == myLayer) {
-									
-									if (hasLinks && allItems[b] instanceof Graphic) {
-										// Якщо на сторінці присутні лінки або це вже 2 сторінка (вона 100% буде з лінками) - перелінковуємо
-										countDone++;
-                                        current++;
-										progress.details("Елемент " + countDone + "/" + total, true);	
-										
-										allItems[b].relink(theFile);
+							app.activeWindow.activePage = myDocument.pages.lastItem();
 
-										progress.increment();
-										
-									} else if (allItems[b] instanceof Rectangle) {
-										// Якщо на сторінці немає лінків - розміщуємо їх
-										countDone++;
-										current++;                                        
-										progress.details("Елемент " + countDone + "/" + total, true);
-										
-										allItems[b].place(theFile)[0];
-										if (!bleedsCompensated || SpaceBetween > 0) allItems[b].fit(FitOptions.CONTENT_TO_FRAME);
-										
-										// Компенсація повороту макета
-										if (myCurrentDoc.Params.rotationCompensation) {
-											var index = current < myCurrentDoc.Params.rotationCompensation.length ? current : (current - myCurrentDoc.Params.rotationCompensation.length * Math.floor(current / myCurrentDoc.Params.rotationCompensation.length));
-											if (myCurrentDoc.Params.rotationCompensation[index] != 0) {
-												allItems[b].graphics.everyItem().rotationAngle = myCurrentDoc.Params.rotationCompensation[index];
-												allItems[b].fit(FitOptions.CONTENT_TO_FRAME);
+							var origin;
+							var newbie;
+							var last;
+
+							var refPoint = app.activeDocument.layoutWindows[0].transformReferencePoint;
+							
+							app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;								
+
+							for (var b = 0; b < itemsCopies; b++) {
+
+								countDone++;
+
+								progress.details("Елемент " + countDone + "/" + total, true);
+
+								if (b == 0 || myCurrentDoc.Params.rotationCompensation[b - 1] != myCurrentDoc.Params.rotationCompensation[b]) {
+									// Базовий елемент
+
+									var RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
+									var IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;							
+
+									var rectProperties = {
+										'contentType': ContentType.GRAPHIC_TYPE,			
+										'strokeWeight': 0,
+										'strokeColor': 'None',
+										'frameFittingOptions': {
+											'properties': {
+												'fittingAlignment': AnchorPoint.CENTER_ANCHOR,
+												'fittingOnEmptyFrame': EmptyFrameFittingOptions.CONTENT_TO_FRAME
 											}
-										}										
-										
-										// Компенсація накладання при роздвижці 0
-										if (SpaceBetween == 0 && myCurrentDoc.Params.bleedCompensation && !bleedsCompensated) {
-											var index = current < myCurrentDoc.Params.bleedCompensation.length ? current : (current - myCurrentDoc.Params.bleedCompensation.length * Math.floor(current / myCurrentDoc.Params.bleedCompensation.length));
-											var curBounds = allItems[b].geometricBounds;
-											allItems[b].geometricBounds = [
-												curBounds[0] + myCurrentDoc.Params.bleedCompensation[index][0],
-												curBounds[1] + myCurrentDoc.Params.bleedCompensation[index][1],
-												curBounds[2] + myCurrentDoc.Params.bleedCompensation[index][2],
-												curBounds[3] + myCurrentDoc.Params.bleedCompensation[index][3]
-											];
-										}
-										
-										progress.increment();
-										
+										},
+										'geometricBounds': [
+											myCurrentDoc.Params.GeometricBounds[b][0],
+											myCurrentDoc.Params.GeometricBounds[b][1],
+											myCurrentDoc.Params.GeometricBounds[b][2],
+											myCurrentDoc.Params.GeometricBounds[b][3]
+										]
 									}
 
-									if (current == itemsCopies - 1) break;
-									
-								}										
+									if (IsRoundedCorners) {
+										rectProperties['bottomLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
+										rectProperties['bottomLeftCornerRadius'] = RoundCornersValue || 0;
+										rectProperties['bottomRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
+										rectProperties['bottomRightCornerRadius'] = RoundCornersValue || 0;
+										rectProperties['topLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
+										rectProperties['topLeftCornerRadius'] = RoundCornersValue || 0;
+										rectProperties['topRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
+										rectProperties['topRightCornerRadius'] = RoundCornersValue || 0;
+									}
+
+									origin = newbie = myDocument.pages.lastItem().rectangles.add(myLayer, LocationOptions.AT_END, rectProperties);									
+									origin.place(theFile)[0];
+									// Компенсація повороту макета
+									origin.graphics.everyItem().rotationAngle = myCurrentDoc.Params.rotationCompensation[b];
+									origin.fit(FitOptions.CONTENT_TO_FRAME);									
+								} else {
+									// Створємо дублікат оригінального елементу в нові координати
+									newbie = last.duplicate([
+										myCurrentDoc.Params.GeometricBounds[b][1], // x
+										myCurrentDoc.Params.GeometricBounds[b][0]  // y
+									]);
+								}
+
+								// Компенсація накладання при роздвижці 0 (застосовується до попереднього)
+								if (SpaceBetween == 0) {
+									var curBounds;
+									if (b != 0 && last) {
+										curBounds = last.geometricBounds;
+										last.geometricBounds = [
+											curBounds[0] + myCurrentDoc.Params.bleedCompensation[b - 1][0],
+											curBounds[1] + myCurrentDoc.Params.bleedCompensation[b - 1][1],
+											curBounds[2] + myCurrentDoc.Params.bleedCompensation[b - 1][2],
+											curBounds[3] + myCurrentDoc.Params.bleedCompensation[b - 1][3]
+										];
+									} else if (b == itemsCopies - 1) {
+										curBounds = newbie.geometricBounds;
+										newbie.geometricBounds = [
+											curBounds[0] + myCurrentDoc.Params.bleedCompensation[b][0],
+											curBounds[1] + myCurrentDoc.Params.bleedCompensation[b][1],
+											curBounds[2] + myCurrentDoc.Params.bleedCompensation[b][2],
+											curBounds[3] + myCurrentDoc.Params.bleedCompensation[b][3]
+										];
+									}									
+								}
+
+								last = newbie;				
+
+								progress.increment();
 							}
-							
-							bleedsCompensated = true;
+
+							app.activeDocument.layoutWindows[0].transformReferencePoint = refPoint;
 							
 							// Якщо не вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо лише поточну сторінку
 							if (!SaveMultipageFilesAsOneFile) {
 								progress.details("Експортую PDF...", false);								
-								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_#' + currentPage : "") + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
+								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 								addDocTitle(outputFile);
 								myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset);
 							}
@@ -2162,97 +2236,134 @@ function PlacePDF(){
 			
 			progress(itemsCount, "Триває розкладка прямокутників " + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + " мм" : "") + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
 
-			for (var i = 0, current = -1, itemIndex = 0, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
+			var origin;
+			var newbie;
+			var last;
+
+			var refPoint = app.activeDocument.layoutWindows[0].transformReferencePoint;
+			
+			app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;			
+
+			for (var i = 0, current = 0, itemIndex = 0, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
 				// Parse the PDF file and extract needed info
 				var theFile = File(okFilesCurrent[i].theFile);
 				var pgCount = okFilesCurrent[i].pgCount;
 				
 				for (var page = 1; page <= pgCount; page++, itemIndex++) {
 					
-					progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + page + " з " + pgCount + ")");
-					
-					for (var j = 1; j <= itemsCopies[itemIndex]; j++) {
+					progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + page + " з " + pgCount + ")");					
 						
-						var hasLinks = (currentPage > 1) || (myDocument.links.count() - (myCurrentDoc.CutterType.marksGenerate ? 0 : 1) == (itemsCount / pagesCount));						
-						
-						for (var b = lastItem + 1, allItems = myDocument.pages.lastItem().allPageItems; b < allItems.length; b++) {
+					for (var j = 1, b = lastItem + 1; j <= itemsCopies[itemIndex]; j++, b++) {
 
-                            lastItem = b;
-							
-							if (allItems[b].isValid && allItems[b].itemLayer == myLayer) {
-                                
-                                var isValid = false;
-								
-								if (hasLinks && allItems[b] instanceof Graphic) {
-                                        
-									// Якщо на сторінці присутні лінки або це вже 2 сторінка (вона 100% буде з лінками) - перелінковуємо
-									countDone++;
-									current++;                                    
-									progress.details("Елемент " + countDone + "/" + itemsCount, true);	
-									
-                                    app.pdfPlacePreferences.pageNumber = page;
-									allItems[b].relink(theFile);
-								
-									progress.increment();
-                                    
-                                    isValid = true;
-									
-								} else if (allItems[b] instanceof Rectangle) {
-									// Якщо на сторінці немає лінків - розміщуємо їх
-                                    
-									countDone++;
-									current++;                                    
-									progress.details("Елемент " + countDone + "/" + itemsCount, true);
-									
-                                    app.pdfPlacePreferences.pageNumber = page;
-									allItems[b].place(theFile)[0];
-                                    
-									if (!bleedsCompensated || SpaceBetween > 0) allItems[b].fit(FitOptions.CONTENT_TO_FRAME);
-									
-									// Компенсація повороту макета
-									if (myCurrentDoc.Params.rotationCompensation) {
-										var index = current < myCurrentDoc.Params.rotationCompensation.length ? current : (current - myCurrentDoc.Params.rotationCompensation.length * Math.floor(current / myCurrentDoc.Params.rotationCompensation.length));
-										if (myCurrentDoc.Params.rotationCompensation[index] != 0) {
-											allItems[b].graphics.everyItem().rotationAngle = myCurrentDoc.Params.rotationCompensation[index];
-											allItems[b].fit(FitOptions.CONTENT_TO_FRAME);
-										}
-									}										
-									
-									// Компенсація накладання при роздвижці 0
-									if (SpaceBetween == 0 && myCurrentDoc.Params.bleedCompensation && !bleedsCompensated) {
-										var index = current < myCurrentDoc.Params.bleedCompensation.length ? current : (current - myCurrentDoc.Params.bleedCompensation.length * Math.floor(current / myCurrentDoc.Params.bleedCompensation.length));
-										var curBounds = allItems[b].geometricBounds;
-										allItems[b].geometricBounds = [
-											curBounds[0] + myCurrentDoc.Params.bleedCompensation[index][0],
-											curBounds[1] + myCurrentDoc.Params.bleedCompensation[index][1],
-											curBounds[2] + myCurrentDoc.Params.bleedCompensation[index][2],
-											curBounds[3] + myCurrentDoc.Params.bleedCompensation[index][3]
-										];
+						lastItem = b;
+
+						countDone++;
+
+						progress.details("Елемент " + countDone + "/" + itemsCount, true);
+
+						if (b == 0 || j == 1 || myCurrentDoc.Params.rotationCompensation[b - 1] != myCurrentDoc.Params.rotationCompensation[b]) {
+							// Базовий елемент
+							var RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
+							var IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;							
+
+							var rectProperties = {
+								'contentType': ContentType.GRAPHIC_TYPE,			
+								'strokeWeight': 0,
+								'strokeColor': 'None',
+								'frameFittingOptions': {
+									'properties': {
+										'fittingAlignment': AnchorPoint.CENTER_ANCHOR,
+										'fittingOnEmptyFrame': EmptyFrameFittingOptions.CONTENT_TO_FRAME
 									}
-									
-									progress.increment();
-                                    
-                                    isValid = true;
-									
-								}
+								},
+								'geometricBounds': [
+									myCurrentDoc.Params.GeometricBounds[b][0],
+									myCurrentDoc.Params.GeometricBounds[b][1],
+									myCurrentDoc.Params.GeometricBounds[b][2],
+									myCurrentDoc.Params.GeometricBounds[b][3]
+								]
+							}
 
-								if ((current == (itemsCount / pagesCount) - 1) && (currentPage != pagesCount)) {
-									// Додаємо сторінку
-									progress.details("Додаю сторінку...", false);
-									currentPage++;
-                                    current = -1;
-									lastItem = -1;
-									myDocument.pages.lastItem().duplicate(LocationOptions.AT_END);
-									bleedsCompensated = true;
-								}
-								
-								if (isValid) break;
-								
-							}										
+							if (IsRoundedCorners) {
+								rectProperties['bottomLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
+								rectProperties['bottomLeftCornerRadius'] = RoundCornersValue || 0;
+								rectProperties['bottomRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
+								rectProperties['bottomRightCornerRadius'] = RoundCornersValue || 0;
+								rectProperties['topLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
+								rectProperties['topLeftCornerRadius'] = RoundCornersValue || 0;
+								rectProperties['topRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
+								rectProperties['topRightCornerRadius'] = RoundCornersValue || 0;
+							}
+
+							origin = newbie = myDocument.pages.lastItem().rectangles.add(myLayer, LocationOptions.AT_END, rectProperties);
+							app.pdfPlacePreferences.pageNumber = page;
+							origin.place(theFile)[0];
+							// Компенсація повороту макета
+							origin.graphics.everyItem().rotationAngle = myCurrentDoc.Params.rotationCompensation[b];
+							origin.fit(FitOptions.CONTENT_TO_FRAME);									
+						} else {
+							// Створємо дублікат оригінального елементу в нові координати
+							newbie = last.duplicate([
+								myCurrentDoc.Params.GeometricBounds[b][1], // x
+								myCurrentDoc.Params.GeometricBounds[b][0]  // y
+							]);
 						}
-					}							
+
+						// Компенсація накладання при роздвижці 0 (застосовується до попереднього)
+						if (SpaceBetween == 0) {
+							var curBounds;
+							if (b != 0 && last) {
+								curBounds = last.geometricBounds;
+								last.geometricBounds = [
+									curBounds[0] + myCurrentDoc.Params.bleedCompensation[b - 1][0],
+									curBounds[1] + myCurrentDoc.Params.bleedCompensation[b - 1][1],
+									curBounds[2] + myCurrentDoc.Params.bleedCompensation[b - 1][2],
+									curBounds[3] + myCurrentDoc.Params.bleedCompensation[b - 1][3]
+								];
+							} else if (b == (itemsCount / pagesCount) - 1) {
+								curBounds = newbie.geometricBounds;
+								newbie.geometricBounds = [
+									curBounds[0] + myCurrentDoc.Params.bleedCompensation[b][0],
+									curBounds[1] + myCurrentDoc.Params.bleedCompensation[b][1],
+									curBounds[2] + myCurrentDoc.Params.bleedCompensation[b][2],
+									curBounds[3] + myCurrentDoc.Params.bleedCompensation[b][3]
+								];
+							}									
+						}
+
+						last = newbie;				
+
+						progress.increment();
+
+						if ((b == (itemsCount / pagesCount) - 1) && (currentPage != pagesCount)) {
+							// Додаємо сторінку
+							progress.details("Додаю сторінку...", false);
+							currentPage++;
+							lastItem = -1;
+							b = -1;
+
+							myDocument.pages.add(LocationOptions.AT_END);
+							myDocument.pages.lastItem().marginPreferences.properties = {
+								'top': myCurrentDoc.CutterType.marginTop,
+								'bottom': myCurrentDoc.CutterType.marginBottom,
+								'left': myCurrentDoc.CutterType.marginLeft,
+								'right': myCurrentDoc.CutterType.marginRight	
+							};
+							for (var pi = 0, pageItems = myDocument.layers.itemByName(PLOTTERLayer).allPageItems; pi < pageItems.length; pi++) {
+								if (pageItems[pi].isValid && pageItems[pi].parentPage == myDocument.pages.firstItem()) {
+									pageItems[pi].duplicate(myDocument.pages.lastItem());
+								}
+							};
+
+							app.activeWindow.activePage = myDocument.pages.lastItem();
+						}						
+
+					}
+														
 				}
 			}
+
+			app.activeDocument.layoutWindows[0].transformReferencePoint = refPoint;
 
 			progress.details("Експортую PDF...", false);			
 			var fileName = myFileName.replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, '');
@@ -2278,15 +2389,6 @@ function PlacePDF(){
 		app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;	
 		
 		app.waitForAllTasks();
-		
-		// var tasks = app.backgroundTasks;
-		// var tasksList = "";
-		// var thisTask = tasks.firstItem();
-		// while (thisTask.isValid) {
-			// tasksList = tasksList + thisTask.name + ": " + thisTask.status + ", alerts: " + thisTask.alerts.toSource() + " | ";
-			// thisTask = tasks.nextItem(thisTask);
-		// };
-		// if (tasksList != "") alert(tasksList);
 		
 		progress.close();
 		myDocument.close(SaveOptions.NO);
@@ -2446,15 +2548,18 @@ function progress(steps, title) {
 
     };
 
-    progress.increment = function () {
+    progress.increment = function (val) {
 		
-		if (bar.value == 0) timer.startedAt = new Date();		
+		if (bar.value == 0) timer.startedAt = new Date();	
 		
-        bar.value++;
+        if (val && val > 0) 
+			bar.value += val
+		else
+			bar.value++;
 		
 		timer.totalSpent = new Date() - timer.startedAt;
 			
-		timer.timeLeft = (bar.maxvalue * timer.totalSpent) / bar.value - timer.totalSpent;			
+		timer.timeLeft = (bar.maxvalue * timer.totalSpent) / bar.value - timer.totalSpent;
 
     };
 
@@ -2469,24 +2574,24 @@ function progress(steps, title) {
 	
     progress.details = function (detailsText, showTimeleft) {
 		
-		if (bar.value == 0) timer.startedAt = new Date();
+		if (bar.value == 0) timer.startedAt = new Date();		
 		
 		if (!detailsText) detailsText = "";
 		
-		if (showTimeleft) detailsText = detailsText + progress.timeleft();		
+		if (showTimeleft) detailsText = detailsText + progress.timeLeftParser(timer.timeLeft);		
 		
 		details.text = detailsText;
 
     };
 	
-	progress.timeleft = function () {		
+	progress.timeLeftParser = function (timeLeft) {	
 		
-		if (!timer.timeLeft) return "";
+		if (!timeLeft) return "";
 		
-		var milliseconds = Math.floor((timer.timeLeft % 1000) / 100),
-			seconds = Math.floor((timer.timeLeft / 1000) % 60),
-			minutes = Math.floor((timer.timeLeft / (1000 * 60)) % 60),
-			hours = Math.floor((timer.timeLeft / (1000 * 60 * 60)) % 24);
+		var milliseconds = Math.floor((timeLeft % 1000) / 100),
+			seconds = Math.floor((timeLeft / 1000) % 60),
+			minutes = Math.floor((timeLeft / (1000 * 60)) % 60),
+			hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
 
 			hours = (hours < 10) ? "0" + hours : hours;
 			minutes = (minutes < 10) ? "0" + minutes : minutes;
@@ -2508,8 +2613,8 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	
 	const SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 	
-	progress(4, "Підготовка документа");
-	progress.message("Готую розкладку " + Params.Diameter + " мм");
+	progress(5 * Params.total, "Підготовка документа");
+	progress.message("Готую порізку " + Params.Diameter + " мм");
 	progress.details("Створюю новий документ...", false);
 	myDocument = app.documents.add();
 	myDocument.documentPreferences.properties = {
@@ -2534,15 +2639,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	myLayer = myDocument.layers.firstItem();
 	myLayer.name = PRINTLayer;
 	
-	var MarksLayer = myDocument.layers.add({
+	var PlotterLayer = myDocument.layers.add({
 		'name': PLOTTERLayer
 	});	
+
+	var CutLayer = myDocument.layers.add({
+		'name': CUTLayer
+	});		
 
 	if (myCurrentDoc.CutterType.marksGenerate == false) {
 		
 		progress.details("Імпортую мітки...", false);	
 
-		var MarksPlacement = firstPage.rectangles.add(MarksLayer, LocationOptions.AT_BEGINNING, {
+		var MarksPlacement = firstPage.rectangles.add(PlotterLayer, LocationOptions.AT_BEGINNING, {
 			'contentType': ContentType.GRAPHIC_TYPE,
 			'strokeWeight': 0,
 			'strokeColor': 'None',
@@ -2559,7 +2668,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		MarksPlacement.place(File(myCurrentDoc.CutterType.marksFile))[0];			
 		app.pdfPlacePreferences.transparentBackground = false;	
 
-		progress.increment();
+		progress.increment(Params.total);
 		
 	}	
 	
@@ -2568,6 +2677,46 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	var documentRotated = Params.widthSheet != myCurrentDoc.CutterType.widthSheet;
 	
 	var Bleeds = myCurrentDoc.IsZeroBleeds ? 0 : myCurrentDoc.CutterType.minSpaceBetween / 2;
+
+	// Координати фреймів для вставки макетів
+	myCurrentDoc.Params.GeometricBounds = [];
+
+	var contourColor = myDocument.colors.add({
+			"colorValue": myCurrentDoc.CutterType.contourColor,
+			"model": ColorModel.PROCESS,
+			"space": ColorSpace.CMYK,
+			"name": "CONTOUR"
+		});	
+
+	const AddOval = function(thisBounds) {
+
+		var ovalsProperties = {
+			'fillColor': 'None',							
+			'geometricBounds': thisBounds
+		};
+
+		if (myCurrentDoc.IsSaveFileWithCut) {
+			ovalsProperties['strokeWeight'] = 1;
+			ovalsProperties['strokeColor'] = contourColor;
+			ovalsProperties['strokeType'] = 'Solid';
+			ovalsProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;
+		} else {
+			ovalsProperties['strokeWeight'] = 0;
+			ovalsProperties['strokeColor'] = 'None';
+		}
+
+		firstPage.ovals.add(CutLayer, LocationOptions.AT_END, ovalsProperties);
+
+		// Координати фрейма для вставки макета
+		myCurrentDoc.Params.GeometricBounds.push([
+			thisBounds[0] - Bleeds,
+			thisBounds[1] - Bleeds,
+			thisBounds[2] + Bleeds,
+			thisBounds[3] + Bleeds
+		]);
+
+		progress.increment();
+	};
 
 	switch (Params.method) {
 		case 1:
@@ -2579,33 +2728,24 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 				if (i % 2 != 0) {
 					// Odd row
 					for (var j = Params.countXBig - 1; j >= 0; j--) {
-						firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-							'strokeColor': 'None',							
-							'fillColor': 'None',							
-							'geometricBounds': [
+						AddOval([
 								verticalOffset + Params.DistanceYCenters * i,
 								horizontalOffset + Params.DistanceXCenters * j,
 								verticalOffset + Params.DistanceYCenters * i + Params.Diameter,
 								horizontalOffset + Params.DistanceXCenters * j + Params.Diameter
-							]
-						});						
+							]);
 					}					
 				} else {
 					// Even row
 					for (var j = 0; j < Params.countXBig; j++) {
-						firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-							'strokeColor': 'None',							
-							'fillColor': 'None',	
-							'geometricBounds': [
+						AddOval([
 								verticalOffset + Params.DistanceYCenters * i,
 								horizontalOffset + Params.DistanceXCenters * j,
 								verticalOffset + Params.DistanceYCenters * i + Params.Diameter,
 								horizontalOffset + Params.DistanceXCenters * j + Params.Diameter
-							]
-						});						
+							]);											
 					}					
-				}
-
+				};
 			}				
 			break;
 		case 2:
@@ -2635,56 +2775,40 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 					// Small & odd row
 					if (i % 2 != 0 && countSmall < Params.countYSmall) {
 						for (var j = Params.countXSmall - 1; j >= 0; j--) {
-							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffset + Params.DistanceYCenters * i,
-										horizontalOffsetSmall + Params.DistanceXCenters * j,
-										verticalOffset + Params.DistanceYCenters * i + Params.Diameter,
-										horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
-									]
-								});									
+							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {							
+								AddOval([
+											verticalOffset + Params.DistanceYCenters * i,
+											horizontalOffsetSmall + Params.DistanceXCenters * j,
+											verticalOffset + Params.DistanceYCenters * i + Params.Diameter,
+											horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
+										]);								
 							} else {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
-										horizontalOffsetSmall + Params.DistanceXCenters * j,
-										verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter,
-										horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
-									]
-								});									
-							}					
+								AddOval([
+											verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
+											horizontalOffsetSmall + Params.DistanceXCenters * j,
+											verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter,
+											horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
+										]);									
+							}
 						}
 						countSmall++;					
 					} else {
 						// Big & even row
 						for (var j = 0; j < Params.countXBig; j++) {
 							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffset + Params.DistanceYCenters * i,
-										horizontalOffsetBig + Params.DistanceXCenters * j,
-										verticalOffset + Params.DistanceYCenters * i + Params.Diameter,
-										horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
-									]
-								});									
+								AddOval([
+											verticalOffset + Params.DistanceYCenters * i,
+											horizontalOffsetBig + Params.DistanceXCenters * j,
+											verticalOffset + Params.DistanceYCenters * i + Params.Diameter,
+											horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
+										]);														
 							} else {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffset + DistanceYCentersCurrent * countBig,
-										horizontalOffsetBig + Params.DistanceXCenters * j,
-										verticalOffset + DistanceYCentersCurrent * countBig + Params.Diameter,
-										horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
-									]
-								});									
+								AddOval([
+											verticalOffset + DistanceYCentersCurrent * countBig,
+											horizontalOffsetBig + Params.DistanceXCenters * j,
+											verticalOffset + DistanceYCentersCurrent * countBig + Params.Diameter,
+											horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
+										]);			
 							}					
 						}
 						countBig++;
@@ -2709,58 +2833,42 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 					if (i % 2 != 0 && countSmall < Params.countYSmall) {
 						for (var j = Params.countXSmall - 1; j >= 0 ; j--) {
 							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffsetSmall + Params.DistanceXCenters * j,
-										horizontalOffset + DistanceYCentersCurrent * i,
-										verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
-										horizontalOffset + DistanceYCentersCurrent * i + Params.Diameter
-									]
-								});									
+								AddOval([
+											verticalOffsetSmall + Params.DistanceXCenters * j,
+											horizontalOffset + DistanceYCentersCurrent * i,
+											verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
+											horizontalOffset + DistanceYCentersCurrent * i + Params.Diameter
+										]);									
 							} else {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffsetSmall + Params.DistanceXCenters * j,
-										horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
-										verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
-										horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter
-									]
-								});									
+								AddOval([
+											verticalOffsetSmall + Params.DistanceXCenters * j,
+											horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
+											verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
+											horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter
+										]);
 							}
 						}
-						countSmall++;					
+						countSmall++;
 					} else {
 						// Big row
 						for (var j = 0; j < Params.countXBig; j++) {
 							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-									verticalOffsetBig + Params.DistanceXCenters * j,
-									horizontalOffset + DistanceYCentersCurrent * i,
-									verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
-									horizontalOffset + DistanceYCentersCurrent * i + Params.Diameter
-									]
-								});									
+								AddOval([
+											verticalOffsetBig + Params.DistanceXCenters * j,
+											horizontalOffset + DistanceYCentersCurrent * i,
+											verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
+											horizontalOffset + DistanceYCentersCurrent * i + Params.Diameter
+										]);									
 							} else {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-									verticalOffsetBig + Params.DistanceXCenters * j,
-									horizontalOffset + DistanceYCentersCurrent * countBig,
-									verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
-									horizontalOffset + DistanceYCentersCurrent * countBig + Params.Diameter
-									]
-								});									
-							}					
+								AddOval([
+										verticalOffsetBig + Params.DistanceXCenters * j,
+										horizontalOffset + DistanceYCentersCurrent * countBig,
+										verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
+										horizontalOffset + DistanceYCentersCurrent * countBig + Params.Diameter
+									]);
+							}
 						}
-						countBig++;						
+						countBig++;
 					}
 				}
 			}	
@@ -2791,30 +2899,22 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 						if (i % 2 != 0) {
 							// Odd row
 							for (var j = Params.countXBig - 1; j >= 0; j--) {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffset + DistanceYCentersBigBig * i,
-										horizontalOffsetBig + Params.DistanceXCenters * j,
-										verticalOffset + DistanceYCentersBigBig * i + Params.Diameter,
-										horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
-									]
-								});						
+								AddOval([
+											verticalOffset + DistanceYCentersBigBig * i,
+											horizontalOffsetBig + Params.DistanceXCenters * j,
+											verticalOffset + DistanceYCentersBigBig * i + Params.Diameter,
+											horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
+										]);
 							}
 						} else {
 							// Even row
 							for (var j = 0; j < Params.countXBig; j++) {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffset + DistanceYCentersBigBig * i,
-										horizontalOffsetBig + Params.DistanceXCenters * j,
-										verticalOffset + DistanceYCentersBigBig * i + Params.Diameter,
-										horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
-									]
-								});						
+								AddOval([
+											verticalOffset + DistanceYCentersBigBig * i,
+											horizontalOffsetBig + Params.DistanceXCenters * j,
+											verticalOffset + DistanceYCentersBigBig * i + Params.Diameter,
+											horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
+										]);	
 							}
 							countBig++;
 						}
@@ -2829,27 +2929,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							if (isSmall) {
 								for (var j = Params.countXSmall - 1; j >= 0; j--) {
 									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffset + Params.DistanceYCenters * k,
-												horizontalOffsetSmall + Params.DistanceXCenters * j,
-												verticalOffset + Params.DistanceYCenters * k + Params.Diameter,
-												horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
-											]
-										});
+										AddOval([
+													verticalOffset + Params.DistanceYCenters * k,
+													horizontalOffsetSmall + Params.DistanceXCenters * j,
+													verticalOffset + Params.DistanceYCenters * k + Params.Diameter,
+													horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
+												]);	
 									} else {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
-												horizontalOffsetSmall + Params.DistanceXCenters * j,
-												verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter,
-												horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
-											]
-										});	
+										AddOval([
+													verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
+													horizontalOffsetSmall + Params.DistanceXCenters * j,
+													verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter,
+													horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
+												]);	
 									}										
 								}
 								countSmall++;
@@ -2858,27 +2950,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 								// Big row
 								for (var j = Params.countXBig - 1; j >= 0; j--) {
 									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffset + Params.DistanceYCenters * k,
-												horizontalOffsetBig + Params.DistanceXCenters * j,
-												verticalOffset + Params.DistanceYCenters * k + Params.Diameter,
-												horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
-											]
-										});
+										AddOval([
+													verticalOffset + Params.DistanceYCenters * k,
+													horizontalOffsetBig + Params.DistanceXCenters * j,
+													verticalOffset + Params.DistanceYCenters * k + Params.Diameter,
+													horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
+												]);	
 									} else {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffset + DistanceYCentersCurrent * countBig,
-												horizontalOffsetBig + Params.DistanceXCenters * j,
-												verticalOffset + DistanceYCentersCurrent * countBig + Params.Diameter,
-												horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
-											]
-										});	
+										AddOval([
+													verticalOffset + DistanceYCentersCurrent * countBig,
+													horizontalOffsetBig + Params.DistanceXCenters * j,
+													verticalOffset + DistanceYCentersCurrent * countBig + Params.Diameter,
+													horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
+												]);	
 									}
 								}
 								countBig++;
@@ -2890,27 +2974,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							if (isSmall) {
 								for (var j = 0; j < Params.countXSmall; j++) {
 									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {									
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffset + Params.DistanceYCenters * k,
-												horizontalOffsetSmall + Params.DistanceXCenters * j,
-												verticalOffset + Params.DistanceYCenters * k + Params.Diameter,
-												horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
-											]
-										});	
+										AddOval([
+													verticalOffset + Params.DistanceYCenters * k,
+													horizontalOffsetSmall + Params.DistanceXCenters * j,
+													verticalOffset + Params.DistanceYCenters * k + Params.Diameter,
+													horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
+												]);	
 									} else {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
-												horizontalOffsetSmall + Params.DistanceXCenters * j,
-												verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter,
-												horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
-											]
-										});	
+										AddOval([
+													verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
+													horizontalOffsetSmall + Params.DistanceXCenters * j,
+													verticalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter,
+													horizontalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter
+												]);	
 									}										
 								}
 								countSmall++;
@@ -2919,27 +2995,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 								// Big row
 								for (var j = 0; j < Params.countXBig; j++) {
 									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {										
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffset + Params.DistanceYCenters * k,
-												horizontalOffsetBig + Params.DistanceXCenters * j,
-												verticalOffset + Params.DistanceYCenters * k + Params.Diameter,
-												horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
-											]
-										});
+										AddOval([
+													verticalOffset + Params.DistanceYCenters * k,
+													horizontalOffsetBig + Params.DistanceXCenters * j,
+													verticalOffset + Params.DistanceYCenters * k + Params.Diameter,
+													horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
+												]);	
 									} else {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffset + DistanceYCentersCurrent * countBig,
-												horizontalOffsetBig + Params.DistanceXCenters * j,
-												verticalOffset + DistanceYCentersCurrent * countBig + Params.Diameter,
-												horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
-											]
-										});	
+										AddOval([
+													verticalOffset + DistanceYCentersCurrent * countBig,
+													horizontalOffsetBig + Params.DistanceXCenters * j,
+													verticalOffset + DistanceYCentersCurrent * countBig + Params.Diameter,
+													horizontalOffsetBig + Params.DistanceXCenters * j + Params.Diameter
+												]);	
 									}
 								}
 								countBig++
@@ -2962,30 +3030,22 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 						if (i % 2 != 0) {
 							// Odd row
 							for (var j = Params.countXBig - 1; j >= 0; j--) {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffsetBig + Params.DistanceXCenters * j,
-										horizontalOffset + DistanceYCentersBigBig * i,
-										verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
-										horizontalOffset + DistanceYCentersBigBig * i + Params.Diameter
-									]
-								});						
+								AddOval([
+											verticalOffsetBig + Params.DistanceXCenters * j,
+											horizontalOffset + DistanceYCentersBigBig * i,
+											verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
+											horizontalOffset + DistanceYCentersBigBig * i + Params.Diameter
+										]);	
 							}
 						} else {
 							// Even row
 							for (var j = 0; j < Params.countXBig; j++) {
-								firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-									'strokeColor': 'None',							
-									'fillColor': 'None',	
-									'geometricBounds': [
-										verticalOffsetBig + Params.DistanceXCenters * j,
-										horizontalOffset + DistanceYCentersBigBig * i,
-										verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
-										horizontalOffset + DistanceYCentersBigBig * i + Params.Diameter
-									]
-								});						
+								AddOval([
+											verticalOffsetBig + Params.DistanceXCenters * j,
+											horizontalOffset + DistanceYCentersBigBig * i,
+											verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
+											horizontalOffset + DistanceYCentersBigBig * i + Params.Diameter
+										]);	
 							}
 							countBig++;
 						}
@@ -3000,27 +3060,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							if (isSmall) {
 								for (var j = Params.countXSmall - 1; j >= 0; j--) {
 									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffsetSmall + Params.DistanceXCenters * j,
-												horizontalOffset + Params.DistanceYCenters * k,
-												verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
-												horizontalOffset + Params.DistanceYCenters * k + Params.Diameter
-											]
-										});
+										AddOval([
+													verticalOffsetSmall + Params.DistanceXCenters * j,
+													horizontalOffset + Params.DistanceYCenters * k,
+													verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
+													horizontalOffset + Params.DistanceYCenters * k + Params.Diameter
+												]);	
 									} else {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffsetSmall + Params.DistanceXCenters * j,
-												horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
-												verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
-												horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter
-											]
-										});	
+										AddOval([
+													verticalOffsetSmall + Params.DistanceXCenters * j,
+													horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
+													verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
+													horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter
+												]);	
 									}										
 								}
 								countSmall++;	
@@ -3029,27 +3081,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 								// Big row
 								for (var j = Params.countXBig - 1; j >= 0; j--) {
 									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffsetBig + Params.DistanceXCenters * j,
-												horizontalOffset + Params.DistanceYCenters * k,
-												verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
-												horizontalOffset + Params.DistanceYCenters * k + Params.Diameter
-											]
-										});
+										AddOval([
+													verticalOffsetBig + Params.DistanceXCenters * j,
+													horizontalOffset + Params.DistanceYCenters * k,
+													verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
+													horizontalOffset + Params.DistanceYCenters * k + Params.Diameter
+												]);	
 									} else {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffsetBig + Params.DistanceXCenters * j,
-												horizontalOffset + DistanceYCentersCurrent * countBig,
-												verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
-												horizontalOffset + DistanceYCentersCurrent * countBig + Params.Diameter
-											]
-										});
+										AddOval([
+													verticalOffsetBig + Params.DistanceXCenters * j,
+													horizontalOffset + DistanceYCentersCurrent * countBig,
+													verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
+													horizontalOffset + DistanceYCentersCurrent * countBig + Params.Diameter
+												]);	
 									}
 								}
 								countBig++;
@@ -3060,27 +3104,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							if (isSmall) {
 								for (var j = 0; j < Params.countXSmall; j++) {
 									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffsetSmall + Params.DistanceXCenters * j,
-												horizontalOffset + Params.DistanceYCenters * k,
-												verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
-												horizontalOffset + Params.DistanceYCenters * k + Params.Diameter
-											]
-										});	
+										AddOval([
+													verticalOffsetSmall + Params.DistanceXCenters * j,
+													horizontalOffset + Params.DistanceYCenters * k,
+													verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
+													horizontalOffset + Params.DistanceYCenters * k + Params.Diameter
+												]);	
 									} else {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffsetSmall + Params.DistanceXCenters * j,
-												horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
-												verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
-												horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter
-											]
-										});
+										AddOval([
+													verticalOffsetSmall + Params.DistanceXCenters * j,
+													horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall,
+													verticalOffsetSmall + Params.DistanceXCenters * j + Params.Diameter,
+													horizontalOffset + Params.DistanceYCenters + DistanceYCentersCurrent * countSmall + Params.Diameter
+												]);	
 									}										
 								}
 								countSmall++;
@@ -3089,27 +3125,19 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 								// Big row
 								for (var j = 0; j < Params.countXBig; j++) {
 									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffsetBig + Params.DistanceXCenters * j,
-												horizontalOffset + Params.DistanceYCenters * k,
-												verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
-												horizontalOffset + Params.DistanceYCenters * k + Params.Diameter
-											]
-										});
+										AddOval([
+													verticalOffsetBig + Params.DistanceXCenters * j,
+													horizontalOffset + Params.DistanceYCenters * k,
+													verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
+													horizontalOffset + Params.DistanceYCenters * k + Params.Diameter
+												]);	
 									} else {
-										firstPage.ovals.add(myLayer, LocationOptions.AT_END, {
-											'strokeColor': 'None',							
-											'fillColor': 'None',	
-											'geometricBounds': [
-												verticalOffsetBig + Params.DistanceXCenters * j,
-												horizontalOffset + DistanceYCentersCurrent * countBig,
-												verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
-												horizontalOffset + DistanceYCentersCurrent * countBig + Params.Diameter
-											]
-										});	
+										AddOval([
+													verticalOffsetBig + Params.DistanceXCenters * j,
+													horizontalOffset + DistanceYCentersCurrent * countBig,
+													verticalOffsetBig + Params.DistanceXCenters * j + Params.Diameter,
+													horizontalOffset + DistanceYCentersCurrent * countBig + Params.Diameter
+												]);	
 									}										
 								}
 								countBig++;	
@@ -3122,36 +3150,22 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 			break;
 	}
 	
-	progress.increment();
+	progress.increment(Params.total);
 	
-	var OvalsGroup = myDocument.layers.itemByName("PRINT").pageItems.count() > 1 ? myDocument.groups.add(myDocument.layers.itemByName(PRINTLayer).pageItems) : myDocument.layers.itemByName(PRINTLayer);
+	var OvalsGroup = CutLayer.pageItems.count() > 1 ? myDocument.groups.add(CutLayer.pageItems) : CutLayer;
 	
-	var contoursBounds = OvalsGroup.rectangles.count() > 1 ? OvalsGroup.geometricBounds : OvalsGroup.ovals.firstItem().geometricBounds;			
+	var contoursBounds = OvalsGroup.ovals.count() > 1 ? OvalsGroup.geometricBounds : OvalsGroup.ovals.firstItem().geometricBounds;			
 	
 	if (myCurrentDoc.CutterType.marksGenerate == true) {
 		
 		progress.details("Генерую мітки...", false);
 		
-		generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBounds);
+		generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer, contoursBounds);
 
-		progress.increment();			
+		progress.increment(Params.total);			
 	};	
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
-		
-		var contourColor = myDocument.colors.add({
-				"colorValue": myCurrentDoc.CutterType.contourColor,
-				"model": ColorModel.PROCESS,
-				"space": ColorSpace.CMYK,
-				"name": "CONTOUR"
-			});
-		
-		OvalsGroup.ovals.everyItem().properties = {
-			'strokeWeight': 1,
-			'strokeColor': contourColor,
-			'strokeType': 'Solid',
-			'strokeAlignment': StrokeAlignment.CENTER_ALIGNMENT
-		};
 		
 		progress.details("Експортую файл порізки...", false);	
 		
@@ -3197,38 +3211,14 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		}		
 	};
 	
-	progress.increment();
+	progress.increment(Params.total);
 	
 	progress.details("Закінчую підготовку...", false);
-	
-	for (var i = 0; i < OvalsGroup.ovals.length; i++) {
-		var newBounds = [
-			OvalsGroup.ovals[i].geometricBounds[0] - Bleeds,
-			OvalsGroup.ovals[i].geometricBounds[1] - Bleeds,
-			OvalsGroup.ovals[i].geometricBounds[2] + Bleeds,
-			OvalsGroup.ovals[i].geometricBounds[3] + Bleeds
-		];
-		OvalsGroup.ovals[i].properties = {
-			'contentType': ContentType.GRAPHIC_TYPE,			
-			'strokeWeight': 0,
-			'strokeColor': 'None',
-			'frameFittingOptions': {
-				'properties': {
-					'fittingAlignment': AnchorPoint.CENTER_ANCHOR,
-					'fittingOnEmptyFrame': EmptyFrameFittingOptions.CONTENT_TO_FRAME
-				}
-			},			
-			'geometricBounds': [
-				newBounds[0],
-				newBounds[1],
-				newBounds[2],
-				newBounds[3]
-			]
-		}
 
-	}
+	CutLayer.remove();
 	
-	progress.increment();
+	progress.increment(Params.total);
+
 	progress.close();
 }
 
@@ -3248,7 +3238,8 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	Params.bleedCompensation = [];
 	Params.rotationCompensation = [];
 	
-	progress(4, "Підготовка документа");
+	progress(5 * Params.total, "Підготовка документа");
+
 	progress.message("Готую розкладку " + Params.widthItem + "x" + Params.heightItem + " мм");
 	progress.details("Створюю новий документ...", false);
 	myDocument = app.documents.add();
@@ -3274,16 +3265,19 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	myLayer = myDocument.layers.firstItem();
 	myLayer.name = PRINTLayer;
 	
-	var MarksLayer = myDocument.layers.add({
+	var PlotterLayer = myDocument.layers.add({
 		'name': PLOTTERLayer
 	});	
+
+	var CutLayer = myDocument.layers.add({
+		'name': CUTLayer
+	});		
 	
 	if (myCurrentDoc.CutterType.marksGenerate == false) {
 		
 		progress.details("Імпортую мітки...", false);
 		
-		
-		var MarksPlacement = firstPage.rectangles.add(MarksLayer, LocationOptions.AT_BEGINNING, {
+		var MarksPlacement = firstPage.rectangles.add(PlotterLayer, LocationOptions.AT_BEGINNING, {
 			'contentType': ContentType.GRAPHIC_TYPE,
 			'strokeWeight': 0,
 			'strokeColor': 'None',
@@ -3304,7 +3298,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		
 		app.pdfPlacePreferences.transparentBackground = false;
 		
-		progress.increment();		
+		progress.increment(Params.total);		
 	};
 	
 	progress.details("Додаю елементи...", false);
@@ -3313,6 +3307,61 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	var totalHeight;
 	var horizontalOffset;
 	var verticalOffset;	
+
+	var contourColor = myDocument.colors.add({
+			"colorValue": myCurrentDoc.CutterType.contourColor,
+			"model": ColorModel.PROCESS,
+			"space": ColorSpace.CMYK,
+			"name": "CONTOUR"
+		});	
+
+	// Координати фреймів для вставки макетів
+	myCurrentDoc.Params.GeometricBounds = [];
+
+	function AddRectangle(thisBounds, thisRotation, bleedCompensation) {
+
+		var rectProperties = {
+			'fillColor': 'None',
+			'strokeColor': 'None',						
+			'geometricBounds': thisBounds
+		};
+
+		if (SpaceBetween > 0) {
+			rectProperties['strokeWeight'] = 1;
+			rectProperties['strokeColor'] = contourColor;
+			rectProperties['strokeType'] = 'Solid';
+			rectProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;			
+		}
+
+		if (IsRoundedCorners) {
+			rectProperties['bottomLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
+			rectProperties['bottomLeftCornerRadius'] = RoundCornersValue || 0;
+			rectProperties['bottomRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
+			rectProperties['bottomRightCornerRadius'] = RoundCornersValue || 0;
+			rectProperties['topLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
+			rectProperties['topLeftCornerRadius'] = RoundCornersValue || 0;
+			rectProperties['topRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
+			rectProperties['topRightCornerRadius'] = RoundCornersValue || 0;
+		}
+
+		firstPage.rectangles.add(CutLayer, LocationOptions.AT_END, rectProperties);			
+
+		// Додаємо в масив компенсацію повороту макета
+		Params.rotationCompensation.push(thisRotation);
+		// Додаємо в масив компенсацію вильотів при накладанні макетів
+		Params.bleedCompensation.push(bleedCompensation);
+
+		// Координати фрейма для вставки макета
+		myCurrentDoc.Params.GeometricBounds.push([
+			thisBounds[0] - Bleeds,
+			thisBounds[1] - Bleeds,
+			thisBounds[2] + Bleeds,
+			thisBounds[3] + Bleeds
+		]);		
+
+		progress.increment();			
+
+	}
 
 	switch (Params.method) {
 		case 1:
@@ -3331,33 +3380,29 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						count++;
 						
 						var itemIndex = isOdd ? j : Params.countY - j - 1;
-						
-						firstPage.rectangles.add(myLayer, LocationOptions.AT_END, {
-							'strokeColor': 'None',
-							'fillColor': 'None',
-							'geometricBounds': [
-								verticalOffset + (Params.widthItem + SpaceBetween) * i,
-								horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
-								verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
-								horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
-							]
-						});
-						// Створюємо масив компенсації повороту макетів
-						Params.rotationCompensation.push(90);
-						
-						// Створюємо масив компенсації вильотів при накладанні макетів
+						var bleedCompensation = [0, 0, 0, 0];
+
 						if (SpaceBetween == 0) {
 							var firstRow = count > 0 && count <= Params.countY;
 							var lastRow = count > (Params.total - Params.countY) && count <= Params.total;
 							var firstCol = itemIndex == 0;
 							var lastCol = itemIndex == Params.countY - 1;
-							Params.bleedCompensation.push([
+							bleedCompensation = [
 								firstRow ? 0 : Bleeds,
 								firstCol ? 0 : Bleeds,
 								lastRow ? 0 : -Bleeds,
 								lastCol ? 0 : -Bleeds
-							]);
-						}
+							];
+						};
+
+						AddRectangle([
+										verticalOffset + (Params.widthItem + SpaceBetween) * i,
+										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
+										verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
+										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
+									],
+									90,
+									bleedCompensation);
 					}
 					isOdd = !isOdd;
 				}				
@@ -3375,20 +3420,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						count++;
 						
 						var itemIndex = isOdd ? j : Params.countX - j - 1;
-						
-						firstPage.rectangles.add(myLayer, LocationOptions.AT_END, {
-							'strokeColor': 'None',
-							'fillColor': 'None',
-							'geometricBounds': [
-								verticalOffset + (Params.heightItem + SpaceBetween) * i,
-								horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
-								verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
-								horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
-							]
-						});
-						
-						// Створюємо масив компенсації повороту макетів
-						Params.rotationCompensation.push(0);
+						var bleedCompensation = [0, 0, 0, 0];
 						
 						// Створюємо масив компенсації вильотів при накладанні макетів
 						if (SpaceBetween == 0) {
@@ -3396,13 +3428,23 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 							var lastRow = count > (Params.total - Params.countX) && count <= Params.total;
 							var firstCol = itemIndex == 0;
 							var lastCol = itemIndex == Params.countX - 1;
-							Params.bleedCompensation.push([
+							bleedCompensation = [
 								firstRow ? 0 : Bleeds,
 								firstCol ? 0 : Bleeds,
 								lastRow ? 0 : -Bleeds,
 								lastCol ? 0 : -Bleeds
-							]);
-						}
+							];
+						};
+
+						AddRectangle([
+										verticalOffset + (Params.heightItem + SpaceBetween) * i,
+										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
+										verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
+										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
+									],
+									0,
+									bleedCompensation);
+
 					}
 					isOdd = !isOdd;
 				}				
@@ -3428,19 +3470,16 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					for (var j = 0; j < Params.countY; j++) {
 						
 						var itemIndex = isOdd ? j : Params.countY - j - 1;
+						var bleedCompensation = [0, 0, 0, 0];
 						
-						firstPage.rectangles.add(myLayer, LocationOptions.AT_END, {
-							'strokeColor': 'None',
-							'fillColor': 'None',
-							'geometricBounds': [
-								verticalOffset + (Params.widthItem + SpaceBetween) * i,
-								horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
-								verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
-								horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
-							]
-						});
-						// Створюємо масив компенсації повороту макетів
-						Params.rotationCompensation.push(90);				
+						AddRectangle([
+										verticalOffset + (Params.widthItem + SpaceBetween) * i,
+										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
+										verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
+										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
+									],
+									90,
+									bleedCompensation);			
 					}
 					isOdd = !isOdd;
 				}
@@ -3453,19 +3492,16 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					for (var j = 0; j < Params.countRotatedY; j++) {
 						
 						var itemIndex = isOdd ? j : Params.countRotatedY - j - 1;
+						var bleedCompensation = [0, 0, 0, 0];
 						
-						firstPage.rectangles.add(myLayer, LocationOptions.AT_END, {
-							'strokeColor': 'None',
-							'fillColor': 'None',
-							'geometricBounds': [
-								verticalOffset + (Params.heightItem + SpaceBetween) * i,
-								horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
-								verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
-								horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
-							]
-						});
-						// Створюємо масив компенсації повороту макетів
-						Params.rotationCompensation.push(0);
+						AddRectangle([
+										verticalOffset + (Params.heightItem + SpaceBetween) * i,
+										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
+										verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
+										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
+									],
+									0,
+									bleedCompensation);	
 					}
 					isOdd = !isOdd;
 				}				
@@ -3486,19 +3522,16 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					for (var j = 0; j < Params.countX; j++) {
 						
 						var itemIndex = isOdd ? j : Params.countX - j - 1;
+						var bleedCompensation = [0, 0, 0, 0];
 						
-						firstPage.rectangles.add(myLayer, LocationOptions.AT_END, {
-							'strokeColor': 'None',
-							'fillColor': 'None',
-							'geometricBounds': [
-								verticalOffset + (Params.heightItem + SpaceBetween) * i,
-								horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
-								verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
-								horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
-							]
-						});
-						// Створюємо масив компенсації повороту макетів
-						Params.rotationCompensation.push(0);				
+						AddRectangle([
+										verticalOffset + (Params.heightItem + SpaceBetween) * i,
+										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
+										verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
+										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
+									],
+									0,
+									bleedCompensation);					
 					}
 					isOdd = !isOdd;
 				}
@@ -3511,19 +3544,16 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					for (var j = 0; j < Params.countRotatedX; j++) {
 						
 						var itemIndex = isOdd ? j : Params.countRotatedX - j - 1;
+						var bleedCompensation = [0, 0, 0, 0];
 						
-						firstPage.rectangles.add(myLayer, LocationOptions.AT_END, {
-							'strokeColor': 'None',
-							'fillColor': 'None',
-							'geometricBounds': [
-								verticalOffset + (Params.widthItem + SpaceBetween) * i,
-								horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
-								verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
-								horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
-							]
-						});
-						// Створюємо масив компенсації повороту макетів
-						Params.rotationCompensation.push(90);
+						AddRectangle([
+										verticalOffset + (Params.widthItem + SpaceBetween) * i,
+										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
+										verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
+										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
+									],
+									90,
+									bleedCompensation);	
 					}
 					isOdd = !isOdd;
 				}
@@ -3532,32 +3562,19 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 			break;
 	}
 	
-	progress.increment();
+	progress.increment(Params.total);
 	
-	var RectGroup = myDocument.layers.itemByName(PRINTLayer).pageItems.count() > 1 ? myDocument.groups.add(myDocument.layers.itemByName(PRINTLayer).pageItems) : myDocument.layers.itemByName(PRINTLayer);
+	var RectGroup = CutLayer.pageItems.count() > 1 ? myDocument.groups.add(CutLayer.pageItems) : CutLayer;
 
     var contoursBounds = RectGroup.rectangles.count() > 1 ? RectGroup.geometricBounds : RectGroup.rectangles.firstItem().geometricBounds;
-	
-	if (IsRoundedCorners) {
-		RectGroup.rectangles.everyItem().properties = {
-			'bottomLeftCornerOption': CornerOptions.ROUNDED_CORNER,
-			'bottomLeftCornerRadius': RoundCornersValue || 0,
-			'bottomRightCornerOption': CornerOptions.ROUNDED_CORNER,
-			'bottomRightCornerRadius': RoundCornersValue || 0,	
-			'topLeftCornerOption': CornerOptions.ROUNDED_CORNER,
-			'topLeftCornerRadius': RoundCornersValue || 0,
-			'topRightCornerOption': CornerOptions.ROUNDED_CORNER,
-			'topRightCornerRadius': RoundCornersValue || 0				
-		};
-	}
 
 	if (myCurrentDoc.CutterType.marksGenerate == true) {
 		
 		progress.details("Генерую мітки...", false);
 		
-		generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBounds);
+		generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer, contoursBounds);
 
-		progress.increment();			
+		progress.increment(Params.total);			
 	};
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
@@ -3566,23 +3583,10 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		
 		var refPoint = app.activeDocument.layoutWindows[0].transformReferencePoint;
 		
-		app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;
+		app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;	
 		
-		var contourColor = myDocument.colors.add({
-				"colorValue": myCurrentDoc.CutterType.contourColor,
-				"model": ColorModel.PROCESS,
-				"space": ColorSpace.CMYK,
-				"name": "CONTOUR"
-			});		
-		
-		if (SpaceBetween > 0) {
-			RectGroup.rectangles.everyItem().properties = {
-				'strokeWeight': 1,
-				'strokeColor': contourColor,
-				'strokeType': 'Solid',
-				'strokeAlignment': StrokeAlignment.CENTER_ALIGNMENT
-			};			
-		} else {
+		// Контур порізки задається лініями, якщо макети покладено встик
+		if (SpaceBetween == 0) {
 			if (documentRotated) {
 				
 				// Вертикальні лінії різу
@@ -3590,7 +3594,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 				var isOdd = Params.countY % 2 == 0 ? true : false;
 				
 				for (var i = 0; i <= Params.countY; i++) {
-					firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, {
+					firstPage.graphicLines.add(CutLayer, LocationOptions.AT_END, {
 						'geometricBounds': [ // [y1, x1, y2, x2], which give the coordinates of the top-left and bottom-right corners of the bounding box.
 							verticalOffset - contourOffset,
 							horizontalOffset + (Params.heightItem + SpaceBetween / 2) * i,
@@ -3611,7 +3615,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 				isOdd = Params.countX % 2 == 0 ? false : true;
 				
 				for (var i = 0; i <= Params.countX; i++) {
-					firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, {
+					firstPage.graphicLines.add(CutLayer, LocationOptions.AT_END, {
 						'geometricBounds': [ // [y1, x1, y2, x2], which give the coordinates of the top-left and bottom-right corners of the bounding box.
 							verticalOffset + (Params.widthItem + SpaceBetween / 2) * i,
 							horizontalOffset - contourOffset,
@@ -3635,7 +3639,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 				
 				for (var i = 0; i <= Params.countX; i++) {
 					
-					firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, {
+					firstPage.graphicLines.add(CutLayer, LocationOptions.AT_END, {
 						'geometricBounds': [ // [y1, x1, y2, x2], which give the coordinates of the top-left and bottom-right corners of the bounding box.
 							verticalOffset - contourOffset,
 							horizontalOffset + (Params.widthItem + SpaceBetween / 2) * i,
@@ -3657,7 +3661,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 				
 				for (var i = 0; i <= Params.countY; i++) {				
 					
-					firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, {
+					firstPage.graphicLines.add(CutLayer, LocationOptions.AT_END, {
 						'geometricBounds': [ // [y1, x1, y2, x2], which give the coordinates of the top-left and bottom-right corners of the bounding box.
 							verticalOffset + (Params.heightItem + SpaceBetween / 2) * i,
 							horizontalOffset - contourOffset,
@@ -3728,39 +3732,14 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		}		
 	};
 	
-	progress.increment();
+	progress.increment(Params.total);
 	
-	progress.details("Закінчую підготовку...", false);	
+	progress.details("Закінчую підготовку...", false);
+
+	CutLayer.remove();
 	
-	if (SpaceBetween == 0) firstPage.graphicLines.everyItem().remove();
-	
-	for (var i = 0, Rectangles = RectGroup.rectangles; i < Rectangles.length; i++) {
-		var newBounds = [
-			Rectangles[i].geometricBounds[0] - Bleeds,
-			Rectangles[i].geometricBounds[1] - Bleeds,
-			Rectangles[i].geometricBounds[2] + Bleeds,
-			Rectangles[i].geometricBounds[3] + Bleeds
-		];
-		Rectangles[i].properties = {
-			'contentType': ContentType.GRAPHIC_TYPE,			
-			'strokeWeight': 0,
-			'strokeColor': 'None',
-			'frameFittingOptions': {
-				'properties': {
-					'fittingAlignment': AnchorPoint.CENTER_ANCHOR,
-					'fittingOnEmptyFrame': EmptyFrameFittingOptions.CONTENT_TO_FRAME
-				}
-			},			
-			'geometricBounds': [
-				newBounds[0],
-				newBounds[1],
-				newBounds[2],
-				newBounds[3]
-			]
-		}
-	}
-	
-	progress.increment();
+	progress.increment(Params.total);
+
 	progress.close();
 }
 

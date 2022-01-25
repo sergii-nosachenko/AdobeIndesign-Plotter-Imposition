@@ -24,7 +24,7 @@ const PaperNames = new RegExp('(SRA[34]|SRA3 Max\+|A[34]|Ricoh ?X?L)', 'g'); // 
 // Global variables
 var myPDFExportPreset;
 var theFiles;
-var okFiles = new Array;
+var okFiles = [];
 var myImposing = "";
 var outputFolder;
 var myFileName = "";
@@ -49,7 +49,6 @@ var myCustomDoc = {
 var AddFileNameTitle = true;
 var SaveMultipageFilesAsOneFile = true;
 var steps;
-var totalPages;
 
 // Запуск головного діалогового вікна
 DialogWindow();
@@ -69,6 +68,8 @@ function DialogWindow() {
 		document: false,
 		preset: false
 	}
+
+	var totalPages;
 	
     var myDocumentNames = new Array;
 	myDocumentNames.push('Нова розкладка');
@@ -1315,9 +1316,12 @@ function PlacePDF(){
 				app.displaySettings.item(i).vector = TagVector.PROXY;			
 			}			
 		}		
-	}	
+	}
+
+	var totalPages = 0;
 	
 	var fileCounter = 1;
+	var pagesTotalProcessedCounter = 0;
 	var myCurrentDoc = {
 		CutterType: myCustomDoc.CutterType,
 		SpaceBetween: myCustomDoc.SpaceBetween,
@@ -1599,7 +1603,7 @@ function PlacePDF(){
 
 						myLayer.pageItems.everyItem().remove();
 						
-						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++) {
+						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++, pagesTotalProcessedCounter++) {
 							
 							progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + currentPage + " з " + pgCount + ")");
 							app.pdfPlacePreferences.pageNumber = currentPage;
@@ -1693,6 +1697,7 @@ function PlacePDF(){
 					var itemsCount = 0;
 					var pagesCount = 1;
 					var docPagesCount = myDocument.pages.count();
+					pagesTotalProcessedCounter = 0;
 					
 					// Прибираємо всі сторінки, окрім першої
 					if (docPagesCount != 1) {
@@ -1769,7 +1774,7 @@ function PlacePDF(){
 						}
 					}	
 								
-					for (var i = 0; i < itemsCopies.length; i++) {
+					for (var i = pagesTotalProcessedCounter, copiesCounter = 1; i < itemsCopies.length && copiesCounter <= totalPages; i++, copiesCounter++) {
 						if (itemsCopies[i].indexOf('+') > 0) {
 							itemsAddTo.push(i);
 							itemsCopies[i] = +itemsCopies[i].replace('+','');
@@ -1808,14 +1813,14 @@ function PlacePDF(){
 			
 			progress(itemsCount, "Триває розкладка кружечків " + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? myCurrentDoc.Diameter + " мм" : ""));
 			
-			for (var i = 0, itemIndex = 0, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
+			for (var i = 0, itemIndex = pagesTotalProcessedCounter, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
 				// Parse the PDF file and extract needed info
 				var theFile = File(okFilesCurrent[i].theFile);
 				var pgCount = okFilesCurrent[i].pgCount;
 
 				var origin;				
 				
-				for (var page = 1; page <= pgCount; page++, itemIndex++) {
+				for (var page = 1; page <= pgCount; page++, itemIndex++, pagesTotalProcessedCounter++) {
 					
 					progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + page + " з " + pgCount + ")");
 					
@@ -1972,7 +1977,7 @@ function PlacePDF(){
 
 						myLayer.pageItems.everyItem().remove();
 						
-						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++) {
+						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++, pagesTotalProcessedCounter++) {
 							
 							progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + currentPage + " з " + pgCount + ")");
 							app.pdfPlacePreferences.pageNumber = currentPage;
@@ -2119,6 +2124,7 @@ function PlacePDF(){
 					var docPagesCount = myDocument.pages.count();
 					var pagesCount = 1;
 					var totalFrames = myCurrentDoc.Params.total ? myCurrentDoc.Params.total : 0;
+					pagesTotalProcessedCounter = 0;
                     
 					// Прибираємо всі сторінки, окрім першої
 					if (docPagesCount != 1) {
@@ -2195,9 +2201,9 @@ function PlacePDF(){
 						} else {
 							itemsCopies.push(items[i]);
 						}
-					}	
+					}
 
-					for (var i = 0; i < itemsCopies.length; i++) {
+					for (var i = pagesTotalProcessedCounter, copiesCounter = 1; i < itemsCopies.length && copiesCounter <= totalPages; i++, copiesCounter++) {
 						if (itemsCopies[i].indexOf('+') > 0) {
 							itemsAddTo.push(i);
 							itemsCopies[i] = +itemsCopies[i].replace('+','');
@@ -2244,12 +2250,12 @@ function PlacePDF(){
 			
 			app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;			
 
-			for (var i = 0, current = 0, itemIndex = 0, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
+			for (var i = 0, itemIndex = pagesTotalProcessedCounter, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
 				// Parse the PDF file and extract needed info
 				var theFile = File(okFilesCurrent[i].theFile);
 				var pgCount = okFilesCurrent[i].pgCount;
 				
-				for (var page = 1; page <= pgCount; page++, itemIndex++) {
+				for (var page = 1; page <= pgCount; page++, itemIndex++, pagesTotalProcessedCounter++) {
 					
 					progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + page + " з " + pgCount + ")");					
 						
@@ -2506,28 +2512,40 @@ function removeDocTitle(){
 
 function progress(steps, title) {
 
-    var bar;
-
-    var text;
-
-    var window;
-	
-    var details;
+    var bar,
+		text,
+		window,
+		details;
 	
 	var timer = {
-		startedAt: new Date(),
-		totalSpent: 0,
-		timeLeft: 0
-	};
+		startedAt: null,
+		lastActionAt: null,
+		start: function() {
+			this.startedAt = new Date();
+		},
+		action: function() {
+			this.lastActionAt = new Date();
+		},
+		clear: function() {
+			this.startedAt = null;
+			this.lastActionAt = null;
+		},			
+		totalSpent: function() {
+			if (this.lastActionAt && this.startedAt) return this.lastActionAt - this.startedAt;
+			return null;
+		},
+		timeLeft: function() {
+			if (this.totalSpent() && bar) return (bar.maxvalue * this.totalSpent()) / bar.value - this.totalSpent();
+			return null;
+		}
+	}
 
     window = new Window("window", title || "", undefined, {closeButton: false});
 
-    text = window.add("statictext");
-	
+    text = window.add("statictext");	
 	details = window.add("statictext");
 
-    text.preferredSize = [450, -1]; // 450 pixels wide, default height.
-	
+    text.preferredSize = [450, -1]; // 450 pixels wide, default height.	
     details.preferredSize = [450, -1]; // 450 pixels wide, default height.
 
     if (steps) {
@@ -2536,9 +2554,7 @@ function progress(steps, title) {
 
         bar.preferredSize = [450, -1]; // 450 pixels wide, default height.
 		
-		timer.startedAt = new Date();
-		timer.totalSpent = 0;
-		timer.timeLeft = 0;
+		timer.clear();
 
     }
 
@@ -2550,16 +2566,14 @@ function progress(steps, title) {
 
     progress.increment = function (val) {
 		
-		if (bar.value == 0) timer.startedAt = new Date();	
+		if (bar.value == 0) timer.start();
 		
         if (val && val > 0) 
 			bar.value += val
 		else
 			bar.value++;
-		
-		timer.totalSpent = new Date() - timer.startedAt;
-			
-		timer.timeLeft = (bar.maxvalue * timer.totalSpent) / bar.value - timer.totalSpent;
+
+		timer.action();
 
     };
 
@@ -2574,30 +2588,41 @@ function progress(steps, title) {
 	
     progress.details = function (detailsText, showTimeleft) {
 		
-		if (bar.value == 0) timer.startedAt = new Date();		
+		if (bar.value == 0) timer.start();
 		
 		if (!detailsText) detailsText = "";
 		
-		if (showTimeleft) detailsText = detailsText + progress.timeLeftParser(timer.timeLeft);		
+		if (showTimeleft) detailsText = detailsText + progress.timeLeftParser();		
 		
 		details.text = detailsText;
 
     };
 	
-	progress.timeLeftParser = function (timeLeft) {	
+	progress.timeLeftParser = function () {	
+
+		const timeLeft = timer.timeLeft();
+
+		var message = "";
 		
-		if (!timeLeft) return "";
+		if (!timeLeft) return message;
 		
 		var milliseconds = Math.floor((timeLeft % 1000) / 100),
 			seconds = Math.floor((timeLeft / 1000) % 60),
 			minutes = Math.floor((timeLeft / (1000 * 60)) % 60),
 			hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
 
-			hours = (hours < 10) ? "0" + hours : hours;
-			minutes = (minutes < 10) ? "0" + minutes : minutes;
-			seconds = (seconds < 10) ? "0" + seconds : seconds;
+			// hours = (hours < 10) ? "0" + hours : hours;
+			// minutes = (minutes < 10) ? "0" + minutes : minutes;
+			// seconds = (seconds < 10) ? "0" + seconds : seconds;
 
-		return " (залишилось ~ " + (hours > 0 ? hours + "год " : "") + (hours > 0 || minutes > 0 ? minutes + "хв " : "") + seconds + "сек)";
+		if (bar.value / bar.maxvalue <= 0.5 && minutes > 0) {
+			minutes += (seconds > 30) ? 1 : 0;
+			message = " (залишилось >" + (hours > 0 ? " " + hours + "год" : "") + (hours <= 0 || minutes > 0 ? " " + minutes + "хв)" : ")");
+		} else {
+			message = " (залишилось ~ " + (hours > 0 ? hours + "год " : "") + (hours > 0 || minutes > 0 ? minutes + "хв " : "") + seconds + "сек)";
+		}
+
+		return message;
 		
 	}
 

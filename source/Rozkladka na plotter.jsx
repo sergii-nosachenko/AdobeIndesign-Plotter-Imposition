@@ -1,4 +1,4 @@
-﻿const version = "2.5.0";
+﻿const version = "2.5.1";
 
 // Debug level
 // Comment next line for production!
@@ -7,6 +7,7 @@
 //@include "helpers/JSON.jsx"
 //@include "helpers/Array.indexOf.polyfill.jsx"
 //@include "helpers/Array.fill.polyfill.jsx"
+//@include "helpers/Array.reduce.polyfill.jsx"
 //@include "helpers/PDFmultipage.jsx"
 //@include "rozkladka/RozkladkaCircles.jsx"
 //@include "rozkladka/RozkladkaRectangles.jsx"
@@ -2518,25 +2519,72 @@ function progress(steps, title) {
 		details;
 	
 	var timer = {
+		isActive: false,
 		startedAt: null,
 		lastActionAt: null,
+		prevActionAt: null,
+		processingEachTime: [],
+		growthRates: [],
 		start: function() {
+			this.clear();
+			this.isActive = true;
 			this.startedAt = new Date();
+			this.prevActionAt = this.startedAt;
 		},
 		action: function() {
 			this.lastActionAt = new Date();
+			this.processingEachTime.push(this.lastActionAt - this.prevActionAt);
+			this.prevActionAt = this.lastActionAt;
 		},
 		clear: function() {
+			this.isActive = false;
 			this.startedAt = null;
 			this.lastActionAt = null;
+			this.processingEachTime = [];
+			this.growthRates = [];
 		},			
 		totalSpent: function() {
 			if (this.lastActionAt && this.startedAt) return this.lastActionAt - this.startedAt;
 			return null;
 		},
-		timeLeft: function() {
-			if (this.totalSpent() && bar) return (bar.maxvalue * this.totalSpent()) / bar.value - this.totalSpent();
+		timeLeft: function(averageCount, chunkSize) {
+
+			averageCount = averageCount ? parseInt(averageCount) : 30;
+			chunkSize = chunkSize ? parseInt(chunkSize) : 100;
+
+			this.growthRate(this.processingEachTime, averageCount, chunkSize);
+			const avgRate = this.growthRates.reduce(function(sum, curr) {
+				return sum + curr;
+			}, 0) / this.growthRates.length || 0;
+			const avgTime = this.processingEachTime.slice(-averageCount).reduce(function(sum, curr) {
+				return sum + curr;
+			}, 0) / averageCount || this.processingEachTime[this.processingEachTime.length - 1];
+			if (avgTime && bar) return (bar.maxvalue - bar.value) * avgTime * (1 + avgRate) * (bar.maxvalue / bar.value);
 			return null;
+		},
+		growthRate: function(arr, averageSumCount, partSize) {
+
+			if (partSize < 2 * averageSumCount) return null;
+			if (arr.length < partSize) return null;
+			
+			for (var i = 0, j = arr.length, k = 0; i < j; i += partSize, k++) {
+				var temporary = arr.slice(i, i + partSize);				
+				if (temporary.length < partSize) continue;				
+				if (k <= this.growthRates.length) continue;				
+				var first = temporary.reduce(function(sum, curr, index) {
+					if (index < averageSumCount) return sum + curr;
+					return sum;
+				}, 0) / averageSumCount;     
+				var last = temporary.reduce(function(sum, curr, index) {
+					if (index >= temporary.length - averageSumCount) return sum + curr;
+					return sum;
+				}, 0) / averageSumCount;
+				this.growthRates.push(this.rate(first, last, temporary.length));
+			}			
+		},
+		rate: function(first, last, len) {
+			if (!first || !last || !len) return 0;
+			return Math.pow(last / first, 1 / len) - 1;
 		}
 	}
 
@@ -2553,8 +2601,6 @@ function progress(steps, title) {
         bar = window.add("progressbar", undefined, 0, steps);
 
         bar.preferredSize = [450, -1]; // 450 pixels wide, default height.
-		
-		timer.clear();
 
     }
 
@@ -2566,7 +2612,7 @@ function progress(steps, title) {
 
     progress.increment = function (val) {
 		
-		if (bar.value == 0) timer.start();
+		if (bar.value == 0 && !timer.isActive) timer.start();
 		
         if (val && val > 0) 
 			bar.value += val
@@ -2586,23 +2632,23 @@ function progress(steps, title) {
 
     };
 	
-    progress.details = function (detailsText, showTimeleft) {
+    progress.details = function (detailsText, showTimeleft, averageCount, chunkSize) {
 		
-		if (bar.value == 0) timer.start();
+		if (bar.value == 0 && !timer.isActive) timer.start();
 		
 		if (!detailsText) detailsText = "";
 		
-		if (showTimeleft) detailsText = detailsText + progress.timeLeftParser();		
+		if (showTimeleft) detailsText = detailsText + progress.timeLeftParser(averageCount, chunkSize);		
 		
 		details.text = detailsText;
 
     };
 	
-	progress.timeLeftParser = function () {	
+	progress.timeLeftParser = function (averageCount, chunkSize) {	
 
-		const timeLeft = timer.timeLeft();
+		const timeLeft = timer.timeLeft(averageCount, chunkSize);
 
-		var message = "";
+		var message = " (обчислюю залишок часу...)";
 		
 		if (!timeLeft) return message;
 		
@@ -2617,7 +2663,7 @@ function progress(steps, title) {
 
 		if (bar.value / bar.maxvalue <= 0.5 && minutes > 0) {
 			minutes += (seconds > 30) ? 1 : 0;
-			message = " (залишилось >" + (hours > 0 ? " " + hours + "год" : "") + (hours <= 0 || minutes > 0 ? " " + minutes + "хв)" : ")");
+			message = " (залишилось ~ " + (hours > 0 ? " " + hours + "год" : "") + (hours <= 0 || minutes > 0 ? " " + minutes + "хв)" : ")");
 		} else {
 			message = " (залишилось ~ " + (hours > 0 ? hours + "год " : "") + (hours > 0 || minutes > 0 ? minutes + "хв " : "") + seconds + "сек)";
 		}

@@ -2657,15 +2657,11 @@ function progress(steps, title) {
 			minutes = Math.floor((timeLeft / (1000 * 60)) % 60),
 			hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
 
-			// hours = (hours < 10) ? "0" + hours : hours;
-			// minutes = (minutes < 10) ? "0" + minutes : minutes;
-			// seconds = (seconds < 10) ? "0" + seconds : seconds;
-
 		if (bar.value / bar.maxvalue <= 0.5 && minutes > 0) {
 			minutes += (seconds > 30) ? 1 : 0;
-			message = " (залишилось ~ " + (hours > 0 ? " " + hours + "год" : "") + (hours <= 0 || minutes > 0 ? " " + minutes + "хв)" : ")");
+			message = " (залишилось ~" + (hours > 0 ? " " + hours + "год" : "") + (hours <= 0 || minutes > 0 ? " " + minutes + "хв)" : ")");
 		} else {
-			message = " (залишилось ~ " + (hours > 0 ? hours + "год " : "") + (hours > 0 || minutes > 0 ? minutes + "хв " : "") + seconds + "сек)";
+			message = " (залишилось ~" + (hours > 0 ? " " + hours + "год" : "") + (hours > 0 || minutes > 0 ? " " + minutes + "хв" : "") + " " + seconds + "сек)";
 		}
 
 		return message;
@@ -2684,7 +2680,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	
 	const SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 	
-	progress(5 * Params.total, "Підготовка документа");
+	progress(4 + Params.total, "Підготовка документа");
 	progress.message("Готую порізку " + Params.Diameter + " мм");
 	progress.details("Створюю новий документ...", false);
 	myDocument = app.documents.add();
@@ -2739,7 +2735,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		MarksPlacement.place(File(myCurrentDoc.CutterType.marksFile))[0];			
 		app.pdfPlacePreferences.transparentBackground = false;	
 
-		progress.increment(Params.total);
+		progress.increment();
 		
 	}	
 	
@@ -3221,7 +3217,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 			break;
 	}
 	
-	progress.increment(Params.total);
+	progress.increment();
 	
 	var OvalsGroup = CutLayer.pageItems.count() > 1 ? myDocument.groups.add(CutLayer.pageItems) : CutLayer;
 	
@@ -3233,7 +3229,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		
 		generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer, contoursBounds);
 
-		progress.increment(Params.total);			
+		progress.increment();			
 	};	
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
@@ -3282,13 +3278,13 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		}		
 	};
 	
-	progress.increment(Params.total);
+	progress.increment();
 	
 	progress.details("Закінчую підготовку...", false);
 
 	CutLayer.remove();
 	
-	progress.increment(Params.total);
+	progress.increment();
 
 	progress.close();
 }
@@ -3309,7 +3305,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	Params.bleedCompensation = [];
 	Params.rotationCompensation = [];
 	
-	progress(5 * Params.total, "Підготовка документа");
+	progress(4 + Params.total, "Підготовка документа");
 
 	progress.message("Готую розкладку " + Params.widthItem + "x" + Params.heightItem + " мм");
 	progress.details("Створюю новий документ...", false);
@@ -3369,7 +3365,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		
 		app.pdfPlacePreferences.transparentBackground = false;
 		
-		progress.increment(Params.total);		
+		progress.increment();		
 	};
 	
 	progress.details("Додаю елементи...", false);
@@ -3633,7 +3629,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 			break;
 	}
 	
-	progress.increment(Params.total);
+	progress.increment();
 	
 	var RectGroup = CutLayer.pageItems.count() > 1 ? myDocument.groups.add(CutLayer.pageItems) : CutLayer;
 
@@ -3645,7 +3641,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		
 		generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer, contoursBounds);
 
-		progress.increment(Params.total);			
+		progress.increment();			
 	};
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
@@ -3803,13 +3799,13 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		}		
 	};
 	
-	progress.increment(Params.total);
+	progress.increment();
 	
 	progress.details("Закінчую підготовку...", false);
 
 	CutLayer.remove();
 	
-	progress.increment(Params.total);
+	progress.increment();
 
 	progress.close();
 }

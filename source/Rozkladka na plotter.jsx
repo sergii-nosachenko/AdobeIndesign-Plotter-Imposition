@@ -50,6 +50,7 @@ var myCustomDoc = {
 var AddFileNameTitle = true;
 var SaveMultipageFilesAsOneFile = true;
 var steps;
+var totalPages;
 
 // Запуск головного діалогового вікна
 DialogWindow();
@@ -69,8 +70,6 @@ function DialogWindow() {
 		document: false,
 		preset: false
 	}
-
-	var totalPages;
 	
     var myDocumentNames = new Array;
 	myDocumentNames.push('Нова розкладка');
@@ -1318,8 +1317,6 @@ function PlacePDF(){
 			}			
 		}		
 	}
-
-	var totalPages = 0;
 	
 	var fileCounter = 1;
 	var pagesTotalProcessedCounter = 0;
@@ -1331,7 +1328,7 @@ function PlacePDF(){
 		Params: false
 	};
 
-	var badFiles;
+	var badFiles = {};
 
 	switch (myCustomDoc.Figure) {
 		case "Кола":
@@ -1580,8 +1577,7 @@ function PlacePDF(){
 					for (var i = 0; i < okFilesCurrent.length; i++, fileCounter++) {
 
 						var docPagesCount = myDocument.pages.count();
-												
-						progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength);
+
 						var theFile = File(okFilesCurrent[i].theFile);
 						var fileName = File.decode(okFilesCurrent[i].theFile.name).split('.').slice(0, -1).join('.');					
 						fileName = fileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '');
@@ -1955,7 +1951,6 @@ function PlacePDF(){
 
 						var docPagesCount = myDocument.pages.count();	
 
-						progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength);
 						var theFile = File(okFilesCurrent[i].theFile);
 						var fileName = File.decode(okFilesCurrent[i].theFile.name).split('.').slice(0, -1).join('.');	
 						fileName = fileName.replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, '');
@@ -2008,7 +2003,7 @@ function PlacePDF(){
 
 							var refPoint = app.activeDocument.layoutWindows[0].transformReferencePoint;
 							
-							app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;								
+							app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;
 
 							for (var b = 0; b < itemsCopies; b++) {
 

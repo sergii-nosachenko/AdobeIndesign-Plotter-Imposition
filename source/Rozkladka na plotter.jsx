@@ -1,4 +1,4 @@
-﻿const version = "2.5.1";
+﻿const version = "2.5.2";
 
 // Debug level
 // Comment next line for production!
@@ -1603,7 +1603,6 @@ function PlacePDF(){
 						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++, pagesTotalProcessedCounter++) {
 							
 							progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + currentPage + " з " + pgCount + ")");
-							app.pdfPlacePreferences.pageNumber = currentPage;
 
 							// Додаємо сторінку, якщо вибрано опцію "Зберегти багатосторінковий файл"
 							if (currentPage > 1 && SaveMultipageFilesAsOneFile) {
@@ -1651,7 +1650,8 @@ function PlacePDF(){
 											myCurrentDoc.Params.GeometricBounds[b][2],
 											myCurrentDoc.Params.GeometricBounds[b][3]
 										]
-									});									
+									});
+									app.pdfPlacePreferences.pageNumber = currentPage;
 									origin.place(theFile)[0];
 									origin.fit(FitOptions.CONTENT_TO_FRAME);
 								} else {
@@ -1976,7 +1976,6 @@ function PlacePDF(){
 						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++, pagesTotalProcessedCounter++) {
 							
 							progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + currentPage + " з " + pgCount + ")");
-							app.pdfPlacePreferences.pageNumber = currentPage;
 
 							// Додаємо сторінку, якщо вибрано опцію "Зберегти багатосторінковий файл"
 							if (currentPage > 1 && SaveMultipageFilesAsOneFile) {
@@ -2046,7 +2045,8 @@ function PlacePDF(){
 										rectProperties['topRightCornerRadius'] = RoundCornersValue || 0;
 									}
 
-									origin = newbie = myDocument.pages.lastItem().rectangles.add(myLayer, LocationOptions.AT_END, rectProperties);									
+									origin = newbie = myDocument.pages.lastItem().rectangles.add(myLayer, LocationOptions.AT_END, rectProperties);
+									app.pdfPlacePreferences.pageNumber = currentPage;																		
 									origin.place(theFile)[0];
 									// Компенсація повороту макета
 									origin.graphics.everyItem().rotationAngle = myCurrentDoc.Params.rotationCompensation[b];

@@ -2395,14 +2395,15 @@ function PlacePDF(){
 
 	// Wait all done.
 
-	progress(0, "Завершення фонових операцій");
-	progress.message("Очікуй...", false);
+	progress(0, "Тривають фонові операції");
+	progress.message("Зачекай завершення експорту файлів");
+	progress.details("Оброблка триває...", false);
+
+	var badExport = [];	
 	
 	app.waitForAllTasks();
 
 	progress.close();
-
-	var badExport = [];
 
 	for (var i = 0; i < myDocumentsProcessing.length; i++) {
 

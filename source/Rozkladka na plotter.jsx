@@ -56,8 +56,8 @@ var totalPages;
 
 // Запуск головного діалогового вікна
 app.scriptPreferences.enableRedraw = true;
-DialogWindow();
-// app.doScript(DialogWindow, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.FAST_ENTIRE_SCRIPT, "Rozkladka na plotter");
+// DialogWindow();
+app.doScript(DialogWindow, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.FAST_ENTIRE_SCRIPT, "Rozkladka na plotter");
 
 // Головне діалогове вікно
 function DialogWindow() {
@@ -2395,14 +2395,15 @@ function PlacePDF(){
 
 	// Wait all done.
 
-	progress(0, "Завершення фонових операцій");
-	progress.message("Очікуй...", false);
+	progress(0, "Тривають фонові операції");
+	progress.message("Зачекай завершення експорту файлів");
+	progress.details("Оброблка триває...", false);
+
+	var badExport = [];	
 	
 	app.waitForAllTasks();
 
 	progress.close();
-
-	var badExport = [];
 
 	for (var i = 0; i < myDocumentsProcessing.length; i++) {
 

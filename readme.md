@@ -15,8 +15,8 @@
 Для початку потрібно скопіювати наступні файли з папки `dist`:
 
 ```bash
-Rozkladka na plotter.jsx
-preferences.jsbin
+Rozkladka na plotter.jsbin
+preferences.json
 ```
 
 у робочу папку скриптів InDesign (приклад для Windows):

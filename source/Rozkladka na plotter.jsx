@@ -56,8 +56,8 @@ var totalPages;
 
 // Запуск головного діалогового вікна
 app.scriptPreferences.enableRedraw = true;
-// DialogWindow();
-app.doScript(DialogWindow, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.FAST_ENTIRE_SCRIPT, "Rozkladka na plotter");
+DialogWindow();
+// app.doScript(DialogWindow, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.FAST_ENTIRE_SCRIPT, "Rozkladka na plotter");
 
 // Головне діалогове вікно
 function DialogWindow() {

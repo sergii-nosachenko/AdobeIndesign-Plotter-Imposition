@@ -1,4 +1,4 @@
-﻿const version = "3.0.1";
+﻿const version = "3.0.2";
 
 // Debug level
 // Comment next line for production!
@@ -481,14 +481,14 @@ function DialogWindow() {
 		steps = 0;		
 		
 		var askIt = "Обери один або декілька PDF, AI або TIF файлів";
-		theFiles = File.openDialog(askIt, "*.pdf;*.ai;*.tif", true);
+		theFiles = File.openDialog(askIt, "*.pdf;*.ai;*.tif;*.eps", true);
 
 		if (theFiles != null) {
 			for (var i = 0; i < theFiles.length; i++) {
 				var theFile = theFiles[i];
 				var fileName = File.decode(theFile.name);				
 				var pgCount = 1;
-				if (fileName.indexOf(".tif") == -1) pgCount = getPDFInfo(theFile);
+				if (fileName.indexOf(".tif") == -1 && fileName.indexOf(".eps") == -1) pgCount = getPDFInfo(theFile);
 				if (pgCount > 0) {
 					for (var page = 1; page <= pgCount; page++) {
 						totalPages++;

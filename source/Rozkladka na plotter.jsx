@@ -2397,13 +2397,13 @@ function PlacePDF(){
 
 	progress(0, "Тривають фонові операції");
 	progress.message("Зачекай завершення експорту файлів");
-	progress.details("Оброблка триває...", false);
-
-	var badExport = [];	
+	progress.details("Це може зайняти декілька хвилин...", false);
 	
 	app.waitForAllTasks();
 
 	progress.close();
+
+	var badExport = [];		
 
 	for (var i = 0; i < myDocumentsProcessing.length; i++) {
 
@@ -2643,6 +2643,19 @@ function progress(steps, title) {
 			bar.value++;
 
 		timer.action();
+
+    };
+
+    progress.value = function (val) {
+
+		if (val && val > 0) {
+		
+			if (bar && bar.value == 0 && !timer.isActive) timer.start();
+			
+			bar.value == val
+
+			timer.action();			
+		}
 
     };
 

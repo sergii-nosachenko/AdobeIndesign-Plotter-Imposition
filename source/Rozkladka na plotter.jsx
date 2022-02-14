@@ -1,4 +1,4 @@
-﻿const version = "3.0.0";
+﻿const version = "3.0.1";
 
 // Debug level
 // Comment next line for production!
@@ -473,6 +473,7 @@ function DialogWindow() {
 	function getFiles() {
 		
 		theFiles = null;
+		okFiles = [];
 		FilesNameList.text = "";
 		totalPages = 0;
 		AddFolderBtn.enabled = false;
@@ -2393,13 +2394,33 @@ function PlacePDF(){
 		progress.close();
 	}
 
+	function ProcessedPercentCount() {
+		var percentDone = 0;
+		for (var i = 0; i < myDocumentsProcessing.length; i++) {
+			if (myDocumentsProcessing[i].backgroundTask.status != TaskState.COMPLETED && myDocumentsProcessing[i].backgroundTask.status != TaskState.CANCELLED) {
+				percentDone += myDocumentsProcessing[i].backgroundTask.percentDone;
+			} else {
+				percentDone += 100;
+			}
+		};
+		return percentDone;
+	}	
+
 	// Wait all done.
 
-	progress(0, "Тривають фонові операції");
+	var totalPercent = myDocumentsProcessing.length * 100;
+
+	progress(totalPercent, "Тривають фонові операції");
 	progress.message("Зачекай завершення експорту файлів");
 	progress.details("Це може зайняти декілька хвилин...", false);
-	
-	app.waitForAllTasks();
+	progress.value(ProcessedPercentCount());
+
+	// Очікуємо завершення всіх фонових експортів
+	//app.waitForAllTasks();
+	while (ProcessedPercentCount() < totalPercent) {
+		progress.value(ProcessedPercentCount());
+		$.sleep(1000);
+	}
 
 	progress.close();
 
@@ -2477,8 +2498,7 @@ function PlacePDF(){
 			}
 			
 		BadFilesListWindow.show();
-	}		
-
+	}	
 }
 
 // Додаємо назву документа текстовим блоком
@@ -2652,9 +2672,9 @@ function progress(steps, title) {
 		
 			if (bar && bar.value == 0 && !timer.isActive) timer.start();
 			
-			bar.value == val
+			bar.value = val;
 
-			timer.action();			
+			timer.action();
 		}
 
     };

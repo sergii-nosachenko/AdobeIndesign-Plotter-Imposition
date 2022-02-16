@@ -367,7 +367,7 @@ function DialogWindow() {
 
 	// var ImpositionMethod = DocGroup2.add("dropdownlist", undefined, undefined, {name: "ImpositionMethod", items: myDocumentNames}); 
 	var ImpositionMethod = DocGroup2.add('edittext {properties: {name: "ImpositionMethod", readonly: true}}'); 
-		ImpositionMethod.preferredSize.width = 375;
+		ImpositionMethod.preferredSize.width = 400;
 		// ImpositionMethod.selection = 0; 
 		ImpositionMethod.text = "Не налаштовано";
 		ImpositionMethod.alignment = ["left","center"];
@@ -379,7 +379,7 @@ function DialogWindow() {
 	var CreateImposBtn = DocGroup2.add("button", undefined, undefined, {name: "CreateImposBtn"}); 
 		CreateImposBtn.enabled = true;
 		CreateImposBtn.text = "⚙";
-		CreateImposBtn.preferredSize.width = 30;
+		CreateImposBtn.preferredSize.width = 50;
 		CreateImposBtn.onClick = function() {
 			var res = NewImposSettingsWindow();
 			if (res && (myCustomDoc.IsGetSizeFromFilename || myCustomDoc.title != "")) {

@@ -1,4 +1,4 @@
-﻿const version = "3.0.2";
+﻿const version = "3.0.3";
 
 // Debug level
 // Comment next line for production!
@@ -1477,17 +1477,9 @@ function PlacePDF(){
 				okFilesDiameters[diameter] = files;
 				if (okDiameters.indexOf(diameter) < 0) okDiameters.push(diameter);
 			}
-			
-			if (okFilesDiameters[0]) {
-				// Запам'ятовуємо файли, діаметр яких не вдалося розпізнати 
-				for (var k = 0; k < okFilesDiameters[0].length; k++) {
-					badFiles.push({
-						theFile: okFilesDiameters[0][k],
-						reason: "Не вдалося розпізнати розмір"
-					});
-				}
-				totalOkFilesLength = totalOkFilesLength - okFilesDiameters[0].length;	
-			};			
+
+			// Все, що не розпізнано, як кружечки, передається на аналіз належності до прямокутників
+			badDiameterFiles = okFilesDiameters[0];
 			
 			for (var i = 0; i < badDiameterFiles.length; i++) {
 				var theFile = badDiameterFiles[i].theFile;				
@@ -2811,7 +2803,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	const SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 	
 	progress(3 + Params.total, "Підготовка документа");
-	progress.message("Готую порізку " + Params.Diameter + " мм");
+	progress.message("Готую порізку D=" + Params.Diameter + " мм");
 
 	progress.details("Створюю новий документ...", false);
 	CreateMyDocument(myCurrentDoc);

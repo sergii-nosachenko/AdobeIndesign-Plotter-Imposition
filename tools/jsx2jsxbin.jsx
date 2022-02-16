@@ -1,35 +1,37 @@
+﻿/*
+    Compile jsx file to jsxbin using ExtendScript Toolkit
+    v.1.0
+*/
+
+//#target estoolkit#dbg
+//@target estoolkit#dbg
+
 (function () {
-    //#target estoolkit#dbg
-    //@target estoolkit#dbg
-    var _STRINGS = {
-        JP: {
-            LOAD: "ファイルを開く"
-        },
-        EN: {
-            LOAD: "Load File"
-        }
+    
+   try {
+        var jsxFile = File.openDialog('Load JSX File', 'JavaScript files:*.jsx;*.js;*.jsxinc', false);
+        
+        if (jsxFile == null) {
+            return;
+        };
+    
+        jsxFile.open('r');
+        var jsText = jsxFile.read();
+        jsxFile.close();
+    
+        var jsxbinText = app.compile(jsText, undefined, jsxFile.parent.absoluteURI);
+        
+        var folder = new Folder(jsxFile.path);
+        var destFolder = folder.selectDlg('Select destination folder');
+        
+        var jsxbinFilename = String(destFolder.fullName) + '/' + String(jsxFile.name) + 'bin';
+        var jsxbinFile = new File(jsxbinFilename);
+        jsxbinFile.open('w');
+        jsxbinFile.write(jsxbinText);
+        jsxbinFile.close();
+        alert('Compiled to ' + jsxbinFile.fsName, 'Successfull');
+    } catch(err) {
+        alert(err, 'Error during script execution', true);
     };
-    var LOAD_SUPPORT_EXTENTION = ["JavaScript files:*.jsx;*.js;*.jsxinc", "All files:*.*"];
-    var getLocalizedText = function (str) {
-        if (app.isoLanguage == "ja_JP") {
-            return str.jp;
-        }
-        else {
-            return str.en;
-        }
-    };
-    var folderPath = Folder.desktop;
-    var fileName = decodeURIComponent(folderPath.fsName);
-    var jsxFile = new File(fileName).openDlg(getLocalizedText({ jp: _STRINGS.JP.LOAD, en: _STRINGS.EN.LOAD }), LOAD_SUPPORT_EXTENTION);
-    if (jsxFile == null) {
-        return 0;
-    }
-    jsxFile.open("r");
-    var jsxText = jsxFile.read();
-    jsxFile.close();
-    var jsxbinText = app.compile(jsxText);
-    var jsxbinFile = new File(String(jsxFile.parent) + "/" + String(jsxFile.name.split(".")[0]) + ".jsxbin");
-    jsxbinFile.open("w");
-    jsxbinFile.write(jsxbinText);
-    jsxbinFile.close();
+    
 }).call(this);

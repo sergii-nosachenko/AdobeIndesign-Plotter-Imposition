@@ -289,8 +289,16 @@ illustrator.openIllustratorToConvertDXF = function (files) {
 
 Для того, щоб правильно скомпілювати робочий файл, потрібно виконати наступні дії:
 
+### Варіант №1 - за допомогою меню Adobe ExtendScript Toolkit
+
 1. Запустіть Adobe ExtendScript Toolkit
 2. Відкрийте файл `source\Rozkladka na plotter.jsx`
 3. У відкритому файлі під вкладкою з назвою файла потрібно вибрати правильний target - `Adobe InDesign 2020` *(версія залежатиме від встановленої)*
 4. Виберіть меню `File > Export As Binary...`
 5. Збережіть скомпільований файл до робочої папки скриптів InDesign
+
+### Варіант №2 - за допомогою bat-скрипта (Adobe ExtendScript Toolkit має бути встановлений)
+
+1. Запустіть командний скрипт `compile-jsxbin.bat`
+2. Виберіть файл `source\Rozkladka na plotter.jsx`
+3. Виберіть папку для збереження скомпільованого скрипта

@@ -15,10 +15,10 @@
 
 // Global constants
 const PREFERENCES = parsePreferencesJSON(File($.fileName).path + "/preferences.json"); // preferences.json має бути в папці зі скриптом і містити всі налаштування
-const PRINTLayer = PREFERENCES.layers.PRINTLayer || "PRINT";
-const PLOTTERLayer = PREFERENCES.layers.PLOTTERLayer || "PLOTTER";
-const CUTLayer = PREFERENCES.layers.CUTLayer || "CUT";
-const TITLELayer = PREFERENCES.layers.TITLELayer || "TITLE";
+const PRINTLayer = "PRINT";
+const PLOTTERLayer = "PLOTTER";
+const CUTLayer = "CUT";
+const TITLELayer = "TITLE";
 const CutterTypes = PREFERENCES.cutters;
 const PaperNames = new RegExp('(SRA[34]|SRA3 Max\+|A[34]|Ricoh ?X?L)', 'g'); // Список можливих назв форматів паперу regex
 

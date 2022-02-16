@@ -56,7 +56,7 @@ preferences.json
 illustrator.openIllustratorToConvertAI = function (files) {
   if (BridgeTalk.appName == illustrator.appName) {
 
-        BridgeTalk.bringToFront(illustrator.targetName);
+    BridgeTalk.bringToFront(illustrator.targetName);
 
     var fileArray = new Array;
     if (files instanceof File)
@@ -69,48 +69,48 @@ illustrator.openIllustratorToConvertAI = function (files) {
     };
 
     for (var i = 0; i < fileArray.length; i++) {
-            try {
-                app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
+      try {
+        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 
-                var w = new Window("window", "Зачекай, обробляю файл", undefined, {closeButton: false});
-                var t = w.add("statictext");
-                t.preferredSize = [450, -1];
-                t.text = "Конвертую EPS в AI для порізки...";
-                w.show();
+        var w = new Window("window", "Зачекай, обробляю файл", undefined, {closeButton: false});
+        var t = w.add("statictext");
+        t.preferredSize = [450, -1];
+        t.text = "Конвертую EPS в AI для порізки...";
+        w.show();
 
-                app.open(fileArray[i]);
+        app.open(fileArray[i]);
 
-                var saveOpts = new IllustratorSaveOptions();
-                saveOpts.compatibility = Compatibility.ILLUSTRATOR8;
-                saveOpts.compressed = false;
-                saveOpts.pdfCompatible = false;
+        var saveOpts = new IllustratorSaveOptions();
+        saveOpts.compatibility = Compatibility.ILLUSTRATOR8;
+        saveOpts.compressed = false;
+        saveOpts.pdfCompatible = false;
 
-                var fileName = fileArray[i].fullName.split('.').slice(0, -1).join('.') + ".ai";
-                var AI_File = new File(fileName);
-                fileArray[i].remove();  
+        var fileName = fileArray[i].fullName.split('.').slice(0, -1).join('.') + ".ai";
+        var AI_File = new File(fileName);
+        fileArray[i].remove();  
 
-                app.activeDocument.saveAs( AI_File, saveOpts );
-                app.activeDocument.close();
-                app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
+        app.activeDocument.saveAs( AI_File, saveOpts );
+        app.activeDocument.close();
+        app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
 
-                w.close();
+        w.close();
       } catch (err) {
         reply = {
           success: false,
           err: "Error on open(): " + (err.number & 0xFFFF) + ", " + err.description + ", " + fileArray[i].toString()
-        };
+        }
       }
     }
     indesign15.activate();
     return reply;
   } else {
     // create a BridgeTalk message for Illustrator to invoke open
-    var filesString = illustrator.fileArrayToString ( files );
+    var filesString = illustrator.fileArrayToString (files);
 
     var btMessage = new BridgeTalk;
     btMessage.target = illustrator.targetName;
     btMessage.body = "illustrator.openIllustratorToConvertAI (" + filesString + ");";
-    btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender);}
+    btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender)};
     btMessage.send();
   }
 }
@@ -138,51 +138,51 @@ illustrator.openIllustratorToConvertDXF = function (files) {
 
     for (var i = 0; i < fileArray.length; i++) {
       try {
-                app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
+        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
 
-                var w = new Window("window", "Зачекай, обробляю файл", undefined, {closeButton: false});
-                var t = w.add("statictext");
-                t.preferredSize = [450, -1];
-                t.text = "Конвертую EPS в DXF для порізки...";
-                w.show();
+        var w = new Window("window", "Зачекай, обробляю файл", undefined, {closeButton: false});
+        var t = w.add("statictext");
+        t.preferredSize = [450, -1];
+        t.text = "Конвертую EPS в DXF для порізки...";
+        w.show();
 
-                app.open(fileArray[i]);
+        app.open(fileArray[i]);
 
-                var exportOpts = new ExportOptionsAutoCAD();
-                exportOpts.exportFileFormat = AutoCADExportFileFormat.DXF;
+        var exportOpts = new ExportOptionsAutoCAD();
+        exportOpts.exportFileFormat = AutoCADExportFileFormat.DXF;
 
-                var fileName = fileArray[i].fullName.split('.').slice(0, -1).join('.') + ".dxf";
-                var DXF_File = new File(fileName);
-                fileArray[i].remove();
-                for (var i = 0, items = app.activeDocument.pathItems; i < items.length; i++) {
-                    if (!(items[i].fillColor instanceof NoColor)) {
-                        items[i].strokeColor = items[i].fillColor;
-                        items[i].fillColor = new NoColor();    
-                    };
-                };
+        var fileName = fileArray[i].fullName.split('.').slice(0, -1).join('.') + ".dxf";
+        var DXF_File = new File(fileName);
+        fileArray[i].remove();
+        for (var i = 0, items = app.activeDocument.pathItems; i < items.length; i++) {
+          if (!(items[i].fillColor instanceof NoColor)) {
+            items[i].strokeColor = items[i].fillColor;
+            items[i].fillColor = new NoColor();    
+          };
+        };
 
-                app.activeDocument.exportFile(DXF_File, ExportType.AUTOCAD,exportOpts);
-                app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
-                app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
+        app.activeDocument.exportFile(DXF_File, ExportType.AUTOCAD,exportOpts);
+        app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+        app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
 
-                w.close();
+        w.close();
       } catch (err) {
         reply = {
           success: false,
           err: "Error on open(): " + (err.number & 0xFFFF) + ", " + err.description + ", " + fileArray[i].toString()
-        };
+        }
       }
     }
     indesign15.activate();
     return reply;
   } else {
     // create a BridgeTalk message for Illustrator to invoke open
-    var filesString = illustrator.fileArrayToString ( files );
+    var filesString = illustrator.fileArrayToString (files);
 
     var btMessage = new BridgeTalk;
     btMessage.target = illustrator.targetName;
     btMessage.body = "illustrator.openIllustratorToConvertDXF (" + filesString + ");";
-    btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender);}
+    btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender)};
     btMessage.send();
   }
 }
@@ -207,18 +207,6 @@ illustrator.openIllustratorToConvertDXF = function (files) {
 
 ```javascript
 {
-  // Службові назви для шарів (опціонально)  
-  // Дані налаштування потрібні лише тоді, якщо розкладка буде в документ, підготовлений вручну (він має бути підготовлений і відкритий завчасно)
-  "layers": {
-    // Шар для розміщення розкладки макетів
-    "PRINTLayer": "PRINT",
-    // Шар для розміщення міток
-    "PLOTTERLayer": "PLOTTER",
-    // Шар для розміщення контурів порізки
-    "CUTLayer": "CUT",
-    // Шар для розміщення назви файлу
-    "TITLELayer": "TITLE"
-  },
   // Масив параметрів для плоттерів
   "cutters": [
     {

@@ -299,6 +299,6 @@ illustrator.openIllustratorToConvertDXF = function (files) {
 
 ### Варіант №2 - за допомогою bat-скрипта (Adobe ExtendScript Toolkit має бути встановлений)
 
-1. Запустіть командний скрипт `compile-jsxbin.bat`
+1. Запустіть командний скрипт `compile-jsxbin.bat` або `num run compile`
 2. Виберіть файл `source\Rozkladka na plotter.jsx`
 3. Виберіть папку для збереження скомпільованого скрипта

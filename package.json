@@ -1,10 +1,10 @@
 {
   "name": "indesign_rozkladka_plotter",
-  "version": "2.3.0",
+  "version": "3.0.3",
   "description": "Script for imposign designs for plotter cutting",
   "main": "Rozkladka na plotter.jsx",
   "scripts": {
-    "dist": "compile-jsbin.bat"
+    "compile": "compile-jsbin.bat"
   },
   "author": "Sergii Nosachenko",
   "license": "ISC"

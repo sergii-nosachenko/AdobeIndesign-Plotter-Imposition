@@ -9,7 +9,8 @@
             "request": "launch",
             "name": "Rozkladka na plotter",
             "program": "${workspaceFolder}/source/Rozkladka na plotter.jsx",
-            "stopOnEntry": false
+            "stopOnEntry": false,
+            "targetSpecifier": "indesign"
         }
     ]
 }

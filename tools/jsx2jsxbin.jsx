@@ -32,6 +32,8 @@
         alert('Compiled to ' + jsxbinFile.fsName, 'Successfull');
     } catch(err) {
         alert(err, 'Error during script execution', true);
+    } finally {
+        app.quit();
     };
     
 }).call(this);

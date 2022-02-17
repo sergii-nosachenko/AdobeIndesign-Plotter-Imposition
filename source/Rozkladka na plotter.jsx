@@ -1,4 +1,4 @@
-﻿const version = "3.0.3";
+﻿const version = "3.0.4";
 
 // Debug level
 // Comment next line for production!
@@ -188,7 +188,7 @@ function DialogWindow() {
 				case 0:
 					isOk.Imposing = true;
 					MultipageFileSave.enabled = true;
-					PostfixLabel.show();
+					PostfixLabel.text = "+ номер сторінки та назва файлу додаються автоматично";
 					FileName.text = "Введи префікс назви (необов'язково)";
 					isOk.filename = true; 				
 					ImposingCustomGroup.hide();				
@@ -196,7 +196,7 @@ function DialogWindow() {
 				case 1:
 					isOk.Imposing = true;
 					MultipageFileSave.enabled = false;
-					PostfixLabel.hide();
+					PostfixLabel.text = "Можна написати %names% для автоматичної підстановки назв файлів";
 					FileName.text = "Введи повну назву файла (обов'язково)"; 
 					isOk.filename = false;					
 					ImposingCustomGroup.hide();				
@@ -204,7 +204,7 @@ function DialogWindow() {
 				case 2:
 					isOk.Imposing = false;
 					MultipageFileSave.enabled = false;
-					PostfixLabel.hide();
+					PostfixLabel.text = "Можна написати %names% для автоматичної підстановки назв файлів";
 					FileName.text = "Введи повну назву файла (обов'язково)"; 
 					isOk.filename = false;			
 					ImposingCustomGroup.show();	
@@ -248,10 +248,7 @@ function DialogWindow() {
 				ImposingCustom.text = "Список копій кожної сторінки"; 
 				myImposing = "";
 			}
-		};
-		
-		//ImposingCustom.onChange = checkValidImposingCustom;
-		
+		};		
 		ImposingCustom.onChanging = checkValidImposingCustom;
 
 	var ImposingCustomLabel = ImposingCustomGroup.add("statictext", undefined, undefined, {name: "ImposingCustomLabel"}); 
@@ -336,7 +333,8 @@ function DialogWindow() {
 
 	var PostfixLabel = FileNameGroup.add("statictext", undefined, undefined, {name: "PostfixLabel"}); 
 		PostfixLabel.enabled = false; 
-		PostfixLabel.text = "+ номер сторінки та назва файлу додаються автоматично"; 
+		PostfixLabel.text = "+ номер сторінки та назва файлу додаються автоматично";
+		PostfixLabel.preferredSize.width = 500;
 
 	// DOCUMENTGROUP
 	// =============
@@ -365,16 +363,13 @@ function DialogWindow() {
 	var ImpositionLabel = DocGroup2.add("statictext", undefined, undefined, {name: "ImpositionLabel"}); 
 		ImpositionLabel.text = "Спосіб розкладки"; 
 
-	// var ImpositionMethod = DocGroup2.add("dropdownlist", undefined, undefined, {name: "ImpositionMethod", items: myDocumentNames}); 
 	var ImpositionMethod = DocGroup2.add('edittext {properties: {name: "ImpositionMethod", readonly: true}}'); 
 		ImpositionMethod.preferredSize.width = 400;
-		// ImpositionMethod.selection = 0; 
 		ImpositionMethod.text = "Не налаштовано";
 		ImpositionMethod.alignment = ["left","center"];
 		isOk.document = false;
 		myDocument = false;
-		myLayer = false;
-		// ImpositionMethod.onChange = documentSelection;	
+		myLayer = false;	
 
 	var CreateImposBtn = DocGroup2.add("button", undefined, undefined, {name: "CreateImposBtn"}); 
 		CreateImposBtn.enabled = true;
@@ -383,7 +378,6 @@ function DialogWindow() {
 		CreateImposBtn.onClick = function() {
 			var res = NewImposSettingsWindow();
 			if (res && (myCustomDoc.IsGetSizeFromFilename || myCustomDoc.title != "")) {
-				// ImpositionMethod.items[0].text = myCustomDoc.title;
 				ImpositionMethod.text = myCustomDoc.title;
 				isOk.document = true;
 				myDocument = false;
@@ -1607,6 +1601,7 @@ function PlacePDF(){
 						var theFile = File(okFilesCurrent[i].theFile);
 						var fileName = File.decode(okFilesCurrent[i].theFile.name).split('.').slice(0, -1).join('.');					
 						fileName = fileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '');
+						myFileName = myFileName.replace(/%names%/g, '');
 						if (myFileName.match(PaperNames)) {
 							myFileName = myFileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
 						} else {
@@ -1826,11 +1821,15 @@ function PlacePDF(){
 			progress.details("Створюю новий документ...", false);
 			CreateMyDocument(myCurrentDoc);
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
+
+			var fileNames = [];
 			
 			for (var i = 0, itemIndex = pagesTotalProcessedCounter, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
 
 				var theFile = File(okFilesCurrent[i].theFile);
 				var pgCount = okFilesCurrent[i].pgCount;
+
+				fileNames.push(File.decode(theFile.name).split('.').slice(0, -1).join('.').replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, ''));
 
 				var origin;				
 				
@@ -1905,7 +1904,7 @@ function PlacePDF(){
 			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 			myDocument.windows.add().maximize();			
 			progress.details("Експортую PDF...", false);			
-			var fileName = myFileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '');
+			var fileName = myFileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '').replace(/%names%/, fileNames.join(' + ')).replace(/%names%/g, '');
 			if (fileName.match(PaperNames)) {
 				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
 			} else {
@@ -1961,6 +1960,7 @@ function PlacePDF(){
 						var theFile = File(okFilesCurrent[i].theFile);
 						var fileName = File.decode(okFilesCurrent[i].theFile.name).split('.').slice(0, -1).join('.');	
 						fileName = fileName.replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, '');
+						myFileName = myFileName.replace(/%names%/g, '');
 						if (myFileName.match(PaperNames)) {
 							myFileName = myFileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
 						} else {
@@ -2232,6 +2232,8 @@ function PlacePDF(){
 			CreateMyDocument(myCurrentDoc);
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
 
+			var fileNames = [];
+
 			var origin;
 			var newbie;
 			var last;
@@ -2244,6 +2246,8 @@ function PlacePDF(){
 				// Parse the PDF file and extract needed info
 				var theFile = File(okFilesCurrent[i].theFile);
 				var pgCount = okFilesCurrent[i].pgCount;
+
+				fileNames.push(File.decode(theFile.name).split('.').slice(0, -1).join('.').replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, ''));
 				
 				for (var page = 1; page <= pgCount; page++, itemIndex++, pagesTotalProcessedCounter++) {
 					
@@ -2363,7 +2367,7 @@ function PlacePDF(){
 			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 			myDocument.windows.add().maximize();
 			progress.details("Експортую PDF...", false);
-			var fileName = myFileName.replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, '');
+			var fileName = myFileName.replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, '').replace(/%names%/, fileNames.join(' + ')).replace(/%names%/g, '');
 			if (fileName.match(PaperNames)) {
 				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
 			} else {

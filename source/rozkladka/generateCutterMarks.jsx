@@ -3,11 +3,12 @@
 	@param {Object} myDocument Поточний документ Adobe InDesign
 	@param {Object} myCurrentDoc Параметри та налаштування розкладки, які необхідно опрацювати
 	@param {string} MarksLayer Назва шару для розміщення міток
-	@param {Object[]} contoursBounds Масив координат області на листі, яку займає розкладка макета
 */
-function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBounds) {
+function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
 
     var marksCoordinates = [];
+
+    var contoursBounds = myCurrentDoc.Params.contoursBounds;
 
     var firstPage = myDocument.pages.firstItem();
 
@@ -51,7 +52,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
                             ]);
                             break;
                         default:
-                            throw ("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
+                            throw new Error("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
                     };
                     break;
                 case "right":
@@ -81,7 +82,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
                             ]);
                             break;
                         default:
-                            throw ("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
+                            throw new Error("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
                     };
                     break;
                 case "top":
@@ -111,7 +112,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
                             ]);
                             break;
                         default:
-                            throw ("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
+                            throw new Error("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
                     };
                     break;
                 case "bottom":
@@ -141,11 +142,11 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
                             ]);
                             break;
                         default:
-                            throw ("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
+                            throw new Error("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
                     };
                     break;
                 default:
-                    throw ("Помилка при створенні міток для порізки - невідомий параметр позиції для мітки №" + (i + 1) + ": " + pos);
+                    throw new Error("Помилка при створенні міток для порізки - невідомий параметр позиції для мітки №" + (i + 1) + ": " + pos);
             }
         }
 
@@ -191,7 +192,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
                             marksCoordinates[i] = newMarksCoordinates;
                             break;
                         default:
-                            throw ("Помилка при створенні міток для порізки - невідомий напрямок мітки №" + (i + 1) + ": " + props[i].lineDirection);
+                            throw new Error("Помилка при створенні міток для порізки - невідомий напрямок мітки №" + (i + 1) + ": " + props[i].lineDirection);
                     }
 
                     firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, {
@@ -202,13 +203,12 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, contoursBound
                     });
                     break;
                 default:
-                    throw ("Помилка при створенні міток для порізки - невідома форма мітки №" + (i + 1) + ": " + markShape);
+                    throw new Error("Помилка при створенні міток для порізки - невідома форма мітки №" + (i + 1) + ": " + markShape);
             }
 
         }
 
     } catch (err) {
-        alert(err);
-        exit();
+        throw (err);
     }
 }

@@ -1,4 +1,4 @@
-﻿const version = "3.0.4";
+﻿const version = "3.0.5";
 
 // Debug level
 // Comment next line for production!
@@ -1596,6 +1596,7 @@ function PlacePDF(){
 
 						progress.details("Створюю новий документ...", false);
 						CreateMyDocument(myCurrentDoc);
+						addMarksToDocument(myCurrentDoc);
 						myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 						var theFile = File(okFilesCurrent[i].theFile);
@@ -1638,6 +1639,7 @@ function PlacePDF(){
 									// Створюємо новий документ, якщо не вибрано опцію "Зберегти багатосторінковий файл"		
 									progress.details("Створюю новий документ...", false);
 									CreateMyDocument(myCurrentDoc);
+									addMarksToDocument(myCurrentDoc);
 									myLayer = myDocument.layers.itemByName(PRINTLayer);
 								}
 
@@ -1820,6 +1822,7 @@ function PlacePDF(){
 
 			progress.details("Створюю новий документ...", false);
 			CreateMyDocument(myCurrentDoc);
+			addMarksToDocument(myCurrentDoc);
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 			var fileNames = [];
@@ -1955,6 +1958,7 @@ function PlacePDF(){
 
 						progress.details("Створюю новий документ...", false);
 						CreateMyDocument(myCurrentDoc);
+						addMarksToDocument(myCurrentDoc);
 						myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 						var theFile = File(okFilesCurrent[i].theFile);
@@ -1997,6 +2001,7 @@ function PlacePDF(){
 									// Створюємо новий документ, якщо не вибрано опцію "Зберегти багатосторінковий файл"		
 									progress.details("Створюю новий документ...", false);
 									CreateMyDocument(myCurrentDoc);
+									addMarksToDocument(myCurrentDoc);
 									myLayer = myDocument.layers.itemByName(PRINTLayer);
 								}
 							}
@@ -2230,6 +2235,7 @@ function PlacePDF(){
 
 			progress.details("Створюю новий документ...", false);
 			CreateMyDocument(myCurrentDoc);
+			addMarksToDocument(myCurrentDoc);
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 			var fileNames = [];
@@ -2761,6 +2767,20 @@ function CreateMyDocument(myCurrentDoc) {
 		var CutLayer = myDocument.layers.add({
 			'name': CUTLayer
 		});
+	} catch(e) {
+		alert(e.massage || "Сталася невідома помилка під час створення нового документа!", "Script Alert", true);
+		myDocument.windows.add().maximize();
+		exit();
+	}	
+}
+
+function addMarksToDocument(myCurrentDoc) {
+
+	try {
+
+		if (!myCurrentDoc) throw new Error("Відсутній документ для розміщення міток");
+
+		var PlotterLayer = myDocument.layers.itemByName(PLOTTERLayer) || myDocument.layers.add({'name': PLOTTERLayer});
 
 		if (myCurrentDoc.CutterType.marksGenerate == false) {
 
@@ -2768,7 +2788,7 @@ function CreateMyDocument(myCurrentDoc) {
 
 			if (marksFile.open("r")) {
 				marksFile.close();			
-				progress.details("Імпортую мітки...", false);	
+				if (progress) progress.details("Імпортую мітки...", false);	
 
 				var MarksPlacement = firstPage.rectangles.add(PlotterLayer, LocationOptions.AT_BEGINNING, {
 					'contentType': ContentType.GRAPHIC_TYPE,
@@ -2791,11 +2811,14 @@ function CreateMyDocument(myCurrentDoc) {
 			}
 		
 		} else {
-			progress.details("Генерую мітки...", false);		
-			generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer, contoursBounds);
+			if (progress) progress.details("Генерую мітки...", false);
+			if (!myCurrentDoc.Params.contoursBounds) throw new Error("Відсутні дані про розміри робочого поля");
+			generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer);
 		}
 	} catch(e) {
-		alert(e.massage || "Сталася невідома помилка під час створення нового документа!", "Script Alert", true);
+		alert(e.massage || "Сталася невідома помилка під час додавання міток!", "Script Alert", true);
+		myDocument.windows.add().maximize();
+		exit();
 	}	
 }
 
@@ -3298,7 +3321,9 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	
 	var OvalsGroup = CutLayer.pageItems.count() > 1 ? myDocument.groups.add(CutLayer.pageItems) : CutLayer;
 	
-	var contoursBounds = OvalsGroup.ovals.count() > 1 ? OvalsGroup.geometricBounds : OvalsGroup.ovals.firstItem().geometricBounds;
+	myCurrentDoc.Params.contoursBounds = OvalsGroup.ovals.count() > 1 ? OvalsGroup.geometricBounds : OvalsGroup.ovals.firstItem().geometricBounds;
+
+	addMarksToDocument(myCurrentDoc);
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
 
@@ -3651,7 +3676,9 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	
 	var RectGroup = CutLayer.pageItems.count() > 1 ? myDocument.groups.add(CutLayer.pageItems) : CutLayer;
 
-    var contoursBounds = RectGroup.rectangles.count() > 1 ? RectGroup.geometricBounds : RectGroup.rectangles.firstItem().geometricBounds;
+    myCurrentDoc.Params.contoursBounds = RectGroup.rectangles.count() > 1 ? RectGroup.geometricBounds : RectGroup.rectangles.firstItem().geometricBounds;
+
+	addMarksToDocument(myCurrentDoc);
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
 		

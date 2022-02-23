@@ -1906,7 +1906,7 @@ function PlacePDF(){
 
 			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 			myDocument.windows.add().maximize();			
-			progress.details("Експортую PDF...", false);			
+			progress.details("Експортую PDF...", false);		
 			var fileName = myFileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '').replace(/%names%/, fileNames.join(' + ')).replace(/%names%/g, '');
 			if (fileName.match(PaperNames)) {
 				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);

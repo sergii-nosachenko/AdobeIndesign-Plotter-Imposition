@@ -52,7 +52,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
                             ]);
                             break;
                         default:
-                            throw new Error("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
+                            throw new Error(translate('Error - Unknown mark alignment') + (i + 1) + ": " + alignment);
                     };
                     break;
                 case "right":
@@ -82,7 +82,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
                             ]);
                             break;
                         default:
-                            throw new Error("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
+                            throw new Error(translate('Error - Unknown mark alignment') + (i + 1) + ": " + alignment);
                     };
                     break;
                 case "top":
@@ -112,7 +112,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
                             ]);
                             break;
                         default:
-                            throw new Error("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
+                            throw new Error(translate('Error - Unknown mark alignment') + (i + 1) + ": " + alignment);
                     };
                     break;
                 case "bottom":
@@ -142,11 +142,11 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
                             ]);
                             break;
                         default:
-                            throw new Error("Помилка при створенні міток для порізки - невідомий параметр вирівнювання для мітки №" + (i + 1) + ": " + alignment);
+                            throw new Error(translate('Error - Unknown mark alignment') + (i + 1) + ": " + alignment);
                     };
                     break;
                 default:
-                    throw new Error("Помилка при створенні міток для порізки - невідомий параметр позиції для мітки №" + (i + 1) + ": " + pos);
+                    throw new Error(translate('Error - Unknown mark position') + (i + 1) + ": " + pos);
             }
         }
 
@@ -192,7 +192,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
                             marksCoordinates[i] = newMarksCoordinates;
                             break;
                         default:
-                            throw new Error("Помилка при створенні міток для порізки - невідомий напрямок мітки №" + (i + 1) + ": " + props[i].lineDirection);
+                            throw new Error(translate('Error - Unknown mark direction') + (i + 1) + ": " + props[i].lineDirection);
                     }
 
                     firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, {
@@ -203,7 +203,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
                     });
                     break;
                 default:
-                    throw new Error("Помилка при створенні міток для порізки - невідома форма мітки №" + (i + 1) + ": " + markShape);
+                    throw new Error(translate('Error - Unknown mark shape') + (i + 1) + ": " + markShape);
             }
 
         }

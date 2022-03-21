@@ -1,20 +1,24 @@
-﻿const version = "3.1.0a";
+﻿const VERSION = "3.1.0a";
 
 // Debug level
 // Comment next line for production!
 // $.level = 2;
 
+// Допоміжні бібліотеки
 //@include "helpers/JSON.jsx"
 //@include "helpers/Array.indexOf.polyfill.jsx"
 //@include "helpers/Array.fill.polyfill.jsx"
 //@include "helpers/Array.reduce.polyfill.jsx"
 //@include "helpers/PDFmultipage.jsx"
-//@include "languages/uk-UA.jsx"
+
+// Підтримка багатомовності
+//@include "languages/uk_UA.jsx"
+//@include "languages/en_US.jsx"
+
+// Модулі
 //@include "rozkladka/RozkladkaCircles.jsx"
 //@include "rozkladka/RozkladkaRectangles.jsx"
 //@include "rozkladka/generateCutterMarks.jsx"
-
-alert(LANGUAGES.length);
 
 // Global constants
 const PREFERENCES = parsePreferencesJSON(File($.fileName).path + "/preferences.json"); // preferences.json має бути в папці зі скриптом і містити всі налаштування
@@ -26,6 +30,7 @@ const CutterTypes = PREFERENCES.cutters;
 const PaperNames = new RegExp('(SRA[34]|SRA3 Max\+|A[34]|Ricoh ?X?L)', 'g'); // Список можливих назв форматів паперу regex
 
 // Global variables
+var userLang = PREFERENCES.app && PREFERENCES.app.lang ? PREFERENCES.app.lang : $.locale ? $.locale : 'en_US';
 var myPDFExportPreset;
 var theFiles;
 var okFiles = [];
@@ -40,7 +45,7 @@ var myImposingMethod = 0;
 var myCustomDoc = {
 	title: "",
 	CutterType: false,
-	Figure: "Кола",
+	Figure: translate('Circles'),
 	Diameter: 0,
 	RectWidth: 0,
 	RectHeight: 0,
@@ -77,13 +82,6 @@ function DialogWindow() {
 		document: false,
 		preset: false
 	}
-	
-    var myDocumentNames = new Array;
-	myDocumentNames.push('Нова розкладка');
-    //Get the names of the documents
-    for (var myCounter = 0; myCounter < app.documents.length; myCounter++){
-        myDocumentNames.push(app.documents.item(myCounter).name);
-    }
 
 	var myPDFExportPresets = new Array;
     //Get the names of the documents
@@ -94,7 +92,7 @@ function DialogWindow() {
 	// MULTIPLEPDFIMPOSING
 	// ===================
 	var MultiplePDFImposing = new Window("dialog"); 
-		MultiplePDFImposing.text = "Розкладка макетів під плоттер | " + version + " | © Сергій Носаченко"; 
+		MultiplePDFImposing.text = translate('Plugin Title', {version: VERSION});
 		MultiplePDFImposing.orientation = "column"; 
 		MultiplePDFImposing.alignChildren = ["left","top"]; 
 		MultiplePDFImposing.spacing = 10; 
@@ -103,7 +101,7 @@ function DialogWindow() {
 	// INPUTFILESPANEL
 	// ===============
 	var InputFilesPanel = MultiplePDFImposing.add("panel", undefined, undefined, {name: "InputFilesPanel"}); 
-		InputFilesPanel.text = "Вхідні файли"; 
+		InputFilesPanel.text = translate('Input Files Label'); 
 		InputFilesPanel.orientation = "column"; 
 		InputFilesPanel.alignChildren = ["left","top"]; 
 		InputFilesPanel.spacing = 10; 
@@ -128,11 +126,11 @@ function DialogWindow() {
 		ChooseFilesGroup.alignment = ["fill","center"]; 
 
 	var ChooseFilesLabel = ChooseFilesGroup.add("statictext", undefined, undefined, {name: "ChooseFilesLabel"}); 
-		ChooseFilesLabel.text = "Обери файл або декілька файлів"; 
+		ChooseFilesLabel.text = translate('Choose Files Label');
 		ChooseFilesLabel.alignment = ["left","center"]; 
 
 	var AddFilesBtn = ChooseFilesGroup.add("button", undefined, undefined, {name: "AddFilesBtn"}); 
-		AddFilesBtn.text = "Обрати";
+		AddFilesBtn.text = translate('Select Files Btn');
 		AddFilesBtn.onClick = getFiles;
 
 	// FILESNAMESGROUP
@@ -144,14 +142,14 @@ function DialogWindow() {
 		FilesNameListGroup.margins = [0,0,0,0];
 
 	var FilesNameList = FilesNameListGroup.add('edittext {properties: {name: "FilesNameList", readonly: true, multiline: true, scrollable: true}}'); 
-		FilesNameList.text = "Список файлів та сторінок"; 
+		FilesNameList.text = translate('Files Name List');
 		FilesNameList.preferredSize.width = 550; 
 		FilesNameList.preferredSize.height = 100; 
 
 	// IMPOSINGPANEL
 	// =============
 	var ImposingPanel = MultiplePDFImposing.add("panel", undefined, undefined, {name: "ImposingPanel"}); 
-		ImposingPanel.text = "Налаштування розкладки"; 
+		ImposingPanel.text = translate('Imposing Panel Title');
 		ImposingPanel.orientation = "column"; 
 		ImposingPanel.alignChildren = ["left","top"]; 
 		ImposingPanel.spacing = 10; 
@@ -176,39 +174,43 @@ function DialogWindow() {
 		ImposingMethodGroup.alignment = ["fill","center"]; 
 
 	var ImposingMethodLabel = ImposingMethodGroup.add("statictext", undefined, undefined, {name: "ImposingMethodLabel"}); 
-		ImposingMethodLabel.text = "Метод розкладки"; 
+		ImposingMethodLabel.text = translate('Imposing Method Label');
 		ImposingMethodLabel.alignment = ["left","center"]; 
 
-	var ImposingMethod_array = ["Кожен вид на окремий лист","Вмістити всі види на 1+ лист","Вручну"]; 
+	var ImposingMethod_array = [
+			translate('Imposing Method 1'),
+			translate('Imposing Method 2'),
+			translate('Imposing Method 3')
+		]; 
 	var ImposingMethod = ImposingMethodGroup.add("dropdownlist", undefined, undefined, {name: "ImposingMethod", items: ImposingMethod_array}); 
 		ImposingMethod.selection = 0;
 		ImposingMethod.onChange = function() {
 			myImposingMethod = ImposingMethod.selection.index;
-			ImposingCustom.text = "Список копій кожної сторінки"; 
+			ImposingCustom.text = translate('Imposing Method 3 Text');
 			myImposing = "";					
 			myFileName = "";			
 			switch (myImposingMethod) {
 				case 0:
 					isOk.Imposing = true;
 					MultipageFileSave.enabled = true;
-					PostfixLabel.text = "+ номер сторінки та назва файлу додаються автоматично";
-					FileName.text = "Введи префікс назви (необов'язково)";
+					PostfixLabel.text = translate('File Name Text Only Prefix Info');
+					FileName.text = translate('File Name Text Only Prefix');
 					isOk.filename = true; 				
 					ImposingCustomGroup.hide();				
 					break;
 				case 1:
 					isOk.Imposing = true;
 					MultipageFileSave.enabled = false;
-					PostfixLabel.text = "Можна написати %names% для автоматичної підстановки назв файлів";
-					FileName.text = "Введи повну назву файла (обов'язково)"; 
+					PostfixLabel.text = translate('File Name Text Full Info');
+					FileName.text = translate('File Name Text Full');
 					isOk.filename = false;					
 					ImposingCustomGroup.hide();				
 					break;
 				case 2:
 					isOk.Imposing = false;
 					MultipageFileSave.enabled = false;
-					PostfixLabel.text = "Можна написати %names% для автоматичної підстановки назв файлів";
-					FileName.text = "Введи повну назву файла (обов'язково)"; 
+					PostfixLabel.text = translate('File Name Text Full Info');
+					FileName.text = translate('File Name Text Full');
 					isOk.filename = false;			
 					ImposingCustomGroup.show();	
 					ImposingCustomLabel.text = "- / " + (totalPages ? totalPages : '-') + ' (!)';
@@ -218,7 +220,7 @@ function DialogWindow() {
 		}
 		
 	var MultipageFileSave = ImposingMethodGroup.add("checkbox", undefined, undefined, {name: "MultipageFileSave"}); 
-		MultipageFileSave.text = "Залишити багатосторінковість"; 
+		MultipageFileSave.text = translate('Multipage File Save');
 		MultipageFileSave.value = SaveMultipageFilesAsOneFile; 
 		MultipageFileSave.onClick = function() {
 			SaveMultipageFilesAsOneFile = MultipageFileSave.value;
@@ -236,19 +238,19 @@ function DialogWindow() {
 	// IMPOSINGGROUP
 	// =============
 	var ImposingCustom = ImposingCustomGroup.add('edittext {properties: {name: "ImposingCustom", multiline: true, scrollable: true}}'); 
-		ImposingCustom.helpTip = "Вкажи кількість копій кожної сторінки через кому (послідовність - згідно списку вище). Можна задати кількість сторінок підряд: перед копіями постав необхідне число та англ.літеру \"x\".\nКількість копій буде автоматично збільшено, щоб дозаповнити порожні місця в документі. Якщо потрібно дозаповнити лише певні сторінки: постав знак \"+\" після кількості копій."; 
-		ImposingCustom.text = "Список копій кожної сторінки"; 
+		ImposingCustom.helpTip = translate('Imposing Method 3 Help Tip'); 
+		ImposingCustom.text = translate('Imposing Method 3 Text'); 
 		ImposingCustom.preferredSize.width = 550;
 		ImposingCustom.preferredSize.height = 30;
 		ImposingCustom.onActivate = function() {
-			if (ImposingCustom.text == "Список копій кожної сторінки") {
+			if (ImposingCustom.text == translate('Imposing Method 3 Text')) {
 				ImposingCustom.text = "";
 				myImposing = "";
 			}
 		};		
 		ImposingCustom.onDeactivate = function() {
 			if (ImposingCustom.text == "") {
-				ImposingCustom.text = "Список копій кожної сторінки"; 
+				ImposingCustom.text = translate('Imposing Method 3 Text'); 
 				myImposing = "";
 			}
 		};		
@@ -263,7 +265,7 @@ function DialogWindow() {
 	// EXPORTSETTINGSTAB
 	// =================
 	var ExportSettingsTab = MultiplePDFImposing.add("panel", undefined, undefined, {name: "ExportSettingsTab"}); 
-		ExportSettingsTab.text = "Налаштування експорту"; 
+		ExportSettingsTab.text = translate('Export Settings Panel Title');
 		ExportSettingsTab.orientation = "column"; 
 		ExportSettingsTab.alignChildren = ["left","top"]; 
 		ExportSettingsTab.spacing = 10; 
@@ -288,22 +290,22 @@ function DialogWindow() {
 		ChooseFolderGroup.alignment = ["fill","center"]; 
 
 	var ChooseFolderLabel = ChooseFolderGroup.add("statictext", undefined, undefined, {name: "ChooseFolderLabel"}); 
-		ChooseFolderLabel.text = "Тека для збереження результатів"; 
+		ChooseFolderLabel.text = translate('Choose Folder Label');
 		ChooseFolderLabel.alignment = ["left","center"]; 
 
 	var AddFolderBtn = ChooseFolderGroup.add("button", undefined, undefined, {name: "AddFolderBtn"}); 
 		AddFolderBtn.enabled = false;
-		AddFolderBtn.text = "Обрати";
+		AddFolderBtn.text = translate('Add Folder Btn');
 		AddFolderBtn.onClick = getFolder;
 
 	// FOLDERGROUP
 	// ===========
 	var FolderName = FolderGroup.add('edittext {properties: {name: "FolderName", readonly: true}}'); 
-		FolderName.text = "Назва теки"; 
+		FolderName.text = translate('Folder Name Label');
 		FolderName.preferredSize.width = 550;	
 
 	var FileNameLabel = FolderGroup.add("statictext", undefined, undefined, {name: "FileNameLabel"}); 
-		FileNameLabel.text = "Формат назви файлів"; 
+		FileNameLabel.text = translate('File Name Label');
 
 	// PREFIXGROUP
 	// ===========
@@ -314,11 +316,11 @@ function DialogWindow() {
 		FileNameGroup.margins = 0; 
 
 	var FileName = FileNameGroup.add('edittext {properties: {name: "FileName"}}'); 
-		FileName.text = "Введи префікс назви (необов'язково)"; 
+		FileName.text = translate('File Name Text Only Prefix');
 		FileName.preferredSize.width = 550;
 		FileName.onChange = checkValidFileName;
 		FileName.onActivate = function() {
-			if (FileName.text == "Введи префікс назви (необов'язково)" || FileName.text == "Введи повну назву файла (обов'язково)") {
+			if (FileName.text == translate('File Name Text Only Prefix') || FileName.text == translate('File Name Text Full')) {
 				myFileName = "";
 				FileName.text = "";
 			}
@@ -326,9 +328,9 @@ function DialogWindow() {
 		FileName.onDeactivate = function() {
 			if (FileName.text == "") {
 				if (ImposingMethod.selection.index == 0) {
-					FileName.text = "Введи префікс назви (необов'язково)"; 					
+					FileName.text = translate('File Name Text Only Prefix'); 					
 				} else {
-					FileName.text = "Введи повну назву файла (обов'язково)";						
+					FileName.text = translate('File Name Text Full');						
 				};
 				myFileName = "";
 			};
@@ -336,7 +338,7 @@ function DialogWindow() {
 
 	var PostfixLabel = FileNameGroup.add("statictext", undefined, undefined, {name: "PostfixLabel"}); 
 		PostfixLabel.enabled = false; 
-		PostfixLabel.text = "+ номер сторінки та назва файлу додаються автоматично";
+		PostfixLabel.text = translate('File Name Text Only Prefix Info');
 		PostfixLabel.preferredSize.width = 500;
 
 	// DOCUMENTGROUP
@@ -364,11 +366,11 @@ function DialogWindow() {
 		DocGroup2.margins = 0; 
 
 	var ImpositionLabel = DocGroup2.add("statictext", undefined, undefined, {name: "ImpositionLabel"}); 
-		ImpositionLabel.text = "Спосіб розкладки"; 
+		ImpositionLabel.text = translate('Imposition Label');
 
 	var ImpositionMethod = DocGroup2.add('edittext {properties: {name: "ImpositionMethod", readonly: true}}'); 
-		ImpositionMethod.preferredSize.width = 400;
-		ImpositionMethod.text = "Не налаштовано";
+		ImpositionMethod.preferredSize.width = 350;
+		ImpositionMethod.text = translate('Imposition Not Defined');
 		ImpositionMethod.alignment = ["left","center"];
 		isOk.document = false;
 		myDocument = false;
@@ -414,7 +416,7 @@ function DialogWindow() {
 		PresetGroup2.margins = 0; 
 
 	var PresetLabel = PresetGroup2.add("statictext", undefined, undefined, {name: "PresetLabel"}); 
-		PresetLabel.text = "Налаштування для PDF експорту"; 
+		PresetLabel.text = translate('PDF Preset Label');
 
 	var PresetsList = PresetGroup2.add("dropdownlist", undefined, undefined, {name: "PresetsList", items: myPDFExportPresets}); 
 		PresetsList.selection = 0; 
@@ -435,7 +437,7 @@ function DialogWindow() {
 		LabelingGroup.alignment = ["fill","top"]; 
 
 	var AddFileNameLabel = LabelingGroup.add("checkbox", undefined, undefined, {name: "AddFileNameLabel"}); 
-		AddFileNameLabel.text = "Додати назву файла на розкладку"; 
+		AddFileNameLabel.text = translate('Add File Name Label'); 
 		AddFileNameLabel.value = AddFileNameTitle; 
 		AddFileNameLabel.onClick = function() {
 			AddFileNameTitle = AddFileNameLabel.value;
@@ -452,7 +454,7 @@ function DialogWindow() {
 		ButtonsGroup.alignment = ["right","top"]; 
 
 	var Cancel = ButtonsGroup.add("button", undefined, undefined, {name: "Cancel"}); 
-		Cancel.text = "Відміна";
+		Cancel.text = translate('Cancel Btn');
 		Cancel.onClick = function() {
 			MultiplePDFImposing.close(0);
 			MultiplePDFImposing = null;
@@ -460,7 +462,7 @@ function DialogWindow() {
 
 	var Start = ButtonsGroup.add("button", undefined, undefined, {name: "Start"}); 
 		Start.enabled = false; 
-		Start.text = "Розкласти"; 
+		Start.text = translate('Impose Btn');
 		Start.justify = "left"; 
 		Start.onClick = function () {
 			MultiplePDFImposing.close(1);
@@ -477,7 +479,7 @@ function DialogWindow() {
 		isOk.files = false;	
 		steps = 0;		
 		
-		var askIt = "Обери один або декілька PDF, AI або TIF файлів";
+		var askIt = translate('Files Dialog Title');
 		theFiles = File.openDialog(askIt, "*.pdf;*.ai;*.tif;*.eps", true);
 
 		if (theFiles != null) {
@@ -505,7 +507,7 @@ function DialogWindow() {
 	}	
 	
 	function checkValidImposingCustom() {
-		if (ImposingCustom.text == "Список копій кожної сторінки") {
+		if (ImposingCustom.text == translate('Imposing Method 3 Text')) {
 			isOk.Imposing = true;
 			myImposing = "";
 		} else {
@@ -541,7 +543,7 @@ function DialogWindow() {
 		
 		var folder = new Folder(okFiles[0].theFile.path);
 		
-		outputFolder = folder.selectDlg("Обери папку для експорту розкладок");
+		outputFolder = folder.selectDlg(translate('Folder Dialog Title'));
 		
 		FolderName.text = ""; 
 		isOk.folder = false;		
@@ -557,19 +559,19 @@ function DialogWindow() {
 	function checkValidFileName() {
 		if (ImposingMethod.selection.index == 0) {
 			isOk.filename = isValidFileName(FileName.text);
-			if (FileName.text == "Введи префікс назви (необов'язково)" || FileName.text == "Введи повну назву файла (обов'язково)") {
+			if (FileName.text == translate('File Name Text Only Prefix') || FileName.text == translate('File Name Text Full')) {
 				myFileName = "";
 			} else if (isOk.filename) {
 				myFileName = FileName.text;
-			} else if (!isOk.filename) alert("Недопустимі символи в назві файлу!");	
+			} else if (!isOk.filename) alert(translate('File Name Bad Alert'));	
 		} else {
-			if (FileName.text == "" || FileName.text == "Введи повну назву файла (обов'язково)") {
+			if (FileName.text == "" || FileName.text == translate('File Name Text Full')) {
 				isOk.filename = false;
 				myFileName = "";				
 			} else {
 				isOk.filename = isValidFileName(FileName.text);
 				if (isOk.filename) myFileName = FileName.text;
-				if (!isOk.filename) alert("Недопустимі символи в назві файлу!");
+				if (!isOk.filename) alert(translate('File Name Bad Alert'));
 			}
 		}
 		totalFieldsCheckMain();
@@ -624,7 +626,7 @@ function NewImposSettingsWindow() {
 	// NEWCUSTOMDOCSETTINGS
 	// ====================
 	var NewCustomDocSettings = new Window("dialog"); 
-		NewCustomDocSettings.text = "Налаштування розкладки"; 
+		NewCustomDocSettings.text = translate('Imposition Template Settings Title'); 
 		NewCustomDocSettings.orientation = "column"; 
 		NewCustomDocSettings.alignChildren = ["center","top"]; 
 		NewCustomDocSettings.spacing = 10; 
@@ -641,7 +643,7 @@ function NewImposSettingsWindow() {
 	// CIRCLESSETTINGS
 	// ===============
 	var CirclesSettings = FigureSelector.add("tab", undefined, undefined, {name: "CirclesSettings"}); 
-		CirclesSettings.text = "Кола"; 
+		CirclesSettings.text = translate('Circles');
 		CirclesSettings.orientation = "column"; 
 		CirclesSettings.alignChildren = ["left","top"]; 
 		CirclesSettings.spacing = 10; 
@@ -650,7 +652,7 @@ function NewImposSettingsWindow() {
 	// CIRCLESETTINGSPANEL
 	// =============
 	var CircleSettingsPanel = CirclesSettings.add("panel", undefined, undefined, {name: "CircleSettingsPanel"}); 
-		CircleSettingsPanel.text = "Параметри кола"; 
+		CircleSettingsPanel.text = translate('Circle Settings Panel Title'); 
 		CircleSettingsPanel.orientation = "row"; 
 		CircleSettingsPanel.alignChildren = ["left","top"]; 
 		CircleSettingsPanel.spacing = 10; 
@@ -668,12 +670,12 @@ function NewImposSettingsWindow() {
 		
 
 	var GetCircleSizeFromFilename = CircleDocParamsGroup.add("checkbox", undefined, undefined, {name: "GetCircleSizeFromFilename"}); 
-		GetCircleSizeFromFilename.text = "Брати параметри з назв файлів, інакше ігнорувати."; 
+		GetCircleSizeFromFilename.text = translate('Size From Filename'); 
 		GetCircleSizeFromFilename.value = IsGetSizeFromFilename;		
 		GetCircleSizeFromFilename.onClick = CircleCheckBoxClick;
 		
 	var GetCircleSizeFromFilenameDisclaimer = CircleDocParamsGroup.add("statictext", undefined, undefined, {name: "GetCircleSizeFromFilenameDisclaimer"}); 
-		GetCircleSizeFromFilenameDisclaimer.text = "Назва має містити: _D={1}_, де {1} - діаметр в мм."; 
+		GetCircleSizeFromFilenameDisclaimer.text = translate('Circle Filename Disclaimer'); 
 		GetCircleSizeFromFilenameDisclaimer.enabled = false;		
 		
 	// CIRCLESIZEGROUP
@@ -686,22 +688,22 @@ function NewImposSettingsWindow() {
 		CircleSizeGroup.enabled = !IsGetSizeFromFilename;
 
 	var DiameterLabel = CircleSizeGroup.add("statictext", undefined, undefined, {name: "DiameterLabel"}); 
-		DiameterLabel.text = "Діаметр кола"; 
+		DiameterLabel.text = translate('Diameter Label'); 
 
 	var Diameter = CircleSizeGroup.add('edittext {properties: {name: "Diameter"}}'); 
 		Diameter.text = myCustomDoc.Diameter; 
 		Diameter.preferredSize.width = 100;
-		Diameter.helpTip = "Діаметр має бути числом > 0"; 
+		Diameter.helpTip = translate('Diameter Tip');
 		Diameter.onChange = totalFieldsCheck;
 
 	var DiameterUnits = CircleSizeGroup.add("statictext", undefined, undefined, {name: "DiameterUnits"}); 
-		DiameterUnits.text = "мм";
+		DiameterUnits.text = translate('Units mm');
 
 	// ---------------RECTANGLES-----------------
 	// RECTANGLESSETTINGS
 	// ===============
 	var RectanglesSettings = FigureSelector.add("tab", undefined, undefined, {name: "RectanglesSettings"}); 
-		RectanglesSettings.text = "Прямокутники"; 
+		RectanglesSettings.text = translate('Rectangles');
 		RectanglesSettings.orientation = "column"; 
 		RectanglesSettings.alignChildren = ["left","top"]; 
 		RectanglesSettings.spacing = 10; 
@@ -710,7 +712,7 @@ function NewImposSettingsWindow() {
 	// RECTANGLESETTINGSPANEL
 	// =============
 	var RectangleSettingsPanel = RectanglesSettings.add("panel", undefined, undefined, {name: "RectangleSettingsPanel"}); 
-		RectangleSettingsPanel.text = "Параметри прямокутника"; 
+		RectangleSettingsPanel.text = translate('Rectangles Settings Panel Title');
 		RectangleSettingsPanel.orientation = "row"; 
 		RectangleSettingsPanel.alignChildren = ["left","top"]; 
 		RectangleSettingsPanel.spacing = 10; 
@@ -728,12 +730,12 @@ function NewImposSettingsWindow() {
 		
 
 	var GetRectangleSizeFromFilename = RectangleDocParamsGroup.add("checkbox", undefined, undefined, {name: "GetRectangleSizeFromFilename"}); 
-		GetRectangleSizeFromFilename.text = "Брати параметри з назв файлів, інакше ігнорувати."; 
+		GetRectangleSizeFromFilename.text =  translate('Size From Filename');
 		GetRectangleSizeFromFilename.value = IsGetSizeFromFilename;		
 		GetRectangleSizeFromFilename.onClick = RectangleCheckBoxClick;
 		
 	var GetRectangleSizeFromFilenameDisclaimer = RectangleDocParamsGroup.add("statictext", undefined, undefined, {name: "GetRectangleSizeFromFilenameDisclaimer", multiline: true}); 
-		GetRectangleSizeFromFilenameDisclaimer.text = "Назва має містити: _{1}x{2} R={3}_, де {1} - ширина в мм, {2} - висота в мм, {3} - радіус скругління в мм. Обов'язкові лише ширина та висота.";
+		GetRectangleSizeFromFilenameDisclaimer.text = translate('Rectangles Filename Disclaimer');
 		GetRectangleSizeFromFilenameDisclaimer.enabled = false; 
 		GetRectangleSizeFromFilenameDisclaimer.preferredSize.width = 400;		
 		GetRectangleSizeFromFilenameDisclaimer.preferredSize.height = 45;		
@@ -748,28 +750,28 @@ function NewImposSettingsWindow() {
 		RectangleSizeGroup.enabled = !IsGetSizeFromFilename;
 
 	var WidthLabel = RectangleSizeGroup.add("statictext", undefined, undefined, {name: "WidthLabel"}); 
-		WidthLabel.text = "Ширина";
+		WidthLabel.text = translate('Width Label');
 
 	var RectWidth = RectangleSizeGroup.add('edittext {properties: {name: "RectWidth"}}'); 
 		RectWidth.text = myCustomDoc.RectWidth; 
 		RectWidth.preferredSize.width = 100;
-		RectWidth.helpTip = "Ширина має бути числом > 0"; 
+		RectWidth.helpTip = translate('Width Tip');
 		RectWidth.onChange = totalFieldsCheck;
 
 	var WidthUnits = RectangleSizeGroup.add("statictext", undefined, undefined, {name: "WidthUnits"}); 
-		WidthUnits.text = "мм";
+		WidthUnits.text = translate('Units mm');
 		
 	var HeightLabel = RectangleSizeGroup.add("statictext", undefined, undefined, {name: "HeightLabel"}); 
-		HeightLabel.text = "Висота";
+		HeightLabel.text = translate('Height Label');
 
 	var RectHeight = RectangleSizeGroup.add('edittext {properties: {name: "RectHeight"}}'); 
 		RectHeight.text = myCustomDoc.RectHeight; 
 		RectHeight.preferredSize.width = 100;
-		RectHeight.helpTip = "Висота має бути числом > 0";
+		RectHeight.helpTip = translate('Height Tip');
 		RectHeight.onChange = totalFieldsCheck;
 
 	var HeightUnits = RectangleSizeGroup.add("statictext", undefined, undefined, {name: "HeightUnits"}); 
-		HeightUnits.text = "мм";
+		HeightUnits.text = translate('Units mm');
 
 	// ROUNDCORNERSGROUP
 	// =========	
@@ -780,7 +782,7 @@ function NewImposSettingsWindow() {
 		RoundCornersGroup.margins = 0;
 
 	var RoundCorners = RoundCornersGroup.add("checkbox", undefined, undefined, {name: "RoundCorners"}); 
-		RoundCorners.text = "Скругління кутів"; 
+		RoundCorners.text = translate('Round Corners Label');
 		RoundCorners.value = IsRoundedCorners;		
 		RoundCorners.onClick = RoundCornersCheckBoxClick;
 		
@@ -794,13 +796,13 @@ function NewImposSettingsWindow() {
 		RoundCornersValue.onChange = totalFieldsCheck;
 
 	var CornersUnits = RoundCornersValueGroup.add("statictext", undefined, undefined, {name: "CornersUnits"}); 
-		CornersUnits.text = "мм";
+		CornersUnits.text = translate('Units mm');
 		
 	// ---------------MIXED-----------------
 	// MIXEDSETTINGS
 	// ===============
 	var MixedSettings = FigureSelector.add("tab", undefined, undefined, {name: "MixedSettings"}); 
-		MixedSettings.text = "Мікс"; 
+		MixedSettings.text = translate('Mixed');
 		MixedSettings.orientation = "column"; 
 		MixedSettings.alignChildren = ["left","top"]; 
 		MixedSettings.spacing = 10; 
@@ -809,7 +811,7 @@ function NewImposSettingsWindow() {
 	// MIXEDSETTINGSPANEL
 	// =============
 	var MixedSettingsPanel = MixedSettings.add("panel", undefined, undefined, {name: "MixedSettingsPanel"}); 
-		MixedSettingsPanel.text = "Параметри фігур"; 
+		MixedSettingsPanel.text = translate('Mixed Settings Panel Title'); 
 		MixedSettingsPanel.orientation = "row"; 
 		MixedSettingsPanel.alignChildren = ["left","top"]; 
 		MixedSettingsPanel.spacing = 10; 
@@ -827,16 +829,16 @@ function NewImposSettingsWindow() {
 		
 
 	var GetMixedSizeFromFilename = MixedDocParamsGroup.add("checkbox", undefined, undefined, {name: "GetMixedSizeFromFilename"}); 
-		GetMixedSizeFromFilename.text = "Брати параметри з назв файлів, інакше ігнорувати."; 
+		GetMixedSizeFromFilename.text = translate('Size From Filename');
 		GetMixedSizeFromFilename.value = true;
 		GetMixedSizeFromFilename.enabled = false;
 		
 	var GetMixedSizeFromFilenameDisclaimer1 = MixedDocParamsGroup.add("statictext", undefined, undefined, {name: "GetMixedSizeFromFilenameDisclaimer1"}); 
-		GetMixedSizeFromFilenameDisclaimer1.text = "КОЛА: Назва має містити: _D={1}_, де {1} - діаметр в мм."; 
+		GetMixedSizeFromFilenameDisclaimer1.text = translate('Circle Filename Disclaimer'); 
 		GetMixedSizeFromFilenameDisclaimer1.enabled = false;		
 		
 	var GetMixedSizeFromFilenameDisclaimer2 = MixedDocParamsGroup.add("statictext", undefined, undefined, {name: "GetMixedSizeFromFilenameDisclaimer2", multiline: true}); 
-		GetMixedSizeFromFilenameDisclaimer2.text = "ПРЯМОКУТНИКИ: Назва має містити: _{1}x{2} R={3}_, де {1} - ширина в мм, {2} - висота в мм, {3} - радіус скругління в мм. Обов'язкові лише ширина та висота.";
+		GetMixedSizeFromFilenameDisclaimer2.text = translate('Rectangles Filename Disclaimer');
 		GetMixedSizeFromFilenameDisclaimer2.enabled = false; 
 		GetMixedSizeFromFilenameDisclaimer2.preferredSize.width = 400;		
 		GetMixedSizeFromFilenameDisclaimer2.preferredSize.height = 45;		
@@ -844,9 +846,9 @@ function NewImposSettingsWindow() {
 	// FIGURESELECTOR
 	// ==============
 	FigureSelector.selection = RectanglesSettings;
-	if (!myCustomDoc.Figure || myCustomDoc.Figure == 'Кола') {
+	if (!myCustomDoc.Figure || myCustomDoc.Figure == translate('Circles')) {
 		FigureSelector.selection = CirclesSettings;
-	} else if (myCustomDoc.Figure == 'Прямокутники') {
+	} else if (myCustomDoc.Figure == translate('Rectangles')) {
 		FigureSelector.selection = RectanglesSettings;
 	} else {
 		FigureSelector.selection = MixedSettings;
@@ -856,7 +858,7 @@ function NewImposSettingsWindow() {
 	// SETTINGSPANEL
 	// =============
 	var SettingsPanel = NewCustomDocSettings.add("panel", undefined, undefined, {name: "SettingsPanel"}); 
-		SettingsPanel.text = "Налаштування плоттера"; 
+		SettingsPanel.text = translate('Plotter Panel Title'); 
 		SettingsPanel.orientation = "row"; 
 		SettingsPanel.alignChildren = ["left","top"]; 
 		SettingsPanel.spacing = 10; 
@@ -881,7 +883,7 @@ function NewImposSettingsWindow() {
 		CutterTypeGroup.margins = 0; 
 
 	var CutterTypeLabel = CutterTypeGroup.add("statictext", undefined, undefined, {name: "CutterTypeLabel"}); 
-		CutterTypeLabel.text = "Формат розкладки"; 
+		CutterTypeLabel.text = translate('Cutter Types Label'); 
 
 	var CutterType_array = new Array;
 	for (var i = 0; i < CutterTypes.length; i++) {
@@ -905,24 +907,27 @@ function NewImposSettingsWindow() {
 		SpaceBetweenGroup.margins = 0; 
 
 	var SpaceBetweenLabel = SpaceBetweenGroup.add("statictext", undefined, undefined, {name: "SpaceBetweenLabel"}); 
-		SpaceBetweenLabel.text = "Роздвижка між контурами"; 
+		SpaceBetweenLabel.text = translate('Space Between Label'); 
 
 	var SpaceBetween = SpaceBetweenGroup.add('edittext {properties: {name: "SpaceBetween"}}'); 
-		if (FigureSelector.selection.text == "Прямокутники") {
+		if (FigureSelector.selection.text == translate('Rectangles')) {
 			minSpaceBetween = IsRoundedCorners ? CutterTypes[CutterType.selection.index].minSpaceBetween : 0;
 		} else {
 			minSpaceBetween = CutterTypes[CutterType.selection.index].minSpaceBetween;
 		};
 		SpaceBetween.text = myCustomDoc.SpaceBetween;
-		SpaceBetween.helpTip = "Значення роздвижки має бути числом між " + minSpaceBetween + " та " + CutterTypes[CutterType.selection.index].maxSpaceBetween;
+		SpaceBetween.helpTip = translate('Space Between Tip', {
+			min: minSpaceBetween,
+			max: CutterTypes[CutterType.selection.index].maxSpaceBetween
+		});
 		SpaceBetween.preferredSize.width = 100; 
 		SpaceBetween.onChange = totalFieldsCheck;
 
 	var SpaceBetweenUnits = SpaceBetweenGroup.add("statictext", undefined, undefined, {name: "SpaceBetweenUnits"}); 
-		SpaceBetweenUnits.text = "мм";
+		SpaceBetweenUnits.text = translate('Units mm'); 
 		
 	var IsZeroBleedsChk = DocParamsGroup.add("checkbox", undefined, undefined, {name: "IsZeroBleedsChk"}); 
-		IsZeroBleedsChk.text = "Без вильотів (не рекомендується)"; 
+		IsZeroBleedsChk.text = translate('Is Zero Bleeds Chk'); 
 		IsZeroBleedsChk.value = IsZeroBleeds;		
 		IsZeroBleedsChk.onClick = function() {
 			IsZeroBleeds = IsZeroBleedsChk.value;
@@ -932,7 +937,7 @@ function NewImposSettingsWindow() {
 	var BleedWarningLabel = DocParamsGroup.add("statictext", undefined, undefined, {name: "BleedWarningLabel"}); 
 		BleedWarningLabel.enabled = false; 
 		Bleeds = IsZeroBleeds ? 0 : CutterTypes[CutterType.selection.index].minSpaceBetween / 2;
-		BleedWarningLabel.text = "Вильоти макета мають бути по " + Bleeds + " мм!";
+		BleedWarningLabel.text = translate('Bleed Warning Text', {bleeds: Bleeds});
 
 	// DOCPARAMSGROUP2
 	// ===============
@@ -945,7 +950,7 @@ function NewImposSettingsWindow() {
 		
 
 	var SaveFileWithCut = DocParamsGroup2.add("checkbox", undefined, undefined, {name: "SaveFileWithCut"}); 
-		SaveFileWithCut.text = "Зберегти файл з контуром порізки"; 
+		SaveFileWithCut.text = translate('Save File With Cut');
 		SaveFileWithCut.value = IsSaveFileWithCut;		
 		SaveFileWithCut.onClick = function() {
 			IsSaveFileWithCut = SaveFileWithCut.value;
@@ -954,7 +959,7 @@ function NewImposSettingsWindow() {
 	// VARIANTSPANEL
 	// =============
 	var VariantsPanel = NewCustomDocSettings.add("panel", undefined, undefined, {name: "VariantsPanel"}); 
-		VariantsPanel.text = "Доступні варіанти"; 
+		VariantsPanel.text = translate('Variants Panel Title');
 		VariantsPanel.orientation = "column"; 
 		VariantsPanel.alignChildren = ["left","top"]; 
 		VariantsPanel.spacing = 10; 
@@ -1001,11 +1006,11 @@ function NewImposSettingsWindow() {
 					IsSaveFileWithCut: IsSaveFileWithCut,
 					IsRoundedCorners: IsRoundedCorners
 				};
-				if (FigureSelector.selection.text == "Кола") {
-					myCustomDoc.title = "\u25CB D=" + myCustomDoc.Diameter + " (" + myCustomDoc.SpaceBetween + ") мм | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + " шт";	
+				if (FigureSelector.selection.text == translate('Circles')) {
+					myCustomDoc.title = "\u25CB D=" + myCustomDoc.Diameter + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');	
 				};
-				if (FigureSelector.selection.text == "Прямокутники") {
-					myCustomDoc.title = "\u25A1 " + myCustomDoc.RectWidth + "x" + myCustomDoc.RectHeight + (IsRoundedCorners ? " R=" + myCustomDoc.RoundCornersValue : "") + " (" + myCustomDoc.SpaceBetween + ") мм | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + " шт";
+				if (FigureSelector.selection.text == translate('Rectangles')) {
+					myCustomDoc.title = "\u25A1 " + myCustomDoc.RectWidth + "x" + myCustomDoc.RectHeight + (IsRoundedCorners ? " R=" + myCustomDoc.RoundCornersValue : "") + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');
 				};	
 				NewCustomDocSettings.close(1);				
 			} else {
@@ -1023,7 +1028,7 @@ function NewImposSettingsWindow() {
 		DocBtnsGroup.alignment = ["fill","top"]; 
 
 	var CancelDocBtn = DocBtnsGroup.add("button", undefined, undefined, {name: "CancelDocBtn"}); 
-		CancelDocBtn.text = "Відміна"; 
+		CancelDocBtn.text = translate('Cancel Btn'); 
 		CancelDocBtn.alignment = ["right","bottom"]; 
 		CancelDocBtn.onClick = function() {
 			NewCustomDocSettings.close(0);
@@ -1031,7 +1036,7 @@ function NewImposSettingsWindow() {
 		}
 
 	var SaveDocBtn = DocBtnsGroup.add("button", undefined, undefined, {name: "SaveDocBtn"}); 
-		SaveDocBtn.text = "Зберегти"; 
+		SaveDocBtn.text = translate('Save Btn'); 
 		SaveDocBtn.enabled = false;  
 		SaveDocBtn.onClick = function() {
 			myCustomDoc = {
@@ -1049,21 +1054,21 @@ function NewImposSettingsWindow() {
 			};			
 			if (!IsGetSizeFromFilename) {
 				myCustomDoc.Params = Params;				
-				if (FigureSelector.selection.text == "Кола") {
-					myCustomDoc.title = "\u25CB D=" + myCustomDoc.Diameter + " (" + myCustomDoc.SpaceBetween + ") мм | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + " шт";	
+				if (FigureSelector.selection.text == translate('Circles')) {
+					myCustomDoc.title = "\u25CB D=" + myCustomDoc.Diameter + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');	
 				};
-				if (FigureSelector.selection.text == "Прямокутники") {
-					myCustomDoc.title = "\u25A1 " + myCustomDoc.RectWidth + "x" + myCustomDoc.RectHeight + (IsRoundedCorners ? " R=" + myCustomDoc.RoundCornersValue : "") + " (" + myCustomDoc.SpaceBetween + ") мм | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + " шт";
+				if (FigureSelector.selection.text == translate('Rectangles')) {
+					myCustomDoc.title = "\u25A1 " + myCustomDoc.RectWidth + "x" + myCustomDoc.RectHeight + (IsRoundedCorners ? " R=" + myCustomDoc.RoundCornersValue : "") + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');
 				};
 			} else {
-				if (FigureSelector.selection.text == "Кола") {
-					myCustomDoc.title = "\u25CB По назві файлів | " + myCustomDoc.CutterType.text;
+				if (FigureSelector.selection.text == translate('Circles')) {
+					myCustomDoc.title = "\u25CB " + translate('As In Files Names') + " | " + myCustomDoc.CutterType.text;
 				};
-				if (FigureSelector.selection.text == "Прямокутники") {
-					myCustomDoc.title = "\u25A1 По назві файлів | " + myCustomDoc.CutterType.text;
+				if (FigureSelector.selection.text == translate('Rectangles')) {
+					myCustomDoc.title = "\u25A1 " + translate('As In Files Names') + " | " + myCustomDoc.CutterType.text;
 				};
-				if (FigureSelector.selection.text == "Мікс") {
-					myCustomDoc.title = "\u25CB ? \u25A1 По назві файлів | " + myCustomDoc.CutterType.text;
+				if (FigureSelector.selection.text == translate('Mixed')) {
+					myCustomDoc.title = "\u25CB ? \u25A1 " + translate('As In Files Names') + " | " + myCustomDoc.CutterType.text;
 				};				
 				myCustomDoc.Params = false;
 			}
@@ -1135,32 +1140,32 @@ function NewImposSettingsWindow() {
 		if (RoundCornersGroup.enabled) {
 			RoundCornersValue.text = RoundCornersValue.text.replace(',','.');
 			var maxRadius = +RectWidth.text > +RectHeight.text ? +RectHeight.text / 2 : +RectWidth.text / 2;			
-			RoundCornersValue.helpTip = "Значення радіуса має біти від 0 до " + maxRadius + " мм";
+			RoundCornersValue.helpTip = translate('Round Corners Value Tip', {max: maxRadius});
 			if (RoundCornersValue.text < 0) RoundCornersValue.text = 0;
 			if (RoundCornersValue.text > maxRadius) RoundCornersValue.text = maxRadius;
 		}
 	}
 	
 	function checkValidSpaceBetween() {	
-		if (FigureSelector.selection.text == "Прямокутники" || FigureSelector.selection.text == "Мікс") {
-			specialText = IsRoundedCorners ? "" : ", а також 0.";
+		if (FigureSelector.selection.text == translate('Rectangles') || FigureSelector.selection.text == translate('Mixed')) {
+			specialText = IsRoundedCorners ? "" : translate('Including 0');
 			minSpaceBetween = IsRoundedCorners ? CutterTypes[CutterType.selection.index].minSpaceBetween : 0;
 		} else {
 			specialText = "";
-			minSpaceBetween = CutterTypes[CutterType.selection.index].minSpaceBetween;
+            minSpaceBetween = CutterTypes[CutterType.selection.index].minSpaceBetween;
 		};		
 		SpaceBetween.text = Math.round(SpaceBetween.text.replace(',','.'));
 		isOk.SpaceBetween = isValidNumber(SpaceBetween.text) &&
 							SpaceBetween.text != "" &&
 							((+SpaceBetween.text >= +CutterTypes[CutterType.selection.index].minSpaceBetween && +SpaceBetween.text <= +CutterTypes[CutterType.selection.index].maxSpaceBetween) ||
 							(+SpaceBetween.text == +minSpaceBetween));
-		SpaceBetween.helpTip = "Значення роздвижки має бути числом між " + CutterTypes[CutterType.selection.index].minSpaceBetween + " та " + CutterTypes[CutterType.selection.index].maxSpaceBetween + specialText; 		
+		SpaceBetween.helpTip = translate('Space Between Tip', {min: CutterTypes[CutterType.selection.index].minSpaceBetween, max: CutterTypes[CutterType.selection.index].maxSpaceBetween}) + specialText; 		
 		if (!isOk.SpaceBetween) {
 			SpaceBetween.text = SpaceBetween.text > CutterTypes[CutterType.selection.index].maxSpaceBetween ? CutterTypes[CutterType.selection.index].maxSpaceBetween : minSpaceBetween;
 			isOk.SpaceBetween = true;
 		}
 		var Bleeds = IsZeroBleeds ? 0 : CutterTypes[CutterType.selection.index].minSpaceBetween / 2;
-		if (isOk.SpaceBetween) BleedWarningLabel.text = "Вильоти макета мають бути по " + Bleeds + " мм!"; 	
+		if (isOk.SpaceBetween) BleedWarningLabel.text = translate('Bleed Warning Text', {bleeds: Bleeds});
 	}		
 	
 	function isValidNumber(cText) {
@@ -1168,23 +1173,24 @@ function NewImposSettingsWindow() {
 	  return rg2.test(cText);
 	}
 
-	function totalFieldsCheck(preselected) {	
-		if (FigureSelector.selection.text == "Кола") checkValidDiameter();
-		if (FigureSelector.selection.text == "Прямокутники") checkValidSize();
-		if (FigureSelector.selection.text == "Мікс") checkMixed();
+	function totalFieldsCheck(preselected) {
+		if (!FigureSelector.selection) return;
+		if (FigureSelector.selection.text == translate('Circles')) checkValidDiameter();
+		if (FigureSelector.selection.text == translate('Rectangles')) checkValidSize();
+		if (FigureSelector.selection.text == translate('Mixed')) checkMixed();
 		checkValidSpaceBetween();
 		checkValidRoundCornersValue();
 		calculateVariants(preselected);
 	}
 	
 	function calculateVariants(preselected) {
-		if (FigureSelector.selection.text == "Кола") {
+		if (FigureSelector.selection.text == translate('Circles')) {
 			calculateCircleVariants(preselected);
 		};
-		if (FigureSelector.selection.text == "Прямокутники") {
+		if (FigureSelector.selection.text == translate('Rectangles')) {
 			calculateRectangleVariants(preselected);
 		};
-		if (FigureSelector.selection.text == "Мікс") {
+		if (FigureSelector.selection.text == translate('Mixed')) {
 			calculateMixedVariants(preselected);
 		};
 	}
@@ -1211,7 +1217,7 @@ function NewImposSettingsWindow() {
 			}			
 		} else {
 			Variants.removeAll();			
-			Variants.add('item', 'Буде взято найоптимальніший варіант');		
+			Variants.add('item', translate('Optimal Variant'));		
 		}
 		SaveDocBtn.enabled = isOk.Size && isOk.SpaceBetween && isOk.Variant;
 	}	
@@ -1238,7 +1244,7 @@ function NewImposSettingsWindow() {
 			}			
 		} else {
 			Variants.removeAll();			
-			Variants.add('item', 'Буде взято найоптимальніший варіант');		
+			Variants.add('item', translate('Optimal Variant'));		
 		}
 		SaveDocBtn.enabled = isOk.Size && isOk.SpaceBetween && isOk.Variant;
 	}
@@ -1246,7 +1252,7 @@ function NewImposSettingsWindow() {
 	function calculateMixedVariants(preselected) {	
 		VariantsPanelSwitch();
 		Variants.removeAll();			
-		Variants.add('item', 'Буде взято найоптимальніший варіант');
+		Variants.add('item', translate('Optimal Variant'));
 		SaveDocBtn.enabled = true;
 	}
 
@@ -1312,7 +1318,7 @@ function PlacePDF(){
 	var badFiles = [];
 
 	switch (myCustomDoc.Figure) {
-		case "Кола":
+		case translate('Circles'):
 			if (myCustomDoc.Diameter || myCustomDoc.IsGetSizeFromFilename) {
 				if (myCustomDoc.IsGetSizeFromFilename) {
 					var okFilesDiameters = {};
@@ -1336,7 +1342,7 @@ function PlacePDF(){
 						for (var k = 0; k < okFilesDiameters[0].length; k++) {
 							badFiles.push({
 								theFile: okFilesDiameters[0][k].theFile,
-								reason: "Не вдалося розпізнати розмір"
+								reason: translate('Error - Unknown size')
 							});
 						}						
 						totalOkFilesLength = totalOkFilesLength - badFiles.length;
@@ -1361,7 +1367,7 @@ function PlacePDF(){
 								for (var k = 0; k < okFilesDiameters[okDiameters[i]].length; k++) {
 									badFiles.push({
 										theFile: okFilesDiameters[okDiameters[i]][k].theFile,
-										reason: "Не знайдено варіантів для розкладки"
+										reason: translate('Error - No variants')
 									});
 								}
 							};					
@@ -1376,7 +1382,7 @@ function PlacePDF(){
 				ProcessCircles(okFiles, okFiles.length);
 			};		
 			break;
-		case "Прямокутники":		
+		case translate('Rectangles'):		
 			if ((myCustomDoc.RectWidth && myCustomDoc.RectHeight) || myCustomDoc.IsGetSizeFromFilename) {
 				if (myCustomDoc.IsGetSizeFromFilename) {
 					var okFilesSizes = {};
@@ -1400,7 +1406,7 @@ function PlacePDF(){
 						for (var k = 0; k < okFilesSizes[0].length; k++) {
 							badFiles.push({
 								theFile: okFilesSizes[0][k].theFile,
-								reason: "Не вдалося розпізнати розмір"
+								reason: translate('Error - Unknown size')
 							});
 						}
 						totalOkFilesLength = totalOkFilesLength - badFiles.length;			
@@ -1419,7 +1425,7 @@ function PlacePDF(){
 								for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
 									badFiles.push({
 										theFile: okFilesSizes[okSizes[i]][k].theFile,
-										reason: "Занадто великий радіус"
+										reason: translate('Error - Too big radius')
 									});
 								}								
 								continue;
@@ -1439,7 +1445,7 @@ function PlacePDF(){
 									for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
 										badFiles.push({
 											theFile: okFilesSizes[okSizes[i]][k].theFile,
-											reason: "Не знайдено варіантів для розкладки"
+											reason: translate('Error - No variants')
 										});
 									}
 								};								
@@ -1455,7 +1461,7 @@ function PlacePDF(){
 				ProcessRectangles(okFiles, okFiles.length);
 			};			
 			break;
-		case "Мікс":
+		case translate('Mixed'):
 			var okFilesDiameters = {};
 			var okDiameters = [];
 			var okFilesSizes = {};
@@ -1494,7 +1500,7 @@ function PlacePDF(){
 				for (var k = 0; k < okFilesSizes[0].length; k++) {
 					badFiles.push({
 						theFile: okFilesSizes[0][k].theFile,
-						reason: "Не вдалося розпізнати розмір"
+						reason: translate('Error - Unknown size')
 					});
 				}
 				totalOkFilesLength = totalOkFilesLength - okFilesSizes[0].length;
@@ -1520,7 +1526,7 @@ function PlacePDF(){
 						for (var k = 0; k < okFilesDiameters[okDiameters[i]].length; k++) {
 							badFiles.push({
 								theFile: okFilesDiameters[okDiameters[i]][k].theFile,
-								reason: "Не знайдено варіантів для розкладки"
+								reason: translate('Error - No variants')
 							});
 						}
 					};					
@@ -1539,7 +1545,7 @@ function PlacePDF(){
 						for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
 							badFiles.push({
 								theFile: okFilesSizes[okSizes[i]][k].theFile,
-								reason: "Занадто великий радіус"
+								reason: translate('Error - Too big radius')
 							});
 						}	
 						continue;
@@ -1561,7 +1567,7 @@ function PlacePDF(){
 							for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
 								badFiles.push({
 									theFile: okFilesSizes[okSizes[i]][k].theFile,
-									reason: "Не знайдено варіантів для розкладки"
+									reason: translate('Error - No variants')
 								});
 							}
 						};								
@@ -1576,7 +1582,7 @@ function PlacePDF(){
 	function ProcessCircles(okFilesCurrent, totalFilesLength, customSpaceBetween) {
 
 		if (!myCurrentDoc.Params) {
-			alert("Виникла помилка під час створення нового документу для розкладки!");
+			alert(translate('Error - Creating document'));
 			exit();
 		} else {
 			app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
@@ -1589,15 +1595,15 @@ function PlacePDF(){
 					var itemsCopies = myCurrentDoc.Params.total || 0;
 					
 					if (!itemsCopies) {
-						alert('Помилка обробки параметрів для розкладки!');
+						alert(translate('Error - Incorrect params'));
 						exit();
 					}
 					
-					progress(totalPages * itemsCopies, "Триває розкладка кружечків " + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? myCurrentDoc.Diameter + " мм" : ""));
+					progress(totalPages * itemsCopies, translate('Circles processing') + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? myCurrentDoc.Diameter + translate('Units mm') : ""));
 					
 					for (var i = 0; i < okFilesCurrent.length; i++, fileCounter++) {
 
-						progress.details("Створюю новий документ...", false);
+						progress.details(translate('Creating new document'), false);
 						CreateMyDocument(myCurrentDoc);
 						addMarksToDocument(myCurrentDoc);
 						myLayer = myDocument.layers.itemByName(PRINTLayer);
@@ -1620,12 +1626,17 @@ function PlacePDF(){
 						
 						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++, pagesTotalProcessedCounter++) {
 							
-							progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + currentPage + " з " + pgCount + ")");
+							progress.message(translate('Processing file', {
+								fileCounter: fileCounter,
+								totalFilesLength: totalFilesLength,
+								currentPage: currentPage,
+								pgCount: pgCount
+							}));
 
 							if (currentPage > 1) {
 								if (SaveMultipageFilesAsOneFile) {
 									// Додаємо сторінку, якщо вибрано опцію "Зберегти багатосторінковий файл"									
-									progress.details("Додаю сторінку...", false);
+									progress.details(translate('Adding page'), false);
 									myDocument.pages.add(LocationOptions.AT_END);
 									myDocument.pages.lastItem().marginPreferences.properties = {
 										'top': myCurrentDoc.CutterType.marginTop,
@@ -1640,7 +1651,7 @@ function PlacePDF(){
 									};
 								} else {
 									// Створюємо новий документ, якщо не вибрано опцію "Зберегти багатосторінковий файл"		
-									progress.details("Створюю новий документ...", false);
+									progress.details(translate('Creating new document'), false);
 									CreateMyDocument(myCurrentDoc);
 									addMarksToDocument(myCurrentDoc);
 									myLayer = myDocument.layers.itemByName(PRINTLayer);
@@ -1654,7 +1665,10 @@ function PlacePDF(){
 
 								countDone++;
 
-								progress.details("Елемент " + countDone + "/" + total, true);
+								progress.details(translate('Items counter message', {
+									countDone: countDone,
+									total: total
+								}), true);
 
 								if (b == 0) {
 
@@ -1693,7 +1707,7 @@ function PlacePDF(){
 							if (!SaveMultipageFilesAsOneFile) {
 								// Створємо вікно для документа (інакше буде експортовано порожній документ!)
 								myDocument.windows.add().maximize();
-								progress.details("Експортую PDF...", false);								
+								progress.details(translate('Exporting PDF'), false);								
 								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + "_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
 								addDocTitle(outputFile);
 								myDocument.name = outputFile;
@@ -1709,7 +1723,7 @@ function PlacePDF(){
 						if (SaveMultipageFilesAsOneFile) {
 							// Створємо вікно для документа (інакше буде експортовано порожній документ!)
 							myDocument.windows.add().maximize();
-							progress.details("Експортую PDF...", false);							
+							progress.details(translate('Exporting PDF'), false);							
 							var outputFile = myFileName + "_" + fileName +"_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
 							addDocTitle(outputFile);
 							myDocument.name = outputFile;
@@ -1733,7 +1747,7 @@ function PlacePDF(){
 					pagesTotalProcessedCounter = 0;					
 
 					if (!totalFrames) {
-						alert('Помилка обробки параметрів для розкладки!');
+						alert(translate('Error - Incorrect params'));
 						exit();
 					}
 					
@@ -1769,7 +1783,7 @@ function PlacePDF(){
 					var itemsCount = 0;						
 					
 					if (!totalFrames) {
-						alert('Помилка обробки параметрів для розкладки!');
+						alert(translate('Error - Incorrect params'));
 						exit();
 					}
 					
@@ -1821,9 +1835,9 @@ function PlacePDF(){
 		
 		function ProcessNUpDocumentCircles(itemsCopies, itemsCount, pagesCount) {
 			
-			progress(itemsCount, "Триває розкладка кружечків " + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? myCurrentDoc.Diameter + " мм" : ""));
+			progress(itemsCount, translate('Circles processing') + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? myCurrentDoc.Diameter + translate('Units mm') : ""));
 
-			progress.details("Створюю новий документ...", false);
+			progress.details(translate('Creating new document'), false);
 			CreateMyDocument(myCurrentDoc);
 			addMarksToDocument(myCurrentDoc);
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
@@ -1841,7 +1855,12 @@ function PlacePDF(){
 				
 				for (var page = 1; page <= pgCount; page++, itemIndex++, pagesTotalProcessedCounter++) {
 					
-					progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + page + " з " + pgCount + ")");
+					progress.message(translate('Processing file', {
+								fileCounter: fileCounter,
+								totalFilesLength: totalFilesLength,
+								currentPage: currentPage,
+								pgCount: pgCount
+							}));
 					
 					for (var j = 1, b = lastItem + 1; j <= itemsCopies[itemIndex]; j++, b++) {
 
@@ -1849,7 +1868,10 @@ function PlacePDF(){
 
 						countDone++;
 
-						progress.details("Елемент " + countDone + "/" + itemsCount, true);
+						progress.details(translate('Items counter message', {
+									countDone: countDone,
+									total: itemsCount
+								}), true);
 
 						if (b == 0 || j == 1) {
 
@@ -1885,7 +1907,7 @@ function PlacePDF(){
 
 						if ((b == (itemsCount / pagesCount) - 1) && (currentPage != pagesCount)) {
 							// Додаємо сторінку
-							progress.details("Додаю сторінку...", false);
+							progress.details(translate('Adding page'), false);
 							currentPage++;
 							lastItem = -1;
 							b = -1;
@@ -1909,7 +1931,7 @@ function PlacePDF(){
 
 			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 			myDocument.windows.add().maximize();			
-			progress.details("Експортую PDF...", false);		
+			progress.details(translate('Exporting PDF'), false);		
 			var fileName = myFileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '').replace(/%names%/, fileNames.join(' + ')).replace(/%names%/g, '');
 			if (fileName.match(PaperNames)) {
 				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
@@ -1940,7 +1962,7 @@ function PlacePDF(){
 		var SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 
 		if (!myCurrentDoc.Params) {
-			alert("Виникла помилка під час створення нового документу для розкладки!");
+			alert(translate('Error - Creating document'));
 			exit();
 		} else {
 			app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;		
@@ -1951,15 +1973,15 @@ function PlacePDF(){
 					var itemsCopies = myCurrentDoc.Params.total || 0;
 					
 					if (!itemsCopies) {
-						alert('Помилка обробки параметрів для розкладки!');
+						alert(translate('Error - Incorrect params'));
 						exit();
 					}
 					
-					progress(totalPages * itemsCopies, "Триває розкладка прямокутників " + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + " мм" : "") + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
+					progress(totalPages * itemsCopies, translate('Rectangles processing') + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + " мм" : "") + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
 								
 					for (var i = 0; i < okFilesCurrent.length; i++, fileCounter++) {
 
-						progress.details("Створюю новий документ...", false);
+						progress.details(translate('Creating new document'), false);
 						CreateMyDocument(myCurrentDoc);
 						addMarksToDocument(myCurrentDoc);
 						myLayer = myDocument.layers.itemByName(PRINTLayer);
@@ -1982,12 +2004,17 @@ function PlacePDF(){
 						
 						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++, pagesTotalProcessedCounter++) {
 							
-							progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + currentPage + " з " + pgCount + ")");
+							progress.message(translate('Processing file', {
+								fileCounter: fileCounter,
+								totalFilesLength: totalFilesLength,
+								currentPage: currentPage,
+								pgCount: pgCount
+							}));
 
 							if (currentPage > 1) {
 								if (SaveMultipageFilesAsOneFile) {
 									// Додаємо сторінку, якщо вибрано опцію "Зберегти багатосторінковий файл"									
-									progress.details("Додаю сторінку...", false);	
+									progress.details(translate('Adding page'), false);	
 									myDocument.pages.add(LocationOptions.AT_END);
 									myDocument.pages.lastItem().marginPreferences.properties = {
 										'top': myCurrentDoc.CutterType.marginTop,
@@ -2002,7 +2029,7 @@ function PlacePDF(){
 									};
 								} else {
 									// Створюємо новий документ, якщо не вибрано опцію "Зберегти багатосторінковий файл"		
-									progress.details("Створюю новий документ...", false);
+									progress.details(translate('Creating new document'), false);
 									CreateMyDocument(myCurrentDoc);
 									addMarksToDocument(myCurrentDoc);
 									myLayer = myDocument.layers.itemByName(PRINTLayer);
@@ -2021,7 +2048,10 @@ function PlacePDF(){
 
 								countDone++;
 
-								progress.details("Елемент " + countDone + "/" + total, true);
+								progress.details(translate('Items counter message', {
+									countDone: countDone,
+									total: total
+								}), true);
 
 								if (b == 0 || myCurrentDoc.Params.rotationCompensation[b - 1] != myCurrentDoc.Params.rotationCompensation[b]) {
 									// Базовий елемент
@@ -2105,7 +2135,7 @@ function PlacePDF(){
 							if (!SaveMultipageFilesAsOneFile) {
 								// Створємо вікно для документа (інакше буде експортовано порожній документ!)
 								myDocument.windows.add().maximize();								
-								progress.details("Експортую PDF...", false);
+								progress.details(translate('Exporting PDF'), false);
 								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 								addDocTitle(outputFile);
 								myDocument.name = outputFile;
@@ -2121,7 +2151,7 @@ function PlacePDF(){
 						if (SaveMultipageFilesAsOneFile) {
 							// Створємо вікно для документа (інакше буде експортовано порожній документ!)
 							myDocument.windows.add().maximize();
-							progress.details("Експортую PDF...", false);
+							progress.details(translate('Exporting PDF'), false);
 							var outputFile = myFileName + "_" + fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 							addDocTitle(outputFile);
 							myDocument.name = outputFile;
@@ -2146,7 +2176,7 @@ function PlacePDF(){
 					pagesTotalProcessedCounter = 0;
 					
 					if (!totalFrames) {
-						alert('Помилка обробки параметрів для розкладки!');
+						alert(translate('Error - Incorrect params'));
 						exit();
 					}
 					
@@ -2182,7 +2212,7 @@ function PlacePDF(){
 					var itemsCount = 0;                    
                 
 					if (!totalFrames) {
-						alert('Помилка обробки параметрів для розкладки!');
+						alert(translate('Error - Incorrect params'));
 						exit();
 					}                		
 					
@@ -2234,9 +2264,9 @@ function PlacePDF(){
 		
 		function ProcessNUpDocumentRectangles(itemsCopies, itemsCount, pagesCount) {
 			
-			progress(itemsCount, "Триває розкладка прямокутників " + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + " мм" : "") + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
+			progress(itemsCount, translate('Rectangles processing') + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + " мм" : "") + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
 
-			progress.details("Створюю новий документ...", false);
+			progress.details(translate('Creating new document'), false);
 			CreateMyDocument(myCurrentDoc);
 			addMarksToDocument(myCurrentDoc);
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
@@ -2260,7 +2290,12 @@ function PlacePDF(){
 				
 				for (var page = 1; page <= pgCount; page++, itemIndex++, pagesTotalProcessedCounter++) {
 					
-					progress.message("Опрацьовую файл " + fileCounter + " з " + totalFilesLength + " (сторінка " + page + " з " + pgCount + ")");					
+					progress.message(translate('Processing file', {
+								fileCounter: fileCounter,
+								totalFilesLength: totalFilesLength,
+								currentPage: currentPage,
+								pgCount: pgCount
+							}));					
 						
 					for (var j = 1, b = lastItem + 1; j <= itemsCopies[itemIndex]; j++, b++) {
 
@@ -2268,7 +2303,10 @@ function PlacePDF(){
 
 						countDone++;
 
-						progress.details("Елемент " + countDone + "/" + itemsCount, true);
+						progress.details(translate('Items counter message', {
+									countDone: countDone,
+									total: itemsCount
+								}), true);
 
 						if (b == 0 || j == 1 || myCurrentDoc.Params.rotationCompensation[b - 1] != myCurrentDoc.Params.rotationCompensation[b]) {
 							// Базовий елемент
@@ -2346,7 +2384,7 @@ function PlacePDF(){
 
 						if ((b == (itemsCount / pagesCount) - 1) && (currentPage != pagesCount)) {
 							// Додаємо сторінку
-							progress.details("Додаю сторінку...", false);
+							progress.details(translate('Adding page'), false);
 							currentPage++;
 							lastItem = -1;
 							b = -1;
@@ -2375,7 +2413,7 @@ function PlacePDF(){
 
 			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 			myDocument.windows.add().maximize();
-			progress.details("Експортую PDF...", false);
+			progress.details(translate('Exporting PDF'), false);
 			var fileName = myFileName.replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, '').replace(/%names%/, fileNames.join(' + ')).replace(/%names%/g, '');
 			if (fileName.match(PaperNames)) {
 				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
@@ -2415,9 +2453,9 @@ function PlacePDF(){
 
 	var totalPercent = myDocumentsProcessing.length * 100;
 
-	progress(totalPercent, "Тривають фонові операції");
-	progress.message("Зачекай завершення експорту файлів");
-	progress.details("Це може зайняти декілька хвилин...", false);
+	progress(totalPercent, translate('Background tasks running'));
+	progress.message(translate('Background tasks wait'));
+	progress.details(translate('Background tasks message'), false);
 	progress.value(ProcessedPercentCount());
 
 	// Очікуємо завершення всіх фонових експортів
@@ -2436,7 +2474,7 @@ function PlacePDF(){
 		if (myDocumentsProcessing[i].backgroundTask.alerts.length) {
 			badExport.push({
 				myDocument: myDocumentsProcessing[i].myDocument,
-				reason: "Помилка при експорті в PDF"
+				reason: translate('Error - Failed to export')
 			})
 		} else {
 			myDocumentsProcessing[i].myDocument.close(SaveOptions.NO);
@@ -2464,7 +2502,7 @@ function PlacePDF(){
 		// BadFilesListWindow
 		// ===================
 		var BadFilesListWindow = new Window("dialog"); 
-			BadFilesListWindow.text = "Наступні файли не було оброблено!"; 
+			BadFilesListWindow.text = translate('Skipped files title'); 
 			BadFilesListWindow.orientation = "column"; 
 			BadFilesListWindow.alignChildren = ["left","top"];
 			BadFilesListWindow.preferredSize.width = 720; 			
@@ -2496,7 +2534,7 @@ function PlacePDF(){
 			BadFilesListWindow.alignment = ["fill","top"]; 
 
 		var Ok = ButtonsGroup.add("button", undefined, undefined, {name: "Ok"}); 
-			Ok.text = "Зрозуміло";
+			Ok.text = translate('Accept Btn');
 			Ok.onClick = function() {
 				BadFilesListWindow.close(0);
 				BadFilesListWindow = null;
@@ -2709,7 +2747,7 @@ function progress(steps, title) {
 
 		const timeLeft = timer.timeLeft(averageCount, chunkSize);
 
-		var message = " (обчислюю залишок часу...)";
+		var message = translate('Timeleft calculating');
 		
 		if (!timeLeft) return message;
 		
@@ -2720,9 +2758,9 @@ function progress(steps, title) {
 
 		if (bar.value / bar.maxvalue <= 0.5 && minutes > 0) {
 			minutes += (seconds > 30) ? 1 : 0;
-			message = " (залишилось ~" + (hours > 0 ? " " + hours + "год" : "") + (hours <= 0 || minutes > 0 ? " " + minutes + "хв)" : ")");
+			message = " (" + translate('Timeleft message') + " ~" + (hours > 0 ? " " + hours + translate('hours') : "") + (hours <= 0 || minutes > 0 ? " " + minutes + translate('minutes') + ")" : ")");
 		} else {
-			message = " (залишилось ~" + (hours > 0 ? " " + hours + "год" : "") + (hours > 0 || minutes > 0 ? " " + minutes + "хв" : "") + " " + seconds + "сек)";
+			message = " (" + translate('Timeleft message') + " ~" + (hours > 0 ? " " + hours + translate('hours') : "") + (hours > 0 || minutes > 0 ? " " + minutes + translate('minutes') : "") + " " + seconds + translate('seconds') + ")";
 		}
 
 		return message;
@@ -2771,7 +2809,7 @@ function CreateMyDocument(myCurrentDoc) {
 			'name': CUTLayer
 		});
 	} catch(e) {
-		alert(e.massage || "Сталася невідома помилка під час створення нового документа!", "Script Alert", true);
+		alert(e.massage || translate('Error - Unknown document failure'), "Script Alert", true);
 		myDocument.windows.add().maximize();
 		exit();
 	}	
@@ -2781,7 +2819,7 @@ function addMarksToDocument(myCurrentDoc) {
 
 	try {
 
-		if (!myCurrentDoc) throw new Error("Відсутній документ для розміщення міток");
+		if (!myCurrentDoc) throw new Error(translate('Error - No document'));
 
 		var PlotterLayer = myDocument.layers.itemByName(PLOTTERLayer) || myDocument.layers.add({'name': PLOTTERLayer});
 
@@ -2791,7 +2829,7 @@ function addMarksToDocument(myCurrentDoc) {
 
 			if (marksFile.open("r")) {
 				marksFile.close();			
-				if (progress) progress.details("Імпортую мітки...", false);	
+				if (progress) progress.details(translate('Importing marks'), false);	
 
 				var firstPage = myDocument.pages.firstItem();
 
@@ -2812,16 +2850,16 @@ function addMarksToDocument(myCurrentDoc) {
 				MarksPlacement.place(marksFile)[0];			
 				app.pdfPlacePreferences.transparentBackground = false;
 			} else {
-				throw new Error("Немає доступу до файлу з мітками: " + myCurrentDoc.CutterType.marksFile);
+				throw new Error(translate('Error - No access to marks file') + myCurrentDoc.CutterType.marksFile);
 			}
 		
 		} else {
-			if (progress) progress.details("Генерую мітки...", false);
-			if (!myCurrentDoc.Params.contoursBounds) throw new Error("Відсутні дані про розміри робочого поля");
+			if (progress) progress.details(translate('Generating marks'), false);
+			if (!myCurrentDoc.Params.contoursBounds) throw new Error(translate('Error - No working frame data'));
 			generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer);
 		}
 	} catch(e) {
-		alert(e.massage || "Сталася невідома помилка під час додавання міток!", "Script Alert", true);
+		alert(e.massage || translate('Error - Unknown marks error'), "Script Alert", true);
 		myDocument.windows.add().maximize();
 		exit();
 	}	
@@ -2834,17 +2872,17 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	
 	const SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 	
-	progress(3 + Params.total, "Підготовка документа");
-	progress.message("Готую порізку D=" + Params.Diameter + " мм");
+	progress(3 + Params.total, translate('Preparing document'));
+	progress.message(translate('Prepare circular cut', {Diameter: Params.Diameter}));
 
-	progress.details("Створюю новий документ...", false);
+	progress.details(translate('Creating new document'), false);
 	CreateMyDocument(myCurrentDoc);
 	progress.increment();
 
 	var CutLayer = myDocument.layers.itemByName(CUTLayer);
 	var firstPage = myDocument.pages.firstItem();		
 	
-	progress.details("Додаю елементи...", false);
+	progress.details(translate('Adding elements'), false);
 	
 	var documentRotated = Params.widthSheet != myCurrentDoc.CutterType.widthSheet;
 	
@@ -3335,7 +3373,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 		myDocument.windows.add().maximize();
 
-		progress.details("Експортую файл порізки...", false);	
+		progress.details(translate('Exporting cut file'), false);	
 		
 		var cutLength = Math.ceil(Math.PI * Params.Diameter * Params.total);
 		
@@ -3405,18 +3443,18 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	Params.bleedCompensation = [];
 	Params.rotationCompensation = [];
 	
-	progress(3 + Params.total, "Підготовка документа");
+	progress(3 + Params.total, translate('Preparing document'));
 
-	progress.message("Готую розкладку " + Params.widthItem + "x" + Params.heightItem + " мм" + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
+	progress.message(translate('Prepare rectangular cut', {widthItem: Params.widthItem, heightItem: Params.heightItem}) + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + translate('Units mm') : ""));
 
-	progress.details("Створюю новий документ...", false);
+	progress.details(translate('Creating new document'), false);
 	CreateMyDocument(myCurrentDoc);
 	progress.increment();
 
 	var CutLayer = myDocument.layers.itemByName(CUTLayer);
 	var firstPage = myDocument.pages.firstItem();	
 	
-	progress.details("Додаю елементи...", false);
+	progress.details(translate('Adding elements'), false);
 	
 	var totalWidth;
 	var totalHeight;
@@ -3791,7 +3829,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 
 		// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 		myDocument.windows.add().maximize();
-		progress.details("Експортую файл порізки...", false);	
+		progress.details(translate('Exporting cut file'), false);	
 		
 		var cutLength;
 		
@@ -3867,22 +3905,45 @@ function parsePreferencesJSON(fileName) {
 	file.close();
 	jsonStuff = jsonStuff.join("");
 	if (jsonStuff == "") {
-		alert("Не знайдено налаштування у " + file.absoluteURI);
+		alert(translate('Error - JSON preferences not found') + file.absoluteURI);
 		exit();
 	} else {
 		try {
 			var parsedJson = JSON.parse(jsonStuff);
 			for (var i = 0, cutters = parsedJson.cutters; i < cutters.length; i++) {
-				if (cutters[i].widthSheet <= cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.PORTRAIT;
-				if (cutters[i].widthSheet > cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.LANDSCAPE;
+				if (cutters[i].widthSheet <= cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.PORTRAIT.valueOf();
+				if (cutters[i].widthSheet > cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.LANDSCAPE.valueOf();
 				cutters[i].widthFrame = cutters[i].widthSheet - (cutters[i].marginLeft + cutters[i].marginRight);
 				cutters[i].heightFrame = cutters[i].heightSheet - (cutters[i].marginTop + cutters[i].marginBottom);
 			};
 			return parsedJson;				
 		} catch (err) {
-			alert("Помилка при обробці json-файлу налаштувань плоттерів!\n\n" + err.message);
+			alert(translate('Error - JSON parse failed') + "\n\n" + err.message);
 			exit();
 		}
 	
 	}
+}
+
+/**
+	Шукаємо переклад значення у мовних константах
+	@param {string} value Ключ до значення в об'єкті values, що містить переклад
+	@param {Object} replace Об'єкт, який містить пари ключ-значення для заміни в рядку
+	@param {boolean} useDefault Якщо true, то функція шукатиме значення в мові за промовчанням
+	@returns {String} Фраза-переклад
+*/
+
+function translate(value, replace, useDefault) {
+	const lang = useDefault ? 'uk-UA' : userLang;
+	if (LANG.hasOwnProperty(lang) && LANG[lang].hasOwnProperty('values') && LANG[lang].values.hasOwnProperty(value)) {
+		var translation = LANG[lang].values[value];
+		if (replace) {
+			for (var key in replace) {
+				translation = translation.replace('%' + key + '%', replace[key]);
+			}
+		}
+		return translation;
+	} else if (!useDefault) {
+		return translate(value, replace, true);
+	} else return value;
 }

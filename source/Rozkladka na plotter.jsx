@@ -1,4 +1,4 @@
-﻿const version = "3.0.5";
+﻿const version = "3.1.0a";
 
 // Debug level
 // Comment next line for production!
@@ -9,9 +9,12 @@
 //@include "helpers/Array.fill.polyfill.jsx"
 //@include "helpers/Array.reduce.polyfill.jsx"
 //@include "helpers/PDFmultipage.jsx"
+//@include "languages/uk-UA.jsx"
 //@include "rozkladka/RozkladkaCircles.jsx"
 //@include "rozkladka/RozkladkaRectangles.jsx"
 //@include "rozkladka/generateCutterMarks.jsx"
+
+alert(LANGUAGES.length);
 
 // Global constants
 const PREFERENCES = parsePreferencesJSON(File($.fileName).path + "/preferences.json"); // preferences.json має бути в папці зі скриптом і містити всі налаштування

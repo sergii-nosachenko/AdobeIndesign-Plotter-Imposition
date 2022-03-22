@@ -1,4 +1,5 @@
 // Налаштування параметрів нової розкладки
+
 function NewImposSettingsWindow() {
 	
 	var Params = false;
@@ -278,18 +279,44 @@ function NewImposSettingsWindow() {
 	var CutterTypeLabel = CutterTypeGroup.add("statictext", undefined, undefined, {name: "CutterTypeLabel"}); 
 		CutterTypeLabel.text = translate('Cutter Types Label'); 
 
-	var CutterType_array = new Array;
-	for (var i = 0; i < CutterTypes.length; i++) {
-		CutterType_array.push(CutterTypes[i].text);
+	var CutterType_array = [];
+	for (var i = 0; i < CUTTER_TYPES.length; i++) {
+		CutterType_array.push(CUTTER_TYPES[i].text);
 	}
 	
 	var CutterType = CutterTypeGroup.add("dropdownlist", undefined, undefined, {name: "CutterType", items: CutterType_array}); 
+	    CutterType.preferredSize.width = 250;
+        CutterType.alignment = ["left","fill"];
 	if (myCustomDoc.CutterType) {
 		CutterType.find(myCustomDoc.CutterType.text).selected = true;
 	} else {
 		CutterType.selection = 0;			
 	}
-	CutterType.onChange = totalFieldsCheck;
+	CutterType.addEventListener('change', CutterTypeChange);
+
+    function CutterTypeChange() {
+        totalFieldsCheck();
+    }
+
+	// CUTTERTYPEPREFSBTN
+	// ==================
+	var CytterTypePrefsBtn = CutterTypeGroup.add("button", undefined, undefined, {name: "CytterTypePrefsBtn"}); 
+		CytterTypePrefsBtn.enabled = true;
+		CytterTypePrefsBtn.text = "⚙";
+		CytterTypePrefsBtn.preferredSize.width = 50;
+		CytterTypePrefsBtn.onClick = function() {
+			var res = CytterTypePrefsDialog(CutterType.selection ? CutterType.selection.index : 0);
+			if (res) {
+                CutterType.removeEventListener('change', CutterTypeChange);
+                CutterType.removeAll();
+                for (var i = 0; i < CUTTER_TYPES.length; i++) {
+                    CutterType.add('item', CUTTER_TYPES[i].text);
+                }
+                CutterType.selection = res.index;
+                CutterType.addEventListener('change', CutterTypeChange);
+                totalFieldsCheck();
+			}
+		}
 
 	// SPACEBETWEENGROUP
 	// =================
@@ -304,14 +331,14 @@ function NewImposSettingsWindow() {
 
 	var SpaceBetween = SpaceBetweenGroup.add('edittext {properties: {name: "SpaceBetween"}}'); 
 		if (FigureSelector.selection.text == translate('Rectangles')) {
-			minSpaceBetween = IsRoundedCorners ? CutterTypes[CutterType.selection.index].minSpaceBetween : 0;
+			minSpaceBetween = IsRoundedCorners ? CUTTER_TYPES[CutterType.selection.index].minSpaceBetween : 0;
 		} else {
-			minSpaceBetween = CutterTypes[CutterType.selection.index].minSpaceBetween;
+			minSpaceBetween = CutterType.selection ? CUTTER_TYPES[CutterType.selection.index].minSpaceBetween : 0;
 		};
-		SpaceBetween.text = myCustomDoc.SpaceBetween;
+		SpaceBetween.text = myCustomDoc.SpaceBetween >= 0 ? myCustomDoc.SpaceBetween : minSpaceBetween;
 		SpaceBetween.helpTip = translate('Space Between Tip', {
 			min: minSpaceBetween,
-			max: CutterTypes[CutterType.selection.index].maxSpaceBetween
+			max: CutterType.selection ? CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween : 0
 		});
 		SpaceBetween.preferredSize.width = 100; 
 		SpaceBetween.onChange = totalFieldsCheck;
@@ -329,7 +356,7 @@ function NewImposSettingsWindow() {
 
 	var BleedWarningLabel = DocParamsGroup.add("statictext", undefined, undefined, {name: "BleedWarningLabel"}); 
 		BleedWarningLabel.enabled = false; 
-		Bleeds = IsZeroBleeds ? 0 : CutterTypes[CutterType.selection.index].minSpaceBetween / 2;
+		Bleeds = IsZeroBleeds ? 0 : CutterType.selection ? CUTTER_TYPES[CutterType.selection.index].minSpaceBetween / 2 : 0;
 		BleedWarningLabel.text = translate('Bleed Warning Text', {bleeds: Bleeds});
 
 	// DOCPARAMSGROUP2
@@ -386,7 +413,7 @@ function NewImposSettingsWindow() {
 					}
 				}
 				myCustomDoc = {
-					CutterType: CutterTypes[CutterType.selection.index],
+					CutterType: CUTTER_TYPES[CutterType.selection.index],
 					Figure: FigureSelector.selection.text,
 					Diameter: +Diameter.text,
 					RectWidth: +RectWidth.text,
@@ -433,7 +460,7 @@ function NewImposSettingsWindow() {
 		SaveDocBtn.enabled = false;  
 		SaveDocBtn.onClick = function() {
 			myCustomDoc = {
-				CutterType: CutterTypes[CutterType.selection.index],
+				CutterType: CUTTER_TYPES[CutterType.selection.index],
 				Figure: FigureSelector.selection.text,
 				Diameter: +Diameter.text,
 				RectWidth: +RectWidth.text,
@@ -540,24 +567,29 @@ function NewImposSettingsWindow() {
 	}
 	
 	function checkValidSpaceBetween() {	
+		if (!CutterType) return;
+        if (!CutterType.selection) {
+            isOk.SpaceBetween = false;
+            return;
+        }
 		if (FigureSelector.selection.text == translate('Rectangles') || FigureSelector.selection.text == translate('Mixed')) {
 			specialText = IsRoundedCorners ? "" : translate('Including 0');
-			minSpaceBetween = IsRoundedCorners ? CutterTypes[CutterType.selection.index].minSpaceBetween : 0;
+			minSpaceBetween = IsRoundedCorners ? CUTTER_TYPES[CutterType.selection.index].minSpaceBetween : 0;
 		} else {
 			specialText = "";
-            minSpaceBetween = CutterTypes[CutterType.selection.index].minSpaceBetween;
+            minSpaceBetween = CUTTER_TYPES[CutterType.selection.index].minSpaceBetween;
 		};		
 		SpaceBetween.text = Math.round(SpaceBetween.text.replace(',','.'));
 		isOk.SpaceBetween = isValidNumber(SpaceBetween.text) &&
 							SpaceBetween.text != "" &&
-							((+SpaceBetween.text >= +CutterTypes[CutterType.selection.index].minSpaceBetween && +SpaceBetween.text <= +CutterTypes[CutterType.selection.index].maxSpaceBetween) ||
+							((+SpaceBetween.text >= +CUTTER_TYPES[CutterType.selection.index].minSpaceBetween && +SpaceBetween.text <= +CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween) ||
 							(+SpaceBetween.text == +minSpaceBetween));
-		SpaceBetween.helpTip = translate('Space Between Tip', {min: CutterTypes[CutterType.selection.index].minSpaceBetween, max: CutterTypes[CutterType.selection.index].maxSpaceBetween}) + specialText; 		
+		SpaceBetween.helpTip = translate('Space Between Tip', {min: CUTTER_TYPES[CutterType.selection.index].minSpaceBetween, max: CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween}) + specialText; 		
 		if (!isOk.SpaceBetween) {
-			SpaceBetween.text = SpaceBetween.text > CutterTypes[CutterType.selection.index].maxSpaceBetween ? CutterTypes[CutterType.selection.index].maxSpaceBetween : minSpaceBetween;
+			SpaceBetween.text = SpaceBetween.text > CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween ? CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween : minSpaceBetween;
 			isOk.SpaceBetween = true;
 		}
-		var Bleeds = IsZeroBleeds ? 0 : CutterTypes[CutterType.selection.index].minSpaceBetween / 2;
+		var Bleeds = IsZeroBleeds ? 0 : CUTTER_TYPES[CutterType.selection.index].minSpaceBetween / 2;
 		if (isOk.SpaceBetween) BleedWarningLabel.text = translate('Bleed Warning Text', {bleeds: Bleeds});
 	}		
 	
@@ -568,10 +600,10 @@ function NewImposSettingsWindow() {
 
 	function totalFieldsCheck(preselected) {
 		if (!FigureSelector.selection) return;
+		checkValidSpaceBetween();
 		if (FigureSelector.selection.text == translate('Circles')) checkValidDiameter();
 		if (FigureSelector.selection.text == translate('Rectangles')) checkValidSize();
 		if (FigureSelector.selection.text == translate('Mixed')) checkMixed();
-		checkValidSpaceBetween();
 		checkValidRoundCornersValue();
 		calculateVariants(preselected);
 	}
@@ -594,7 +626,7 @@ function NewImposSettingsWindow() {
 			isOk.Variant = false;
 			Variants.removeAll();
 			if (preselected || (isOk.Size && isOk.SpaceBetween)) {
-				VariantsRozkladka = RozkladkaCircles(Diameter.text, CutterTypes[CutterType.selection.index], SpaceBetween.text);
+				VariantsRozkladka = RozkladkaCircles(Diameter.text, CUTTER_TYPES[CutterType.selection.index], SpaceBetween.text);
 				for (var i = 0; i < VariantsRozkladka.length; i++) {
 					Variants.add("item", VariantsRozkladka[i].listItem);
 				}
@@ -621,7 +653,7 @@ function NewImposSettingsWindow() {
 			isOk.Variant = false;
 			Variants.removeAll();			
 			if (preselected || (isOk.Size && isOk.SpaceBetween)) {
-				VariantsRozkladka = RozkladkaRectangles(RectWidth.text, RectHeight.text, CutterTypes[CutterType.selection.index], SpaceBetween.text, SpaceBetween.text > 0);
+				VariantsRozkladka = RozkladkaRectangles(RectWidth.text, RectHeight.text, CUTTER_TYPES[CutterType.selection.index], SpaceBetween.text, SpaceBetween.text > 0);
 				for (var i = 0; i < VariantsRozkladka.length; i++) {
 					Variants.add("item", VariantsRozkladka[i].listItem);
 				}
@@ -646,18 +678,14 @@ function NewImposSettingsWindow() {
 		VariantsPanelSwitch();
 		Variants.removeAll();			
 		Variants.add('item', translate('Optimal Variant'));
-		SaveDocBtn.enabled = true;
+		if (CutterType.selection) SaveDocBtn.enabled = true;
 	}
 
 	totalFieldsCheck(myCustomDoc.Params);		
 
 	var myResult = NewCustomDocSettings.show();
 
-	if (myResult == true) {
-		NewCustomDocSettings = null;		
-	} else {
-		NewCustomDocSettings = null;
-	}
+	NewCustomDocSettings = null;
 
 	return myResult;
 	

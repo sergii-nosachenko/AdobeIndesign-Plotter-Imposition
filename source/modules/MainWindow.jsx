@@ -1,4 +1,5 @@
 // Головне діалогове вікно
+
 function DialogWindow() {
 	
 	app.scriptPreferences.userInteractionLevel = UserInteractionLevels.interactWithAll;
@@ -23,7 +24,7 @@ function DialogWindow() {
 	// MULTIPLEPDFIMPOSING
 	// ===================
 	var MultiplePDFImposing = new Window("dialog"); 
-		MultiplePDFImposing.text = translate('Plugin Title', {version: VERSION});
+		MultiplePDFImposing.text = translate('Plugin Title', {version: APP_VERSION});
 		MultiplePDFImposing.orientation = "column"; 
 		MultiplePDFImposing.alignChildren = ["left","top"]; 
 		MultiplePDFImposing.spacing = 10; 
@@ -379,13 +380,34 @@ function DialogWindow() {
 	// ============
 	var ButtonsGroup = MultiplePDFImposing.add("group", undefined, {name: "ButtonsGroup"}); 
 		ButtonsGroup.orientation = "row"; 
-		ButtonsGroup.alignChildren = ["left","center"]; 
+		ButtonsGroup.alignChildren = ["fill","center"]; 
 		ButtonsGroup.spacing = 10; 
 		ButtonsGroup.margins = 0; 
-		ButtonsGroup.alignment = ["right","top"]; 
+		ButtonsGroup.alignment = ["fill","top"];
+		
+    var Languages_array = [];
+    var Languages_keys = [];
+
+	for (var prop in LANG) {
+		if (LANG.hasOwnProperty(prop)) {
+			Languages_array.push(LANG[prop].title + " (" + LANG[prop].name + ")");
+			Languages_keys.push(LANG[prop].name);
+		}
+	}
+
+    var AppLanguage = ButtonsGroup.add("dropdownlist", undefined, undefined, {name: "AppLanguage", items: Languages_array}); 
+        AppLanguage.selection = Languages_keys.indexOf(userLang); 
+		AppLanguage.alignment = ["left","fill"];
+		AppLanguage.onChange = function() {
+			if (!APP_PREFERENCES.app) APP_PREFERENCES.app = {};
+			APP_PREFERENCES.app.lang = Languages_keys[AppLanguage.selection.index];
+			savePreferencesJSON(PREFS_FILE);
+			alert(translate('Language change restart'), 'Manually restart script');
+		}
 
 	var Cancel = ButtonsGroup.add("button", undefined, undefined, {name: "Cancel"}); 
 		Cancel.text = translate('Cancel Btn');
+		Cancel.alignment = ["right","fill"];
 		Cancel.onClick = function() {
 			MultiplePDFImposing.close(0);
 			MultiplePDFImposing = null;
@@ -394,6 +416,7 @@ function DialogWindow() {
 	var Start = ButtonsGroup.add("button", undefined, undefined, {name: "Start"}); 
 		Start.enabled = false; 
 		Start.text = translate('Impose Btn');
+		Start.alignment = ["right","fill"];
 		Start.justify = "left"; 
 		Start.onClick = function () {
 			MultiplePDFImposing.close(1);
@@ -527,11 +550,9 @@ function DialogWindow() {
 	var myResult = MultiplePDFImposing.show();
 
 	if (myResult == true){
-		MultiplePDFImposing = null;
 		PlacePDF();
 	}
-	else{
-		MultiplePDFImposing = null;
-	}	
+	
+	MultiplePDFImposing = null;
 
 }

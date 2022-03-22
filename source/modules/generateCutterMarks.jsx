@@ -6,6 +6,8 @@
 */
 function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
 
+    if (!myCurrentDoc.CutterType.marksProperties) return;
+
     var marksCoordinates = [];
 
     var contoursBounds = myCurrentDoc.Params.contoursBounds;

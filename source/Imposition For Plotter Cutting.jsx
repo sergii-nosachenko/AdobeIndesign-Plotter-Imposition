@@ -1,4 +1,4 @@
-﻿const VERSION = "3.1.0a";
+﻿const APP_VERSION = "3.1.0a";
 
 // Debug level
 // Comment next line for production!
@@ -21,18 +21,26 @@
 //@include "modules/generateCutterMarks.jsx"
 //@include "modules/MainWindow.jsx"
 //@include "modules/ImpositionWindow.jsx"
+//@include "modules/CutterTypesPrefsWindow.jsx"
 
 // Global constants
-const PREFERENCES = parsePreferencesJSON(File($.fileName).path + "/preferences.json"); // preferences.json має бути в папці зі скриптом і містити всі налаштування
+const PREFS_FILE = File($.fileName).path + "/preferences.json";
+var APP_PREFERENCES = parsePreferencesJSON(PREFS_FILE); // preferences.json має бути в папці зі скриптом і містити всі налаштування
 const PRINTLayer = "PRINT";
 const PLOTTERLayer = "PLOTTER";
 const CUTLayer = "CUT";
 const TITLELayer = "TITLE";
-const CutterTypes = PREFERENCES.cutters;
+var CUTTER_TYPES = APP_PREFERENCES.cutters;
 const PaperNames = new RegExp('(SRA[34]|SRA3 Max\+|A[34]|Ricoh ?X?L)', 'g'); // Список можливих назв форматів паперу regex
+const defaultTitleFont = 'Tahoma';
+const defaultTitleSize = 9;
+const defaultTitleColor = 'Black';
+const defaultTitleColorTint = 99.56;
+
 
 // Global variables
-var userLang = PREFERENCES.app && PREFERENCES.app.lang ? PREFERENCES.app.lang : $.locale ? $.locale : 'en_US';
+var userLang = APP_PREFERENCES.app && APP_PREFERENCES.app.lang ? APP_PREFERENCES.app.lang : ($.locale ? $.locale : 'en_US');
+
 var myPDFExportPreset;
 var theFiles;
 var okFiles = [];
@@ -1375,10 +1383,10 @@ function addDocTitle(title){
 		});
 		pageTitle.paragraphs.firstItem().properties = {
 			'justification': Justification.CENTER_ALIGN,
-			'appliedFont': 'Tahoma',
-			'pointSize': 10,
-			'fillColor': 'Black',
-			'fillTint': 99.56,			
+			'appliedFont': defaultTitleFont,
+			'pointSize': defaultTitleSize,
+			'fillColor': defaultTitleColor,
+			'fillTint': defaultTitleColorTint,			
 		};
 		if (rotation != 0) {
 			pageTitle.absoluteRotationAngle = rotation;
@@ -1705,7 +1713,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		};
 
 		if (myCurrentDoc.IsSaveFileWithCut) {
-			ovalsProperties['strokeWeight'] = 1;
+			ovalsProperties['strokeWeight'] = 0.5;
 			ovalsProperties['strokeColor'] = contourColor;
 			ovalsProperties['strokeType'] = 'Solid';
 			ovalsProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;
@@ -2279,7 +2287,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		};
 
 		if (SpaceBetween > 0) {
-			rectProperties['strokeWeight'] = 1;
+			rectProperties['strokeWeight'] = 0.5;
 			rectProperties['strokeColor'] = contourColor;
 			rectProperties['strokeType'] = 'Solid';
 			rectProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;			
@@ -2710,10 +2718,12 @@ function parsePreferencesJSON(fileName) {
 		try {
 			var parsedJson = JSON.parse(jsonStuff);
 			for (var i = 0, cutters = parsedJson.cutters; i < cutters.length; i++) {
-				if (cutters[i].widthSheet <= cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.PORTRAIT.valueOf();
-				if (cutters[i].widthSheet > cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.LANDSCAPE.valueOf();
-				cutters[i].widthFrame = cutters[i].widthSheet - (cutters[i].marginLeft + cutters[i].marginRight);
-				cutters[i].heightFrame = cutters[i].heightSheet - (cutters[i].marginTop + cutters[i].marginBottom);
+				if (cutters[i].pageOrientation) {
+					if (cutters[i].widthSheet <= cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.PORTRAIT.valueOf();
+					if (cutters[i].widthSheet > cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.LANDSCAPE.valueOf();
+				}
+				cutters[i].widthFrame = cutters[i].widthFrame || cutters[i].widthSheet - (cutters[i].marginLeft + cutters[i].marginRight);
+				cutters[i].heightFrame = cutters[i].heightFrame || cutters[i].heightSheet - (cutters[i].marginTop + cutters[i].marginBottom);
 			};
 			return parsedJson;				
 		} catch (err) {
@@ -2722,6 +2732,39 @@ function parsePreferencesJSON(fileName) {
 		}
 	
 	}
+}
+
+// Читаємо і готуємо файл налаштувань
+
+function savePreferencesJSON(fileName) {
+    var JSONFile = new File(fileName);
+    writeFile(JSONFile, JSON.stringify(APP_PREFERENCES));
+}
+
+// Solution from https://community.adobe.com/t5/after-effects-discussions/create-a-txt-file-in-extendscript/m-p/9645027#M50287
+
+function writeFile(fileObj, fileContent, encoding) {
+
+    encoding = encoding || "utf-8";
+
+    fileObj = (fileObj instanceof File) ? fileObj : new File(fileObj);
+
+    var parentFolder = fileObj.parent;
+
+    if (!parentFolder.exists && !parentFolder.create())
+
+        throw new Error(translate('Error - cant create file') + fileObj.fsName);
+
+    fileObj.encoding = encoding;
+
+    fileObj.open("w");
+
+    fileObj.write(fileContent);
+
+    fileObj.close();
+
+    return fileObj;
+
 }
 
 /**

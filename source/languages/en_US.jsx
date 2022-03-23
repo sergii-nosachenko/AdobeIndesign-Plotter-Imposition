@@ -123,6 +123,7 @@ LANG['en_US'] = {
         'Marks file source panel': 'Marks file source',
         'External file checkbox': 'Use external file',
         'Choose btn': 'Choose',
+        'Workspace Shrink': 'Allow workspace to shrink to the size of art bounds',
         'Manual marks list panel': 'Manual marks list',
         'Remove mark btn': 'Remove mark',
         'Edit mark btn': 'Edit mark',
@@ -136,6 +137,7 @@ LANG['en_US'] = {
         'Shape col': 'Shape',
         'Position col': 'Position',
         'Size col': 'Size',
+        'Margins col': 'Margins',
 
         'Error - Unknown size': 'Could not recognize size',
         'Error - No variants': 'Could not find any imposition layout',
@@ -154,6 +156,7 @@ LANG['en_US'] = {
         'Error - Unknown mark direction': 'Error creating marks for cutting - unknown direction for mark #',
         'Error - Unknown mark shape': 'Error creating marks for cutting - unknown shape for mark #',
         'Error - cant create file': 'Cannot create file in path ',
+        'Error - Illustrator cannot convert': 'Illustrator can\'t convert contours file to %format%\n%error%',
     }
 };
 

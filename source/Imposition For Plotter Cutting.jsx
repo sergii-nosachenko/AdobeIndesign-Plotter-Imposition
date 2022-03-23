@@ -1630,7 +1630,7 @@ function addMarksToDocument(myCurrentDoc) {
 
 		var PlotterLayer = myDocument.layers.itemByName(PLOTTERLayer) || myDocument.layers.add({'name': PLOTTERLayer});
 
-		if (myCurrentDoc.CutterType.marksGenerate == false) {
+		if (myCurrentDoc.CutterType.marksFile && myCurrentDoc.CutterType.marksFile != "") {
 
 			var marksFile = File(myCurrentDoc.CutterType.marksFile);
 
@@ -1658,9 +1658,9 @@ function addMarksToDocument(myCurrentDoc) {
 				app.pdfPlacePreferences.transparentBackground = false;
 			} else {
 				throw new Error(translate('Error - No access to marks file') + myCurrentDoc.CutterType.marksFile);
-			}
-		
-		} else {
+			}		
+		}
+		if (myCurrentDoc.CutterType.marksGenerate && myCurrentDoc.CutterType.marksGenerate === true) {
 			if (progress) progress.details(translate('Generating marks'), false);
 			if (!myCurrentDoc.Params.contoursBounds) throw new Error(translate('Error - No working frame data'));
 			generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer);
@@ -1669,7 +1669,7 @@ function addMarksToDocument(myCurrentDoc) {
 		alert(e.massage || translate('Error - Unknown marks error'), "Script Alert", true);
 		myDocument.windows.add().maximize();
 		exit();
-	}	
+	}
 }
 
 // Створення шаблону документа для розкладки кружечків
@@ -2191,20 +2191,28 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		if (OvalsGroup.ovals.length > 0) {
 			if (myCurrentDoc.CutterType.plotterCutFormat == "AI") {
 				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-                  // Виклик Ілюстратора для перезбереження файлу до 8 версії AI
-                  var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
-                  if (res) {
-						if (!res.success) alert(res.err);
-				  }
-				  
+                // Виклик Ілюстратора для перезбереження файлу до 8 версії AI
+				try {
+            		var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
+					if (res && !res.success) throw(res.err);
+				} catch(err) {
+					alert(translate('Error - Illustrator cannot convert', {
+							format: myCurrentDoc.CutterType.plotterCutFormat,
+							error: err.message
+						}));
+				}				  
 			} else if (myCurrentDoc.CutterType.plotterCutFormat == "DXF") {
 				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-                  // Виклик Ілюстратора для перезбереження файлу до формату DXF
-				  var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
-                  if (res) {
-						if (!res.success) alert(res.err);
-				  }
-				  
+            // Виклик Ілюстратора для перезбереження файлу до формату DXF
+				try {
+					var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
+					if (res && !res.success) throw(res.err);
+				} catch(err) {
+					alert(translate('Error - Illustrator cannot convert', {
+							format: myCurrentDoc.CutterType.plotterCutFormat,
+							error: err.message
+						}));
+				}				  
 			} else {
 				
 				const myPDFExportPreset4Contour = myPDFExportPreset.duplicate();
@@ -2657,18 +2665,28 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		if (RectGroup.rectangles.length > 0) {
 			if (myCurrentDoc.CutterType.plotterCutFormat == "AI") {
 				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-                  // Виклик Ілюстратора для перезбереження файлу до 8 версії AI
-                  var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
-                  if (res) {
-						if (!res.success) alert(res.err);
-				  }
+                // Виклик Ілюстратора для перезбереження файлу до 8 версії AI
+				try {
+                  	var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
+					if (res && !res.success) throw(res.err);
+				} catch(err) {
+					alert(translate('Error - Illustrator cannot convert', {
+							format: myCurrentDoc.CutterType.plotterCutFormat,
+							error: err.message
+						}));
+				}	
 			} else if (myCurrentDoc.CutterType.plotterCutFormat == "DXF") {
 				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-                  // Виклик Ілюстратора для перезбереження файлу до формату DXF
-                  var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
-                  if (res) {
-						if (!res.success) alert(res.err);
-				  }
+                // Виклик Ілюстратора для перезбереження файлу до формату DXF
+				try {
+                  	var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
+					if (res && !res.success) throw(res.err);
+				} catch(err) {
+					alert(translate('Error - Illustrator cannot convert', {
+							format: myCurrentDoc.CutterType.plotterCutFormat,
+							error: err.message
+						}));
+				}	
 			} else {
 				const myPDFExportPreset4Contour = myPDFExportPreset.duplicate();
 				myPDFExportPreset4Contour.properties = {

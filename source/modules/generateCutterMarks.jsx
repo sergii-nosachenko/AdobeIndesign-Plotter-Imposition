@@ -10,9 +10,20 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer) {
 
     var marksCoordinates = [];
 
-    var contoursBounds = myCurrentDoc.Params.contoursBounds;
+    var contoursBounds;
 
     var firstPage = myDocument.pages.firstItem();
+    
+    if (myCurrentDoc.CutterType.workspaceShrink && myCurrentDoc.CutterType.workspaceShrink === true) {
+        contoursBounds = myCurrentDoc.Params.contoursBounds;
+    } else {
+        contoursBounds = [
+            firstPage.bounds[0] + myCurrentDoc.CutterType.marginTop,
+            firstPage.bounds[1] + myCurrentDoc.CutterType.marginLeft,
+            firstPage.bounds[2] - myCurrentDoc.CutterType.marginBottom,
+            firstPage.bounds[3] - myCurrentDoc.CutterType.marginRight
+        ];
+    }
 
     try {
 

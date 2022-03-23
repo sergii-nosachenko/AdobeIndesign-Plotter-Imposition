@@ -123,6 +123,7 @@ LANG['uk_UA'] = {
         'Marks file source panel': 'Джерело міток плотера',
         'External file checkbox': 'Зовнішній файл',
         'Choose btn': 'Обрати',
+        'Workspace Shrink': 'Дозволити зменшення робочої області до розміру рамки зображення',
         'Manual marks list panel': 'Користувацькі мітки',
         'Remove mark btn': 'Прибрати мітку',
         'Edit mark btn': 'Редагувати мітку',
@@ -136,6 +137,7 @@ LANG['uk_UA'] = {
         'Shape col': 'Форма',
         'Position col': 'Розташування',
         'Size col': 'Розмір',
+        'Margins col': 'Відступи',
 
         'Error - Unknown size': 'Не вдалося розпізнати розмір',
         'Error - No variants': 'Не знайдено варіантів для розкладки',
@@ -154,5 +156,6 @@ LANG['uk_UA'] = {
         'Error - Unknown mark direction': 'Помилка при створенні міток для порізки - невідомий напрямок мітки №',
         'Error - Unknown mark shape': 'Помилка при створенні міток для порізки - невідома форма мітки №',
         'Error - cant create file': 'Неможливо створити/перезаписати файл у ',
+        'Error - Illustrator cannot convert': 'Illustrator не вдалося конвертувати файл з порізкою у формат %format%\n%error%',
     }
 };

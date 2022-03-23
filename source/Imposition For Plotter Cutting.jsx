@@ -22,6 +22,7 @@
 //@include "modules/MainWindow.jsx"
 //@include "modules/ImpositionWindow.jsx"
 //@include "modules/CutterTypesPrefsWindow.jsx"
+//@include "modules/EditMarkWindow.jsx"
 
 // Global constants
 const PREFS_FILE = File($.fileName).path + "/preferences.json";
@@ -36,7 +37,6 @@ const defaultTitleFont = 'Tahoma';
 const defaultTitleSize = 9;
 const defaultTitleColor = 'Black';
 const defaultTitleColorTint = 99.56;
-
 
 // Global variables
 var userLang = APP_PREFERENCES.app && APP_PREFERENCES.app.lang ? APP_PREFERENCES.app.lang : ($.locale ? $.locale : 'en_US');

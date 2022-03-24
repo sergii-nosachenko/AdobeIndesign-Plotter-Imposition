@@ -1,4 +1,16 @@
-﻿const APP_VERSION = "4.0.0a";
+﻿/* ----------------------------------------------------------------------
+
+Цей плагін є результатом багаторічного досвіду в поліграфії та створений
+з метою спростити життя репрографам, що часто працюють з розкладками
+під плотерну порізку.
+
+Автор: Сергій Носаченко
+github.com/sergii-nosachenko
+2022
+
+---------------------------------------------------------------------- */
+
+const APP_VERSION = "4.0.0a";
 
 // Debug level
 // Comment next line for production!
@@ -2758,7 +2770,7 @@ function parsePreferencesJSON(fileName) {
 		if (createNew) {
 			APP_PREFERENCES = {
 				app: {},
-				cutters: {}
+				cutters: []
 			};
 			savePreferencesJSON(fileName);
 			return parsePreferencesJSON(fileName);

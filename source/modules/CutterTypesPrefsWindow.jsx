@@ -2,6 +2,8 @@ function CytterTypePrefsDialog(selectedIndex) {
 
     var ManualMarksList_array = [];
 
+    var lastSelected = 0;
+
     var isOk = {
         name: false,
         size: false,
@@ -20,7 +22,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         HeightValue: 50,
         TopValue: 0,
         RightValue: 0,
-        BottpmValue: 0,
+        BottomValue: 0,
         LeftValue: 0,
         SBminValue: 0.5,
         SBmaxValue: 0.5,
@@ -71,7 +73,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         CutterTypeList.addEventListener('change', CutterTypeListSelected);
 
     var CopyNewBtn = CutterTypeTopGroup.add("button", undefined, undefined, {name: "CopyNewBtn"}); 
-        CopyNewBtn.enabled = true;
+        CopyNewBtn.enabled = false;
         CopyNewBtn.text = translate('Duplicate');
         CopyNewBtn.onClick = CopyNewPlotter; 
 
@@ -525,47 +527,46 @@ function CytterTypePrefsDialog(selectedIndex) {
 
         if (CutterTypeList.selection.index == 0) {
             AddNewPlotter();
-            return;
+        } else {
+            isOk = {
+                name: false,
+                size: false,
+                margins: false,
+                spaceBetween: false,
+                color: false,
+                overcut: false,
+                marks: false
+            };
+            SaveCurrentBtn.enabled = false;
+            RemoveCurrentBtn.enabled = true;
+            CopyNewBtn.enabled = true;
+            const index = CutterTypeList.selection.index - 1;
+            const selectedCutter = CUTTER_TYPES[index];
+            CutterNameText.text = selectedCutter.text;
+            CutterLabelText.text = selectedCutter.label;
+            WidthValue.text = selectedCutter.widthSheet;
+            HeightValue.text = selectedCutter.heightSheet;
+            SheetNameText.text = selectedCutter.paperName;
+            TopValue.text = selectedCutter.marginTop;
+            RightValue.text = selectedCutter.marginRight;
+            BottomValue.text = selectedCutter.marginBottom;
+            LeftValue.text = selectedCutter.marginLeft;
+            SBminValue.text = selectedCutter.minSpaceBetween;
+            SBmaxValue.text = selectedCutter.maxSpaceBetween;
+            CyanValue.text = selectedCutter.contourColor[0];
+            MagentaValue.text = selectedCutter.contourColor[1];
+            YellowValue.text = selectedCutter.contourColor[2];
+            BlackValue.text = selectedCutter.contourColor[3];
+            OvercutValue.text = selectedCutter.contourOffset;
+            WorkspaceShrinkChk.value = selectedCutter.workspaceShrink;
+            FileFormats.find(selectedCutter.plotterCutFormat).selected = true;
+            fillMarksList(selectedCutter);
+            MarksExternalFileChk.value = selectedCutter.marksFile && selectedCutter.marksFile != "";
+            MarksExternalFilePath.text = selectedCutter.marksFile || "";
+            toggleMarksSource(true);
+
+            lastSelected = CutterTypeList.selection.index;
         }
-
-        needSave();
-
-        isOk = {
-            name: false,
-            size: false,
-            margins: false,
-            spaceBetween: false,
-            color: false,
-            overcut: false,
-            marks: false
-        };
-        SaveCurrentBtn.enabled = false;
-        RemoveCurrentBtn.enabled = true;
-        CopyNewBtn.enabled = true;
-        const index = CutterTypeList.selection.index - 1;
-        const selectedCutter = CUTTER_TYPES[index];
-        CutterNameText.text = selectedCutter.text;
-        CutterLabelText.text = selectedCutter.label;
-        WidthValue.text = selectedCutter.widthSheet;
-        HeightValue.text = selectedCutter.heightSheet;
-        SheetNameText.text = selectedCutter.paperName;
-        TopValue.text = selectedCutter.marginTop;
-        RightValue.text = selectedCutter.marginRight;
-        BottomValue.text = selectedCutter.marginBottom;
-        LeftValue.text = selectedCutter.marginLeft;
-        SBminValue.text = selectedCutter.minSpaceBetween;
-        SBmaxValue.text = selectedCutter.maxSpaceBetween;
-        CyanValue.text = selectedCutter.contourColor[0];
-        MagentaValue.text = selectedCutter.contourColor[1];
-        YellowValue.text = selectedCutter.contourColor[2];
-        BlackValue.text = selectedCutter.contourColor[3];
-        OvercutValue.text = selectedCutter.contourOffset;
-        WorkspaceShrinkChk.value = selectedCutter.workspaceShrink;
-        FileFormats.find(selectedCutter.plotterCutFormat).selected = true;
-        fillMarksList(selectedCutter);
-        MarksExternalFileChk.value = selectedCutter.marksFile && selectedCutter.marksFile != "";
-        MarksExternalFilePath.text = selectedCutter.marksFile || "";
-        toggleMarksSource(true);
     }
 
     function fillMarksList(selectedCutter, index) {
@@ -661,13 +662,15 @@ function CytterTypePrefsDialog(selectedIndex) {
         MarksExternalFilePath.text = defaults.MarksExternalFilePath;
         WorkspaceShrinkChk.value = defaults.WorkspaceShrinkChk;
         WorkspaceShrinkChk.enabled = defaults.WorkspaceShrinkChk;
-        CopyNewBtn.enabled = false;
-        RemoveCurrentBtn.enabled = false;
         MarksExternalFilePath.enabled = false;
         MarksFilePickBtn.enabled = false;
         ManualMarksList.removeAll();
         ManualMarksList_array = [];
-        isAllOk();
+        CutterTypeList.selection = 0;
+        lastSelected = 0;
+        CopyNewBtn.enabled = false;
+        SaveCurrentBtn.enabled = false;
+        RemoveCurrentBtn.enabled = false;
     }
 
     function CheckName() {
@@ -768,11 +771,10 @@ function CytterTypePrefsDialog(selectedIndex) {
             isOk.marks == true
         ) {
             SaveCurrentBtn.enabled = true;
-            CopyNewBtn.enabled = false;
         } else {
             SaveCurrentBtn.enabled = false;
-            CopyNewBtn.enabled = true;
         }
+        CopyNewBtn.enabled = false;
     }
 
     function editMark(mark, index) {
@@ -825,9 +827,6 @@ function CytterTypePrefsDialog(selectedIndex) {
 	}	
 
     function AddNewPlotter() {
-        CutterTypeList.selection = 0;
-        CopyNewBtn.enabled = false;
-        needSave();
         setDefaults();
     }
 
@@ -891,9 +890,7 @@ function CytterTypePrefsDialog(selectedIndex) {
     }
 
     function savePlotter() {
-        SaveCurrentBtn.enabled = false;
-        CopyNewBtn.enabled = true; 
-        var index = CutterTypeList.selection.index - 1;
+        var index = lastSelected - 1;
         var selectedCutter;
         if (index == -1) {
             CUTTER_TYPES.push({});
@@ -934,6 +931,8 @@ function CytterTypePrefsDialog(selectedIndex) {
         }
         CutterTypeList.selection = index + 1;
         CutterTypeList.addEventListener('change', CutterTypeListSelected);
+        SaveCurrentBtn.enabled = false;
+        CopyNewBtn.enabled = true; 
         RemoveCurrentBtn.enabled = true;
         savePreferencesJSON(PREFS_FILE);
     }

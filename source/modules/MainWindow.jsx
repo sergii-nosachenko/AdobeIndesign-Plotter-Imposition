@@ -24,7 +24,7 @@ function DialogWindow() {
 	// MULTIPLEPDFIMPOSING
 	// ===================
 	var MultiplePDFImposing = new Window("dialog"); 
-		MultiplePDFImposing.text = translate('Plugin Title', {version: APP_VERSION});
+		MultiplePDFImposing.text = translate('Plugin Title', {version: APP_VERSION}) + ' | © github.com/sergii-nosachenko';
 		MultiplePDFImposing.orientation = "column"; 
 		MultiplePDFImposing.alignChildren = ["left","top"]; 
 		MultiplePDFImposing.spacing = 10; 

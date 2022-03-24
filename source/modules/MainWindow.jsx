@@ -357,24 +357,7 @@ function DialogWindow() {
 			isOk.preset = true;
 			myPDFExportPreset = app.pdfExportPresets.item(0);
 		};
-		PresetsList.onChange = presetSelection;
-
-	// LABELINGGROUP
-	// =============
-	var LabelingGroup = MultiplePDFImposing.add("group", undefined, {name: "LabelingGroup"}); 
-		LabelingGroup.orientation = "column"; 
-		LabelingGroup.alignChildren = ["left","center"]; 
-		LabelingGroup.spacing = 10; 
-		LabelingGroup.margins = 0; 
-		LabelingGroup.alignment = ["fill","top"]; 
-
-	var AddFileNameLabel = LabelingGroup.add("checkbox", undefined, undefined, {name: "AddFileNameLabel"}); 
-		AddFileNameLabel.text = translate('Add File Name Label'); 
-		AddFileNameLabel.value = AddFileNameTitle; 
-		AddFileNameLabel.onClick = function() {
-			AddFileNameTitle = AddFileNameLabel.value;
-		};		
-		
+		PresetsList.onChange = presetSelection;		
 
 	// BUTTONSGROUP
 	// ============
@@ -396,13 +379,12 @@ function DialogWindow() {
 	}
 
     var AppLanguage = ButtonsGroup.add("dropdownlist", undefined, undefined, {name: "AppLanguage", items: Languages_array}); 
-        AppLanguage.selection = Languages_keys.indexOf(userLang); 
+        AppLanguage.selection = Languages_keys.indexOf(APP_PREFERENCES.app.lang); 
 		AppLanguage.alignment = ["left","fill"];
 		AppLanguage.onChange = function() {
-			if (!APP_PREFERENCES.app) APP_PREFERENCES.app = {};
 			APP_PREFERENCES.app.lang = Languages_keys[AppLanguage.selection.index];
 			savePreferencesJSON(PREFS_FILE);
-			alert(translate('Language change restart'), 'Manually restart script');
+			alert(translate('Language change restart'), translate('Language change title'));
 		}
 
 	var Cancel = ButtonsGroup.add("button", undefined, undefined, {name: "Cancel"}); 

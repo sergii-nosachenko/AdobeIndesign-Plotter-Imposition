@@ -215,7 +215,26 @@ function CytterTypePrefsDialog(selectedIndex) {
         LeftValue.text = defaults.LeftValue; 
         LeftValue.preferredSize.width = 45; 
         LeftValue.alignment = ["left","fill"]; 
-        LeftValue.onChange = isAllOk; 
+        LeftValue.onChange = isAllOk;
+        
+
+    // ROW3
+    // ====
+    var Row3 = DocumentSettingsPanel.add("group", undefined, {name: "Row3"}); 
+        Row3.orientation = "row"; 
+        Row3.alignChildren = ["left","center"]; 
+        Row3.spacing = 10; 
+        Row3.margins = 0; 
+
+    // WorkspaceShrinkChk
+    // ==================
+    var WorkspaceShrinkChk = Row3.add("checkbox", undefined, undefined, {name: "WorkspaceShrinkChk"}); 
+        WorkspaceShrinkChk.text = translate('Workspace Shrink');
+        WorkspaceShrinkChk.enabled = defaults.WorkspaceShrinkChk;
+        WorkspaceShrinkChk.value = defaults.WorkspaceShrinkChk;
+        WorkspaceShrinkChk.onClick = function() {
+            SaveCurrentBtn.enabled = true;
+        };
 
     // CONTOURSPANELS
     // ==============
@@ -403,36 +422,25 @@ function CytterTypePrefsDialog(selectedIndex) {
             translate('Margins col'),
             translate('Appearance col'),
         ];
-    var ManualMarksList = ManualMarksPanel.add("listbox", undefined, undefined, {name: "ManualMarksList", numberOfColumns: 5, columnWidths: [80,80,80,100,80], columnTitles: columnTitles, showHeaders: true}); 
+    var ManualMarksList = ManualMarksPanel.add("listbox", undefined, undefined, {name: "ManualMarksList", numberOfColumns: 5, columnWidths: [60,80,60,90,100], columnTitles: columnTitles, showHeaders: true}); 
         ManualMarksList.selection = 0; 
         ManualMarksList.preferredSize.height = 120; 
         ManualMarksList.alignment = ["fill","top"];
 		ManualMarksList.onChange = function() {
 			if (ManualMarksList.selection) {
+                CloneMarkBtn.enabled = true;
                 RemoveMarkBtn.enabled = true;
                 EditMarkBtn.enabled = true;
             } else {
+                CloneMarkBtn.enabled = false;
                 RemoveMarkBtn.enabled = false;
                 EditMarkBtn.enabled = false;
             }
-        }
-
-    // ROW3
-    // ====
-    var Row3 = ManualMarksPanel.add("group", undefined, {name: "Row3"}); 
-        Row3.orientation = "row"; 
-        Row3.alignChildren = ["left","center"]; 
-        Row3.spacing = 10; 
-        Row3.margins = 0; 
-
-    // WorkspaceShrinkChk
-    // ==================
-    var WorkspaceShrinkChk = Row3.add("checkbox", undefined, undefined, {name: "WorkspaceShrinkChk"}); 
-        WorkspaceShrinkChk.text = translate('Workspace Shrink');
-        WorkspaceShrinkChk.enabled = defaults.WorkspaceShrinkChk;
-        WorkspaceShrinkChk.value = defaults.WorkspaceShrinkChk;
-        WorkspaceShrinkChk.onClick = function() {
-            SaveCurrentBtn.enabled = true;
+        };
+        ManualMarksList.onDoubleClick = function() {
+            if (!ManualMarksList.selection) return;
+            const index = ManualMarksList.selection.index;
+            editMark(ManualMarksList_array[index], index);
         };
 
     // MANUALMARKSBTNGROUP
@@ -444,57 +452,65 @@ function CytterTypePrefsDialog(selectedIndex) {
         ManualMarksBtnGroup.margins = 0; 
         ManualMarksBtnGroup.alignment = ["fill","top"]; 
 
-    var RemoveMarkBtn = ManualMarksBtnGroup.add("button", undefined, undefined, {name: "RemoveMarkBtn"}); 
-        RemoveMarkBtn.enabled = false; 
-        RemoveMarkBtn.text = translate('Remove mark btn');
-        RemoveMarkBtn.alignment = ["center","fill"]; 
+    var AddMarkBtn = ManualMarksBtnGroup.add("button", undefined, undefined, {name: "AddMarkBtn"}); 
+        AddMarkBtn.text = translate('Add mark btn'); 
+        AddMarkBtn.alignment = ["center","fill"];
+        AddMarkBtn.onClick = function() {
+            editMark();
+        };
 
     var EditMarkBtn = ManualMarksBtnGroup.add("button", undefined, undefined, {name: "EditMarkBtn"}); 
         EditMarkBtn.enabled = false; 
         EditMarkBtn.text = translate('Edit mark btn');
         EditMarkBtn.alignment = ["center","fill"]; 
         EditMarkBtn.onClick = function() {
+            if (!ManualMarksList.selection) {
+                CloneMarkBtn.enabled = false; 
+                RemoveMarkBtn.enabled = false; 
+                EditMarkBtn.enabled = false; 
+                return;
+            };
             const index = ManualMarksList.selection.index;
-            var res = EditMarkWindow({
-                mark: ManualMarksList_array[index],
-                sheet: [
-                    +WidthValue.text,
-                    +HeightValue.text
-                ],
-                frame: [
-                    +WidthValue.text - (+LeftValue.text + +RightValue.text),
-                    +HeightValue.text - (+TopValue.text + +BottomValue.text)
-                ],
-                frameMargins: [
-                    +TopValue.text,
-                    +RightValue.text,
-                    +BottomValue.text,
-                    +LeftValue.text
-                ]
-            });
+            editMark(ManualMarksList_array[index], index);
         };
 
-    var AddMarkBtn = ManualMarksBtnGroup.add("button", undefined, undefined, {name: "AddMarkBtn"}); 
-        AddMarkBtn.text = translate('Add mark btn'); 
-        AddMarkBtn.alignment = ["center","fill"];
-        AddMarkBtn.onClick = function() {
-            var res = EditMarkWindow({
-                sheet: [
-                    +WidthValue.text,
-                    +HeightValue.text
-                ],
-                frame: [
-                    +WidthValue.text - (+LeftValue.text + +RightValue.text),
-                    +HeightValue.text - (+TopValue.text + +BottomValue.text)
-                ],
-                frameMargins: [
-                    +TopValue.text,
-                    +RightValue.text,
-                    +BottomValue.text,
-                    +LeftValue.text
-                ]
+    var CloneMarkBtn = ManualMarksBtnGroup.add("button", undefined, undefined, {name: "CloneMarkBtn"}); 
+        CloneMarkBtn.enabled = false; 
+        CloneMarkBtn.text = translate('Clone mark btn');
+        CloneMarkBtn.alignment = ["center","fill"]; 
+        CloneMarkBtn.onClick = function() {
+            if (!ManualMarksList.selection) {
+                CloneMarkBtn.enabled = false; 
+                RemoveMarkBtn.enabled = false; 
+                EditMarkBtn.enabled = false; 
+                return;
+            };
+            const index = ManualMarksList.selection.index;
+            ManualMarksList_array.splice(index, 0, ManualMarksList_array[index]);
+            fillMarksList({
+                marksProperties: ManualMarksList_array
+            }, index + 1);
+            SaveCurrentBtn.enabled = true;
+        }; 
+
+    var RemoveMarkBtn = ManualMarksBtnGroup.add("button", undefined, undefined, {name: "RemoveMarkBtn"}); 
+        RemoveMarkBtn.enabled = false; 
+        RemoveMarkBtn.text = translate('Remove mark btn');
+        RemoveMarkBtn.alignment = ["center","fill"]; 
+        RemoveMarkBtn.onClick = function() {
+            if (!ManualMarksList.selection) {
+                CloneMarkBtn.enabled = false; 
+                RemoveMarkBtn.enabled = false; 
+                EditMarkBtn.enabled = false; 
+                return;
+            };
+            const index = ManualMarksList.selection.index;
+            ManualMarksList_array.splice(index, 1);
+            fillMarksList({
+                marksProperties: ManualMarksList_array
             });
-        };
+            SaveCurrentBtn.enabled = true;
+        }; 
 
     /*---------------------------
     Функціонал
@@ -542,32 +558,57 @@ function CytterTypePrefsDialog(selectedIndex) {
         WorkspaceShrinkChk.value = selectedCutter.workspaceShrink;
         FileFormats.find(selectedCutter.plotterCutFormat).selected = true;
         fillMarksList(selectedCutter);
-        if (selectedCutter.marksGenerate) {
-            MarksExternalFileChk.value = false;
-            MarksExternalFilePath.text = "";
-        } else {
-            MarksExternalFileChk.value = true;
-            MarksExternalFilePath.text = selectedCutter.marksFile;
-        }
+        MarksExternalFileChk.value = selectedCutter.marksFile && selectedCutter.marksFile != "";
+        MarksExternalFilePath.text = selectedCutter.marksFile || "";
         toggleMarksSource(true);
     }
 
-    function fillMarksList(selectedCutter) {
+    function fillMarksList(selectedCutter, index) {
         ManualMarksList.removeAll();
         ManualMarksList_array = [];
+        const appearance = [translate("Cut & Print files"), translate("Cut file"), translate("Print file")];
+        const shape = {
+            'oval': translate('Oval mark'),
+            'rectangle': translate('Rectangle mark'),
+            'line': translate('Line mark'),
+            'text': translate('Text mark'),
+        };
+        const position = {
+            'top-left': translate('TopLeft'),
+            'top-middle': translate('TopMiddle'),
+            'top-right': translate('TopRight'),
+            'bottom-left': translate('BottomLeft'),
+            'bottom-middle': translate('BottomMiddle'),
+            'bottom-right': translate('BottomRight'),
+            'left-top': translate('LeftTop'),
+            'left-middle': translate('LeftMiddle'),
+            'left-bottom': translate('LeftBottom'),
+            'right-top': translate('RightTop'),
+            'right-middle': translate('RightMiddle'),
+            'right-bottom': translate('RightBottom')
+        };
         if (selectedCutter.marksProperties) {
             for (var i = 0; i < selectedCutter.marksProperties.length; i++) {
-                var item = ManualMarksList.add('item', selectedCutter.marksProperties[i].shape);
+                var item = ManualMarksList.add('item', shape[selectedCutter.marksProperties[i].shape]);
                 ManualMarksList_array.push(selectedCutter.marksProperties[i]);
-                item.subItems[0].text = selectedCutter.marksProperties[i].position || translate('Not defined');
-                item.subItems[1].text = selectedCutter.marksProperties[i].width + 'x' + selectedCutter.marksProperties[i].height + translate('Units mm') || "";
+                item.subItems[0].text = position[selectedCutter.marksProperties[i].position] || translate('Not defined');
+
+                item.subItems[1].text = selectedCutter.marksProperties[i].width ? selectedCutter.marksProperties[i].width : '';
+                item.subItems[1].text += item.subItems[1].text != '' ? 'x' : '';
+                item.subItems[1].text += selectedCutter.marksProperties[i].height ? selectedCutter.marksProperties[i].height : '--';
+                item.subItems[1].text += translate('Units mm');
+                item.subItems[1].text += selectedCutter.marksProperties[i].rotation ? ' / ' + selectedCutter.marksProperties[i].rotation + '\u00b0' : '';
+
                 item.subItems[2].text = selectedCutter.marksProperties[i].margins ? selectedCutter.marksProperties[i].margins.join(', ') + translate('Units mm') : "";
-                item.subItems[3].text = selectedCutter.marksProperties[i].appearance ? selectedCutter.marksProperties[i].appearance : translate('Not defined');
+
+                item.subItems[3].text = selectedCutter.marksProperties[i].hasOwnProperty('appearance') ? appearance[selectedCutter.marksProperties[i].appearance] : translate('Not defined');
             }
             WorkspaceShrinkChk.enabled = selectedCutter.marksProperties.length ? true : false;
         } else {
             WorkspaceShrinkChk.enabled = false;
         }
+        index = index || 0;
+        ManualMarksList.selection = index;
     }
 
     function toggleMarksSource(skipCheckAll) {
@@ -723,6 +764,38 @@ function CytterTypePrefsDialog(selectedIndex) {
         }
     }
 
+    function editMark(mark, index) {
+        var res = EditMarkWindow({
+            mark: mark,
+            sheet: [
+                +WidthValue.text,
+                +HeightValue.text
+            ],
+            frame: [
+                (WorkspaceShrinkChk.value ? '~' : '') + (+WidthValue.text - (+LeftValue.text + +RightValue.text)),
+                +HeightValue.text - (+TopValue.text + +BottomValue.text)
+            ],
+            frameMargins: [
+                +TopValue.text,
+                +RightValue.text,
+                +BottomValue.text,
+                +LeftValue.text
+            ]
+        });
+        if (res && res.newMark) {
+            if (index >= 0) {
+                ManualMarksList_array[index] = res.newMark;
+            } else {
+                ManualMarksList_array.push(res.newMark);
+                index = ManualMarksList_array.length - 1;
+            };
+            fillMarksList({
+                marksProperties: ManualMarksList_array
+            }, index);
+            SaveCurrentBtn.enabled = true;
+        }
+    };
+
 	function getFile() {	
 		
 		var askIt = translate('Get marks file title');
@@ -809,10 +882,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         ];
         selectedCutter.contourOffset = +OvercutValue.text;
         selectedCutter.plotterCutFormat = FileFormats.selection.text;
-
-        // !!!!!!!!!!!!!!
-        selectedCutter.marksGenerate = !MarksExternalFileChk.value;
-
+        selectedCutter.marksProperties = ManualMarksList_array;
         selectedCutter.marksFile = MarksExternalFileChk.value ? MarksExternalFilePath.text : "";
         selectedCutter.workspaceShrink = WorkspaceShrinkChk.value;
         CutterTypeList.removeEventListener('change', CutterTypeListSelected);

@@ -290,11 +290,12 @@ function NewImposSettingsWindow() {
 	if (myCustomDoc.CutterType) {
 		CutterType.find(myCustomDoc.CutterType.text).selected = true;
 	} else {
-		CutterType.selection = 0;			
+		CutterType.selection = APP_PREFERENCES.app.lastPlotter < CutterType_array.length ? APP_PREFERENCES.app.lastPlotter : 0;			
 	}
 	CutterType.addEventListener('change', CutterTypeChange);
 
     function CutterTypeChange() {
+		if (!CutterType.selection) return;
         totalFieldsCheck();
     }
 
@@ -412,8 +413,10 @@ function NewImposSettingsWindow() {
 						break;
 					}
 				}
+				APP_PREFERENCES.app.lastPlotter = CutterType.selection.index;
+				savePreferencesJSON(PREFS_FILE);
 				myCustomDoc = {
-					CutterType: CUTTER_TYPES[CutterType.selection.index],
+					CutterType: CUTTER_TYPES[APP_PREFERENCES.app.lastPlotter],
 					Figure: FigureSelector.selection.text,
 					Diameter: +Diameter.text,
 					RectWidth: +RectWidth.text,
@@ -459,8 +462,10 @@ function NewImposSettingsWindow() {
 		SaveDocBtn.text = translate('Save Btn'); 
 		SaveDocBtn.enabled = false;  
 		SaveDocBtn.onClick = function() {
+			APP_PREFERENCES.app.lastPlotter = CutterType.selection.index;
+			savePreferencesJSON(PREFS_FILE);
 			myCustomDoc = {
-				CutterType: CUTTER_TYPES[CutterType.selection.index],
+				CutterType: CUTTER_TYPES[APP_PREFERENCES.app.lastPlotter],
 				Figure: FigureSelector.selection.text,
 				Diameter: +Diameter.text,
 				RectWidth: +RectWidth.text,
@@ -579,16 +584,20 @@ function NewImposSettingsWindow() {
 			specialText = "";
             minSpaceBetween = CUTTER_TYPES[CutterType.selection.index].minSpaceBetween;
 		};		
-		SpaceBetween.text = Math.round(SpaceBetween.text.replace(',','.'));
-		isOk.SpaceBetween = isValidNumber(SpaceBetween.text) &&
-							SpaceBetween.text != "" &&
-							((+SpaceBetween.text >= +CUTTER_TYPES[CutterType.selection.index].minSpaceBetween && +SpaceBetween.text <= +CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween) ||
-							(+SpaceBetween.text == +minSpaceBetween));
-		SpaceBetween.helpTip = translate('Space Between Tip', {min: CUTTER_TYPES[CutterType.selection.index].minSpaceBetween, max: CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween}) + specialText; 		
-		if (!isOk.SpaceBetween) {
-			SpaceBetween.text = SpaceBetween.text > CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween ? CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween : minSpaceBetween;
-			isOk.SpaceBetween = true;
-		}
+		SpaceBetween.text = SpaceBetween.text.replace(',','.');
+		if (isValidNumber(SpaceBetween.text) && SpaceBetween.text != "") {
+			if (+SpaceBetween.text != minSpaceBetween) {
+				if (+SpaceBetween.text < CUTTER_TYPES[CutterType.selection.index].minSpaceBetween) SpaceBetween.text = CUTTER_TYPES[CutterType.selection.index].minSpaceBetween;
+				if (+SpaceBetween.text > CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween) SpaceBetween.text = CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween;
+			};
+		} else {
+			SpaceBetween.text = minSpaceBetween;
+		};
+		isOk.SpaceBetween = true;
+		SpaceBetween.helpTip = translate('Space Between Tip', {
+				min: CUTTER_TYPES[CutterType.selection.index].minSpaceBetween,
+				max: CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween
+			}) + specialText; 		
 		var Bleeds = IsZeroBleeds ? 0 : CUTTER_TYPES[CutterType.selection.index].minSpaceBetween / 2;
 		if (isOk.SpaceBetween) BleedWarningLabel.text = translate('Bleed Warning Text', {bleeds: Bleeds});
 	}		

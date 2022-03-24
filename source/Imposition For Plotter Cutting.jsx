@@ -39,7 +39,9 @@ const defaultTitleColor = 'Black';
 const defaultTitleColorTint = 99.56;
 
 // Global variables
-var userLang = APP_PREFERENCES.app && APP_PREFERENCES.app.lang ? APP_PREFERENCES.app.lang : ($.locale ? $.locale : 'en_US');
+APP_PREFERENCES.app = APP_PREFERENCES.app || {};
+APP_PREFERENCES.app.lang = APP_PREFERENCES.app.lang ? APP_PREFERENCES.app.lang : ($.locale ? $.locale : 'en_US');
+APP_PREFERENCES.app.lastPlotter = APP_PREFERENCES.app.lastPlotter ? APP_PREFERENCES.app.lastPlotter : 0;
 
 var myPDFExportPreset;
 var theFiles;
@@ -67,7 +69,6 @@ var myCustomDoc = {
 	IsSaveFileWithCut: true,
 	IsRoundedCorners: false
 };
-var AddFileNameTitle = true;
 var SaveMultipageFilesAsOneFile = true;
 var steps;
 var totalPages;
@@ -123,6 +124,7 @@ function PlacePDF(){
 	};
 
 	var badFiles = [];
+	var badExport = [];	
 
 	switch (myCustomDoc.Figure) {
 		case translate('Circles'):
@@ -412,7 +414,7 @@ function PlacePDF(){
 
 						progress.details(translate('Creating new document'), false);
 						CreateMyDocument(myCurrentDoc);
-						addMarksToDocument(myCurrentDoc);
+						addMarksToDocument(myCurrentDoc, 'PRINT');
 						myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 						var theFile = File(okFilesCurrent[i].theFile);
@@ -460,7 +462,7 @@ function PlacePDF(){
 									// Створюємо новий документ, якщо не вибрано опцію "Зберегти багатосторінковий файл"		
 									progress.details(translate('Creating new document'), false);
 									CreateMyDocument(myCurrentDoc);
-									addMarksToDocument(myCurrentDoc);
+									addMarksToDocument(myCurrentDoc, 'PRINT');
 									myLayer = myDocument.layers.itemByName(PRINTLayer);
 								}
 
@@ -518,10 +520,17 @@ function PlacePDF(){
 								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + "_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
 								addDocTitle(outputFile);
 								myDocument.name = outputFile;
-								myDocumentsProcessing.push({
-									myDocument: myDocument,
-									backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
-								});
+								try {
+									myDocumentsProcessing.push({
+										myDocument: myDocument,
+										backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
+									});
+								} catch(err) {
+									badExport.push({
+										myDocument: myDocument,
+										reason: translate('Error - Cannot export file', {filename: 'PDF'})
+									})
+								};
 							}
 							
 						}
@@ -534,10 +543,17 @@ function PlacePDF(){
 							var outputFile = myFileName + "_" + fileName +"_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
 							addDocTitle(outputFile);
 							myDocument.name = outputFile;
-							myDocumentsProcessing.push({
-								myDocument: myDocument,
-								backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
-							});
+							try {
+								myDocumentsProcessing.push({
+									myDocument: myDocument,
+									backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
+								});
+							} catch(err) {
+								badExport.push({
+									myDocument: myDocument,
+									reason: translate('Error - Cannot export file', {filename: 'PDF'})
+								})
+							};
 						}
 
 					}	
@@ -646,7 +662,7 @@ function PlacePDF(){
 
 			progress.details(translate('Creating new document'), false);
 			CreateMyDocument(myCurrentDoc);
-			addMarksToDocument(myCurrentDoc);
+			addMarksToDocument(myCurrentDoc, 'PRINT');
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 			var fileNames = [];
@@ -753,10 +769,17 @@ function PlacePDF(){
 			var outputFile = fileName + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? "_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 			addDocTitle(outputFile);
 			myDocument.name = outputFile;
-			myDocumentsProcessing.push({
-				myDocument: myDocument,
-				backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
-			});			
+			try {
+				myDocumentsProcessing.push({
+					myDocument: myDocument,
+					backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
+				});
+			} catch(err) {
+				badExport.push({
+					myDocument: myDocument,
+					reason: translate('Error - Cannot export file', {filename: 'PDF'})
+				})
+			};	
 		}		
 
 		progress.close();		
@@ -790,7 +813,7 @@ function PlacePDF(){
 
 						progress.details(translate('Creating new document'), false);
 						CreateMyDocument(myCurrentDoc);
-						addMarksToDocument(myCurrentDoc);
+						addMarksToDocument(myCurrentDoc, 'PRINT');
 						myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 						var theFile = File(okFilesCurrent[i].theFile);
@@ -838,7 +861,7 @@ function PlacePDF(){
 									// Створюємо новий документ, якщо не вибрано опцію "Зберегти багатосторінковий файл"		
 									progress.details(translate('Creating new document'), false);
 									CreateMyDocument(myCurrentDoc);
-									addMarksToDocument(myCurrentDoc);
+									addMarksToDocument(myCurrentDoc, 'PRINT');
 									myLayer = myDocument.layers.itemByName(PRINTLayer);
 								}
 							}
@@ -946,10 +969,17 @@ function PlacePDF(){
 								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 								addDocTitle(outputFile);
 								myDocument.name = outputFile;
-								myDocumentsProcessing.push({
-									myDocument: myDocument,
-									backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
-								});								
+								try {
+									myDocumentsProcessing.push({
+										myDocument: myDocument,
+										backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
+									});	
+								} catch(err) {
+									badExport.push({
+										myDocument: myDocument,
+										reason: translate('Error - Cannot export file', {filename: 'PDF'})
+									})
+								};						
 							}
 							
 						}
@@ -962,10 +992,17 @@ function PlacePDF(){
 							var outputFile = myFileName + "_" + fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 							addDocTitle(outputFile);
 							myDocument.name = outputFile;
-							myDocumentsProcessing.push({
-								myDocument: myDocument,
-								backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
-							});
+							try {
+								myDocumentsProcessing.push({
+									myDocument: myDocument,
+									backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
+								});
+							} catch(err) {
+								badExport.push({
+									myDocument: myDocument,
+									reason: translate('Error - Cannot export file', {filename: 'PDF'})
+								})
+							};
 						}
 						
 					}	
@@ -1075,7 +1112,7 @@ function PlacePDF(){
 
 			progress.details(translate('Creating new document'), false);
 			CreateMyDocument(myCurrentDoc);
-			addMarksToDocument(myCurrentDoc);
+			addMarksToDocument(myCurrentDoc, 'PRINT');
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 			var fileNames = [];
@@ -1235,10 +1272,17 @@ function PlacePDF(){
 			var outputFile = fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 			addDocTitle(outputFile);
 			myDocument.name = outputFile;
-			myDocumentsProcessing.push({
-				myDocument: myDocument,
-				backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
-			});			
+			try {
+				myDocumentsProcessing.push({
+					myDocument: myDocument,
+					backgroundTask: myDocument.asynchronousExportFile(ExportFormat.pdfType, File(outputFolder + '/' + outputFile + ".pdf"), false, myPDFExportPreset)
+				});
+			} catch(err) {
+				badExport.push({
+					myDocument: myDocument,
+					reason: translate('Error - Cannot export file', {filename: 'PDF'})
+				})
+			};
 		}
 
 		progress.close();
@@ -1272,9 +1316,7 @@ function PlacePDF(){
 		$.sleep(1000);
 	}
 
-	progress.close();
-
-	var badExport = [];		
+	progress.close();	
 
 	for (var i = 0; i < myDocumentsProcessing.length; i++) {
 
@@ -1354,7 +1396,11 @@ function PlacePDF(){
 // Додаємо назву документа текстовим блоком
 
 function addDocTitle(title){
-	if (!AddFileNameTitle) return false;
+
+	//!!!!!!!!
+
+	return;
+	//if (!AddFileNameTitle) return false;
 	removeDocTitle();
 	var position = myDocument.documentPreferences.pageWidth <= myDocument.documentPreferences.pageHeight ? "top" : "left";
 	var geometricBounds, rotation;
@@ -1622,9 +1668,9 @@ function CreateMyDocument(myCurrentDoc) {
 	}	
 }
 
-function addMarksToDocument(myCurrentDoc) {
+function addMarksToDocument(myCurrentDoc, docType) {
 
-	try {
+	//try {
 
 		if (!myCurrentDoc) throw new Error(translate('Error - No document'));
 
@@ -1660,16 +1706,17 @@ function addMarksToDocument(myCurrentDoc) {
 				throw new Error(translate('Error - No access to marks file') + myCurrentDoc.CutterType.marksFile);
 			}		
 		}
-		if (myCurrentDoc.CutterType.marksGenerate && myCurrentDoc.CutterType.marksGenerate === true) {
+		if (myCurrentDoc.CutterType.marksProperties && myCurrentDoc.CutterType.marksProperties.length) {
 			if (progress) progress.details(translate('Generating marks'), false);
 			if (!myCurrentDoc.Params.contoursBounds) throw new Error(translate('Error - No working frame data'));
-			generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer);
+			generateCutterMarks(myDocument, myCurrentDoc, PlotterLayer, docType);
 		}
+	/*
 	} catch(e) {
 		alert(e.massage || translate('Error - Unknown marks error'), "Script Alert", true);
 		myDocument.windows.add().maximize();
 		exit();
-	}
+	} */
 }
 
 // Створення шаблону документа для розкладки кружечків
@@ -2173,7 +2220,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	
 	myCurrentDoc.Params.contoursBounds = OvalsGroup.ovals.count() > 1 ? OvalsGroup.geometricBounds : OvalsGroup.ovals.firstItem().geometricBounds;
 
-	addMarksToDocument(myCurrentDoc);
+	addMarksToDocument(myCurrentDoc, 'CUT');
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
 
@@ -2187,31 +2234,43 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		var outputFile = outputFolder + '/' + 'D=' + Params.Diameter + "(" + SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + cutLength + "mm_" + Params.total + " sht";
 
 		myDocument.name = outputFile;
+
+		var dontCloseDocument = false;
            
 		if (OvalsGroup.ovals.length > 0) {
 			if (myCurrentDoc.CutterType.plotterCutFormat == "AI") {
-				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-                // Виклик Ілюстратора для перезбереження файлу до 8 версії AI
 				try {
-            		var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
-					if (res && !res.success) throw(res.err);
+					myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
+					// Виклик Ілюстратора для перезбереження файлу до 8 версії AI
+					try {
+						var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
+						if (res && !res.success) throw(res.err);
+					} catch(err) {
+						alert(translate('Error - Illustrator cannot convert', {
+								format: myCurrentDoc.CutterType.plotterCutFormat,
+								error: err.message
+							}));
+					}
 				} catch(err) {
-					alert(translate('Error - Illustrator cannot convert', {
-							format: myCurrentDoc.CutterType.plotterCutFormat,
-							error: err.message
-						}));
+					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".eps"}));
+					dontCloseDocument = true;
 				}				  
 			} else if (myCurrentDoc.CutterType.plotterCutFormat == "DXF") {
-				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-            // Виклик Ілюстратора для перезбереження файлу до формату DXF
 				try {
-					var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
-					if (res && !res.success) throw(res.err);
+					myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
+					// Виклик Ілюстратора для перезбереження файлу до формату DXF
+					try {
+						var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
+						if (res && !res.success) throw(res.err);
+					} catch(err) {
+						alert(translate('Error - Illustrator cannot convert', {
+								format: myCurrentDoc.CutterType.plotterCutFormat,
+								error: err.message
+							}));
+					}
 				} catch(err) {
-					alert(translate('Error - Illustrator cannot convert', {
-							format: myCurrentDoc.CutterType.plotterCutFormat,
-							error: err.message
-						}));
+					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".eps"}));
+					dontCloseDocument = true;
 				}				  
 			} else {
 				
@@ -2227,9 +2286,13 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 					'optimizePDF': false,
 					'pdfColorSpace': PDFColorSpace.CMYK
 				};				
-				myDocument.exportFile(ExportFormat.pdfType, File(outputFile + ".pdf"), false, myPDFExportPreset4Contour);	
+				try {
+					myDocument.exportFile(ExportFormat.pdfType, File(outputFile + ".pdf"), false, myPDFExportPreset4Contour);
+				} catch(err) {
+					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".pdf"}));
+					dontCloseDocument = true;
+				};
 				myPDFExportPreset4Contour.remove();
-                docReady = true;
 			}
 		}
 	};
@@ -2238,7 +2301,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	progress.close();
 
 	// Видаляємо документ (для пришвидшення роботи скрипта)
-	myDocument.close(SaveOptions.NO);
+	if (!dontCloseDocument) myDocument.close(SaveOptions.NO);
 
 }
 
@@ -2536,7 +2599,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 
     myCurrentDoc.Params.contoursBounds = RectGroup.rectangles.count() > 1 ? RectGroup.geometricBounds : RectGroup.rectangles.firstItem().geometricBounds;
 
-	addMarksToDocument(myCurrentDoc);
+	addMarksToDocument(myCurrentDoc, 'CUT');
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
 		
@@ -2661,31 +2724,43 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		var outputFile = outputFolder + '/' + Params.widthItem + "x" + Params.heightItem + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + cutLength + "mm_" + Params.total + " sht";
 
 		myDocument.name = outputFile;
+
+		var dontCloseDocument = false;
            
 		if (RectGroup.rectangles.length > 0) {
 			if (myCurrentDoc.CutterType.plotterCutFormat == "AI") {
-				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-                // Виклик Ілюстратора для перезбереження файлу до 8 версії AI
 				try {
-                  	var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
-					if (res && !res.success) throw(res.err);
+					myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
+					// Виклик Ілюстратора для перезбереження файлу до 8 версії AI
+					try {
+						var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
+						if (res && !res.success) throw(res.err);
+					} catch(err) {
+						alert(translate('Error - Illustrator cannot convert', {
+								format: myCurrentDoc.CutterType.plotterCutFormat,
+								error: err.message
+							}));
+					}
 				} catch(err) {
-					alert(translate('Error - Illustrator cannot convert', {
-							format: myCurrentDoc.CutterType.plotterCutFormat,
-							error: err.message
-						}));
-				}	
+					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".eps"}));
+					dontCloseDocument = true;
+				}				  
 			} else if (myCurrentDoc.CutterType.plotterCutFormat == "DXF") {
-				myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-                // Виклик Ілюстратора для перезбереження файлу до формату DXF
 				try {
-                  	var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
-					if (res && !res.success) throw(res.err);
+					myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
+					// Виклик Ілюстратора для перезбереження файлу до формату DXF
+					try {
+						var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
+						if (res && !res.success) throw(res.err);
+					} catch(err) {
+						alert(translate('Error - Illustrator cannot convert', {
+								format: myCurrentDoc.CutterType.plotterCutFormat,
+								error: err.message
+							}));
+					}
 				} catch(err) {
-					alert(translate('Error - Illustrator cannot convert', {
-							format: myCurrentDoc.CutterType.plotterCutFormat,
-							error: err.message
-						}));
+					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".eps"}));
+					dontCloseDocument = true;
 				}	
 			} else {
 				const myPDFExportPreset4Contour = myPDFExportPreset.duplicate();
@@ -2700,20 +2775,22 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					'optimizePDF': false,
 					'pdfColorSpace': PDFColorSpace.CMYK
 				};
-				myDocument.exportFile(ExportFormat.pdfType, File(outputFile + ".pdf"), false, myPDFExportPreset4Contour);	
+				try {
+					myDocument.exportFile(ExportFormat.pdfType, File(outputFile + ".pdf"), false, myPDFExportPreset4Contour);
+				} catch(err) {
+					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".pdf"}));
+					dontCloseDocument = true;
+				};
 				myPDFExportPreset4Contour.remove();
-                docReady = true;
 			}
 		}
-
 	};
 	
-	progress.increment();
-	
+	progress.increment();	
 	progress.close();
 
 	// Видаляємо документ (для пришвидшення роботи скрипта)
-	myDocument.close(SaveOptions.NO);
+	if (!dontCloseDocument) myDocument.close(SaveOptions.NO);
 }
 
 // Читаємо і готуємо файл налаштувань
@@ -2730,25 +2807,32 @@ function parsePreferencesJSON(fileName) {
 	file.close();
 	jsonStuff = jsonStuff.join("");
 	if (jsonStuff == "") {
-		alert(translate('Error - JSON preferences not found') + file.absoluteURI);
-		exit();
-	} else {
-		try {
-			var parsedJson = JSON.parse(jsonStuff);
-			for (var i = 0, cutters = parsedJson.cutters; i < cutters.length; i++) {
-				if (cutters[i].pageOrientation) {
-					if (cutters[i].widthSheet <= cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.PORTRAIT.valueOf();
-					if (cutters[i].widthSheet > cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.LANDSCAPE.valueOf();
-				}
-				cutters[i].widthFrame = cutters[i].widthFrame || cutters[i].widthSheet - (cutters[i].marginLeft + cutters[i].marginRight);
-				cutters[i].heightFrame = cutters[i].heightFrame || cutters[i].heightSheet - (cutters[i].marginTop + cutters[i].marginBottom);
+		var createNew = confirm(translate('Error - JSON preferences not found', {path: file.fsName}, true), false, translate('Confirm create new json', null, true));
+		if (createNew) {
+			APP_PREFERENCES = {
+				app: {},
+				cutters: {}
 			};
-			return parsedJson;				
-		} catch (err) {
-			alert(translate('Error - JSON parse failed') + "\n\n" + err.message);
+			savePreferencesJSON(fileName);
+			return parsePreferencesJSON(fileName);
+		} else {
 			exit();
 		}
-	
+	};
+	try {
+		var parsedJson = JSON.parse(jsonStuff);
+		for (var i = 0, cutters = parsedJson.cutters; i < cutters.length; i++) {
+			if (cutters[i].pageOrientation) {
+				if (cutters[i].widthSheet <= cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.PORTRAIT.valueOf();
+				if (cutters[i].widthSheet > cutters[i].heightSheet) cutters[i].pageOrientation = PageOrientation.LANDSCAPE.valueOf();
+			}
+			cutters[i].widthFrame = cutters[i].widthFrame || cutters[i].widthSheet - (cutters[i].marginLeft + cutters[i].marginRight);
+			cutters[i].heightFrame = cutters[i].heightFrame || cutters[i].heightSheet - (cutters[i].marginTop + cutters[i].marginBottom);
+		};
+		return parsedJson;				
+	} catch (err) {
+		alert(translate('Error - JSON parse failed', null, true) + "\n\n" + err.message);
+		exit();
 	}
 }
 
@@ -2794,7 +2878,7 @@ function writeFile(fileObj, fileContent, encoding) {
 */
 
 function translate(value, replace, useDefault) {
-	const lang = useDefault ? 'uk-UA' : userLang;
+	const lang = useDefault ? 'en_US' : APP_PREFERENCES.app.lang;
 	if (LANG.hasOwnProperty(lang) && LANG[lang].hasOwnProperty('values') && LANG[lang].values.hasOwnProperty(value)) {
 		var translation = LANG[lang].values[value];
 		if (replace) {

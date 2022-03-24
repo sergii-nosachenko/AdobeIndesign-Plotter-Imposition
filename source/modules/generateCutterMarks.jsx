@@ -13,6 +13,8 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
 
     var contoursBounds;
 
+	var pages = myDocument.pages.everyItem().getElements();
+
     var firstPage = myDocument.pages.firstItem();
 
     var anchorPoint = app.changeObjectPreferences.anchorPoint;
@@ -28,15 +30,61 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
             firstPage.bounds[2] - myCurrentDoc.CutterType.marginBottom,
             firstPage.bounds[3] - myCurrentDoc.CutterType.marginRight
         ];
+    };
+
+    const ItemContourSize = function() {
+        switch (myCustomDoc.Figure) {
+            case translate('Circles'):
+                return 'D=' + myCustomDoc.Diameter;
+            case translate('Rectangles'):
+                return myCustomDoc.RectWidth + 'x' + myCustomDoc.RectHeight + (myCurrentDoc.IsRoundedCorners ? ' R=' + myCurrentDoc.RoundedCornersValue : '');
+            default:
+                return '';
+        }
     }
 
-    //try {
+    const zeroStart = function(num) {
+        return num < 10 ? '0' + num : num;
+    }
+
+    const CurrentTime = function() {
+        const date = new Date();
+        const hours = zeroStart(date.getHours());
+        const minutes = zeroStart(date.getMinutes());
+        const seconds = zeroStart(date.getSeconds());
+        return hours + ':' + minutes + ':' + seconds;
+    }
+
+    const CurrentDate = function() {
+        const date = new Date();
+        const day = zeroStart(date.getDate());
+        const month = zeroStart(date.getMonth() + 1);
+        const year = zeroStart(date.getFullYear());
+        return day + '-' + month + '-' + year;
+    }
+
+    var placeholders = {
+        'DocumentName': File.decode(myDocument.name),
+        'DocumentFolder': Folder.decode(outputFolder),
+        'CurrentPage': 0,
+        'TotalPages': myDocument.pages.count(),
+        'PlotterName': myCurrentDoc.CutterType.text,
+        'PlotterAlias': myCurrentDoc.CutterType.label,
+        'ItemContourSize': ItemContourSize(),
+        'CutLength': myCurrentDoc.Params.cutLength,
+        'ContourGap': myCurrentDoc.SpaceBetween,
+        'ItemsPerPage': myCurrentDoc.Params.total,
+        'ItemsPerDocument': myCurrentDoc.Params.total * myDocument.pages.count(),
+        'SheetSize': myCurrentDoc.CutterType.widthSheet + 'x' + myCurrentDoc.CutterType.heightSheet,
+        'PaperName': myCurrentDoc.CutterType.paperName,
+        'CurrentTime': CurrentTime(),
+        'CurrentDate': CurrentDate(),
+        'UserName': app.userName || ''
+    }
+
+    try {
 
         // Вираховуємо координати всіх міток
-
-        $.writeln('-------------------------------');
-        $.writeln(myCurrentDoc.CutterType.marksProperties.toSource());
-        $.writeln('-------------------------------');
 
         for (var i = 0, props = myCurrentDoc.CutterType.marksProperties; i < props.length; i++) {
 
@@ -204,9 +252,11 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
                 'geometricBounds': marksCoordinates[i]
             };
 
+            var contourColor, fillColor;
+
             if (props[i].strokeWeight && props[i].strokeWeight > 0) {
                 if (!(props[i].strokeColor instanceof Array)) return;
-                var contourColor = myDocument.colors.itemByName(props[i].strokeColor.join(','));
+                contourColor = myDocument.colors.itemByName(props[i].strokeColor.join(','));
                 if (!contourColor.isValid) contourColor = myDocument.colors.add({
                         "colorValue": props[i].strokeColor,
                         "model": ColorModel.PROCESS,
@@ -225,7 +275,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
 
             if (props[i].fillColor) {
                 if (!(props[i].fillColor instanceof Array)) return;
-                var fillColor = myDocument.colors.itemByName(props[i].fillColor.join(','));
+                fillColor = myDocument.colors.itemByName(props[i].fillColor.join(','));
                 if (!fillColor.isValid) fillColor = myDocument.colors.add({
                         "colorValue": props[i].fillColor,
                         "model": ColorModel.PROCESS,
@@ -235,30 +285,76 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
                 shapeProperties['fillColor'] = fillColor;		
             }
 
-            $.writeln('shapeProperties: ', shapeProperties.toSource());
+            for (var k = 0, current = 1; k < pages.length; k++) {
+                if (pages[k].isValid) {
+                    switch (markShape) {
+                        case "oval":
+                            pages[k].ovals.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
+                            break;
+                        case "rectangle":
+                            pages[k].rectangles.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
+                            break;
+                        case "line":
+                            pages[k].graphicLines.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
+                            break;
+                        case "text":
+                            placeholders.CurrentPage = current;
+                            var template = props[i].template;
+                            for (var name in placeholders) {
+                                if (placeholders.hasOwnProperty(name)) {
+                                    var regex = new RegExp('%' + name + '%', 'gm');
+                                    template = template.replace(regex, placeholders[name]);
+                                }
+                            };
 
-            switch (markShape) {
-                case "oval":
-                    firstPage.ovals.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
-                    break;
-                case "rectangle":
-                    firstPage.rectangles.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
-                    break;
-                case "line":
-                    firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
-                    break;
-                case "text":
-                    firstPage.graphicLines.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
-                    break;
-                default:
-                    throw new Error(translate('Error - Unknown mark shape', {index: i, markShape: markShape}));
+                            var side = props[i].position.split("-")[0] || null;
+                            var rotation;
+                            
+                            switch (side) {
+                                case 'top':
+                                    rotation = props[i].orientation ? 180 : 0;
+                                    break;
+                                case 'bottom':
+                                    rotation = props[i].orientation ? 0 : 180;
+                                    break;
+                                case 'left':
+                                    rotation = props[i].orientation ? -90 : 90;
+                                    break;
+                                case 'right':
+                                    rotation = props[i].orientation ? 90 : -90;
+                                    break;
+                            }
+
+                            var pageText = pages[k].textFrames.add(MarksLayer, LocationOptions.AT_END, {
+                                'contents': template,
+                                'geometricBounds': marksCoordinates[i],
+                                'textFramePreferences': {
+                                    'verticalJustification': props[i].orientation ? VerticalJustification.TOP_ALIGN : VerticalJustification.BOTTOM_ALIGN
+                                }
+                            });
+                            pageText.paragraphs.everyItem().properties = {
+                                'justification': Justification.CENTER_ALIGN,
+                                'appliedFont': props[i].fontName,
+                                'pointSize': props[i].fontSize,
+                                'fillColor': fillColor,
+                                'fillTint': 100,			
+                            };
+                            if (rotation != 0) {
+                                pageText.absoluteRotationAngle = rotation;
+                                pageText.geometricBounds = marksCoordinates[i];
+                            }
+                            break;
+                        default:
+                            throw new Error(translate('Error - Unknown mark shape', {index: i, markShape: markShape}));
+                    };
+                    current++;
+                }
             }
-
         }
 
         app.changeObjectPreferences.anchorPoint = anchorPoint;
-/*
+
     } catch (err) {
         throw (err);
-    }*/
+    }
 }

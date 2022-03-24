@@ -70,10 +70,10 @@ function CytterTypePrefsDialog(selectedIndex) {
         CutterTypeList.selection = CutterTypeList_array.length > selectedIndex + 1 ? selectedIndex + 1 : 0;
         CutterTypeList.addEventListener('change', CutterTypeListSelected);
 
-    var AddNewBtn = CutterTypeTopGroup.add("button", undefined, undefined, {name: "AddNewBtn"}); 
-        AddNewBtn.enabled = true;
-        AddNewBtn.text = translate('Add new');
-        AddNewBtn.onClick = AddNewPlotter; 
+    var CopyNewBtn = CutterTypeTopGroup.add("button", undefined, undefined, {name: "CopyNewBtn"}); 
+        CopyNewBtn.enabled = true;
+        CopyNewBtn.text = translate('Duplicate');
+        CopyNewBtn.onClick = CopyNewPlotter; 
 
     var SaveCurrentBtn = CutterTypeTopGroup.add("button", undefined, undefined, {name: "SaveCurrentBtn"}); 
         SaveCurrentBtn.enabled = false;
@@ -233,6 +233,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         WorkspaceShrinkChk.enabled = defaults.WorkspaceShrinkChk;
         WorkspaceShrinkChk.value = defaults.WorkspaceShrinkChk;
         WorkspaceShrinkChk.onClick = function() {
+            CopyNewBtn.enabled = false;
             SaveCurrentBtn.enabled = true;
         };
 
@@ -491,6 +492,7 @@ function CytterTypePrefsDialog(selectedIndex) {
                 marksProperties: ManualMarksList_array
             }, index + 1);
             SaveCurrentBtn.enabled = true;
+            CopyNewBtn.enabled = false;
         }; 
 
     var RemoveMarkBtn = ManualMarksBtnGroup.add("button", undefined, undefined, {name: "RemoveMarkBtn"}); 
@@ -504,12 +506,15 @@ function CytterTypePrefsDialog(selectedIndex) {
                 EditMarkBtn.enabled = false; 
                 return;
             };
-            const index = ManualMarksList.selection.index;
+            var index = ManualMarksList.selection.index;
             ManualMarksList_array.splice(index, 1);
+            index = index < ManualMarksList_array.length ? index : index - 1;
+            index = index >= 0 ? index : 0;
             fillMarksList({
                 marksProperties: ManualMarksList_array
-            });
+            }, index);
             SaveCurrentBtn.enabled = true;
+            CopyNewBtn.enabled = false;
         }; 
 
     /*---------------------------
@@ -536,7 +541,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         };
         SaveCurrentBtn.enabled = false;
         RemoveCurrentBtn.enabled = true;
-        AddNewBtn.enabled = true;
+        CopyNewBtn.enabled = true;
         const index = CutterTypeList.selection.index - 1;
         const selectedCutter = CUTTER_TYPES[index];
         CutterNameText.text = selectedCutter.text;
@@ -603,10 +608,11 @@ function CytterTypePrefsDialog(selectedIndex) {
 
                 item.subItems[3].text = selectedCutter.marksProperties[i].hasOwnProperty('appearance') ? appearance[selectedCutter.marksProperties[i].appearance] : translate('Not defined');
             }
-            WorkspaceShrinkChk.enabled = selectedCutter.marksProperties.length ? true : false;
+            WorkspaceShrinkChk.enabled = selectedCutter.marksProperties.length && !MarksExternalFileChk.value;
         } else {
             WorkspaceShrinkChk.enabled = false;
         }
+        WorkspaceShrinkChk.value = WorkspaceShrinkChk.enabled ? WorkspaceShrinkChk.value : false;
         index = index || 0;
         ManualMarksList.selection = index;
     }
@@ -620,6 +626,8 @@ function CytterTypePrefsDialog(selectedIndex) {
             MarksExternalFilePath.enabled = false;
         }
         if (!skipCheckAll) isAllOk();
+        WorkspaceShrinkChk.enabled = ManualMarksList.items.length && !MarksExternalFileChk.value;
+        WorkspaceShrinkChk.value = WorkspaceShrinkChk.enabled ? WorkspaceShrinkChk.value : false;
     }
 
     function setDefaults() {
@@ -653,6 +661,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         MarksExternalFilePath.text = defaults.MarksExternalFilePath;
         WorkspaceShrinkChk.value = defaults.WorkspaceShrinkChk;
         WorkspaceShrinkChk.enabled = defaults.WorkspaceShrinkChk;
+        CopyNewBtn.enabled = false;
         RemoveCurrentBtn.enabled = false;
         MarksExternalFilePath.enabled = false;
         MarksFilePickBtn.enabled = false;
@@ -759,8 +768,10 @@ function CytterTypePrefsDialog(selectedIndex) {
             isOk.marks == true
         ) {
             SaveCurrentBtn.enabled = true;
+            CopyNewBtn.enabled = false;
         } else {
             SaveCurrentBtn.enabled = false;
+            CopyNewBtn.enabled = true;
         }
     }
 
@@ -793,6 +804,7 @@ function CytterTypePrefsDialog(selectedIndex) {
                 marksProperties: ManualMarksList_array
             }, index);
             SaveCurrentBtn.enabled = true;
+            CopyNewBtn.enabled = false;
         }
     };
 
@@ -814,9 +826,37 @@ function CytterTypePrefsDialog(selectedIndex) {
 
     function AddNewPlotter() {
         CutterTypeList.selection = 0;
-        AddNewBtn.enabled = false;
+        CopyNewBtn.enabled = false;
         needSave();
         setDefaults();
+    }
+
+    function CopyNewPlotter() {
+        if (CutterTypeList.selection.index == 0) {
+            CopyNewBtn.enabled = false;
+            return;
+        }
+        const index = CutterTypeList.selection.index - 1;
+        var copied = {};
+        for (var key in CUTTER_TYPES[index]) {
+            if (CUTTER_TYPES[index].hasOwnProperty(key)) {
+                copied[key] = CUTTER_TYPES[index][key];
+            }
+        }
+        copied.text += ' ' + translate('copy');
+        CUTTER_TYPES.push(copied);
+        CutterTypeList.removeEventListener('change', CutterTypeListSelected);
+        CutterTypeList.removeAll();
+        CutterTypeList.add('item', translate('Add new'));
+        for (var i = 0; i < CUTTER_TYPES.length; i++) {
+            CutterTypeList.add('item', CUTTER_TYPES[i].text);
+        }
+        if (CUTTER_TYPES.length) RemoveCurrentBtn.enabled = true;
+        CutterTypeList.selection = CUTTER_TYPES.length;
+        CutterTypeList.active = true;
+        CutterTypeListSelected();
+        CutterTypeList.addEventListener('change', CutterTypeListSelected);
+        savePreferencesJSON(PREFS_FILE);
     }
 
     function needSave() {
@@ -831,9 +871,10 @@ function CytterTypePrefsDialog(selectedIndex) {
         if (deleteIt) {
             SaveCurrentBtn.enabled = false;
             RemoveCurrentBtn.enabled = false;
-            const index = CutterTypeList.selection.index - 1;
+            CopyNewBtn.enabled = true;
+            var index = CutterTypeList.selection.index - 1;
             if (index == -1) return;
-            CUTTER_TYPES.pop(index);
+            CUTTER_TYPES.splice(index, 1);
             CutterTypeList.removeEventListener('change', CutterTypeListSelected);
             CutterTypeList.removeAll();
             CutterTypeList.add('item', translate('Add new'));
@@ -841,7 +882,7 @@ function CytterTypePrefsDialog(selectedIndex) {
                 CutterTypeList.add('item', CUTTER_TYPES[i].text);
             }
             if (CUTTER_TYPES.length) RemoveCurrentBtn.enabled = true;
-            CutterTypeList.selection = CUTTER_TYPES.length;
+            CutterTypeList.selection = index;
             CutterTypeList.active = true;
             CutterTypeListSelected();
             CutterTypeList.addEventListener('change', CutterTypeListSelected);
@@ -851,7 +892,7 @@ function CytterTypePrefsDialog(selectedIndex) {
 
     function savePlotter() {
         SaveCurrentBtn.enabled = false;
-        AddNewBtn.enabled = true; 
+        CopyNewBtn.enabled = true; 
         var index = CutterTypeList.selection.index - 1;
         var selectedCutter;
         if (index == -1) {

@@ -435,7 +435,8 @@ function NewImposSettingsWindow() {
 				if (FigureSelector.selection.text == translate('Rectangles')) {
 					myCustomDoc.title = "\u25A1 " + myCustomDoc.RectWidth + "x" + myCustomDoc.RectHeight + (IsRoundedCorners ? " R=" + myCustomDoc.RoundCornersValue : "") + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');
 				};	
-				NewCustomDocSettings.close(1);				
+				NewCustomDocSettings.close(1);
+				NewCustomDocSettings = null;			
 			} else {
 				isOk.Variant = false;
 			}
@@ -497,7 +498,8 @@ function NewImposSettingsWindow() {
 				};				
 				myCustomDoc.Params = false;
 			}
-			NewCustomDocSettings.close(1);			
+			NewCustomDocSettings.close(1);
+			NewCustomDocSettings = null;			
 		};
 
 	function CircleCheckBoxClick() {
@@ -561,7 +563,8 @@ function NewImposSettingsWindow() {
 		isOk.Size = true;
 	}	
 	
-	function checkValidRoundCornersValue() {	
+	function checkValidRoundCornersValue() {
+		if (!NewCustomDocSettings) return;	
 		if (RoundCornersGroup.enabled) {
 			RoundCornersValue.text = RoundCornersValue.text.replace(',','.');
 			var maxRadius = +RectWidth.text > +RectHeight.text ? +RectHeight.text / 2 : +RectWidth.text / 2;			
@@ -572,7 +575,7 @@ function NewImposSettingsWindow() {
 	}
 	
 	function checkValidSpaceBetween() {	
-		if (!CutterType) return;
+		if (!NewCustomDocSettings) return;
         if (!CutterType.selection) {
             isOk.SpaceBetween = false;
             return;
@@ -608,6 +611,7 @@ function NewImposSettingsWindow() {
 	}
 
 	function totalFieldsCheck(preselected) {
+		if (!NewCustomDocSettings) return;
 		if (!FigureSelector.selection) return;
 		checkValidSpaceBetween();
 		if (FigureSelector.selection.text == translate('Circles')) checkValidDiameter();

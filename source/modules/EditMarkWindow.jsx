@@ -485,6 +485,37 @@ function EditMarkWindow(markToEdit) {
         TextTemplate.alignment = ["fill","top"];
         TextTemplate.onChange = checkObligatoryFields;
 
+    var Placeholders_list = [
+        translate('Add placeholder'),
+        '%DocumentName%',
+        '%DocumentFolder%',
+        '%CurrentPage%',
+        '%TotalPages%',
+        '%PlotterName%',
+        '%PlotterAlias%',
+        '%ItemContourSize%',
+        '%CutLength%',
+        '%ContourGap%',
+        '%ItemsPerPage%',
+        '%ItemsPerDocument%',
+        '%SheetSize%',
+        '%PaperName%',
+        '%CurrentTime%',
+        '%CurrentDate%',
+        '%UserName%'
+    ];
+
+    var Placeholders = TextPanel.add("dropdownlist", undefined, undefined, {items: Placeholders_list, name: "Placeholders"}); 
+        Placeholders.selection = 0;
+        Placeholders.preferredSize.width = 140;
+        Placeholders.alignment = ["left","fill"];
+        Placeholders.onChange = function() {
+            if (Placeholders.selection && Placeholders.selection.index) {
+                TextTemplate.textselection = Placeholders_list[Placeholders.selection.index];
+                Placeholders.selection = 0;
+            }
+        }
+
     // ROW6
     // ====
     var Row6 = TextPanel.add("group", undefined, {name: "Row6"}); 
@@ -516,8 +547,8 @@ function EditMarkWindow(markToEdit) {
         
     var MarkAppearance = Row7.add("dropdownlist", undefined, undefined, {items: [translate("Cut & Print files"), translate("Cut file"), translate("Print file")], name: "MarkAppearance"}); 
         MarkAppearance.selection = 0;
-        MarkAppearance.preferredSize.width = 200;
-        MarkAppearance.alignment = ["left","fill"]; 
+        MarkAppearance.preferredSize.width = 220;
+        MarkAppearance.alignment = ["left","fill"];
 
     // BUTTONSGROUP
     // ============
@@ -756,6 +787,12 @@ function EditMarkWindow(markToEdit) {
                 newMark.fontSize = +FontSize.text;
                 newMark.template = TextTemplate.text;
                 newMark.orientation = TextOrientation.selection.index;
+                newMark.fillColor = [
+                    +FillC.text,
+                    +FillM.text,
+                    +FillY.text,
+                    +FillK.text,
+                ];
                 break;
         }
         EditMark.close();
@@ -772,7 +809,7 @@ function EditMarkWindow(markToEdit) {
         if (markToEdit.frame) WorkingFramePanel.text = markToEdit.frame[0] + 'x' + markToEdit.frame[1] + translate('Units mm');
         if (markToEdit.frameMargins) {
             TopMargin.text = "\u2191 " + markToEdit.frameMargins[0];
-            LeftRightMargins.text = "\u27f5 " + markToEdit.frameMargins[1] + "  " + markToEdit.frameMargins[3] + " \u27f6";
+            LeftRightMargins.text = "\u27f5 " + markToEdit.frameMargins[3] + "  " + markToEdit.frameMargins[1] + " \u27f6";
             BottomMargin.text = "\u2193 " + markToEdit.frameMargins[2];
         };      
         if (markToEdit.mark) {

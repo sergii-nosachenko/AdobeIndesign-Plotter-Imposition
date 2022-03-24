@@ -97,6 +97,8 @@ LANG['uk_UA'] = {
 
         'Cytter Prefs Window': 'Редактор налаштувань плотерів',
         'Add new': 'Створити',
+        'Duplicate': 'Копія',
+        'copy': '(копія)',
         'Save': 'Зберегти',
         'Remove': 'Видалити',
         'Cutter name label': 'Назва плотера',
@@ -174,11 +176,12 @@ LANG['uk_UA'] = {
         'Font Name label': 'Шрифт:',
         'Font Size tip': 'Має бути числом > 0',
         'Template label': 'Шаблон:',
-        'Template tip': 'Ви можете використовувати заповнювачі:\n%DocumentName% - назва документа, як він збережений\n%DocumentFolder% - шлях до папки документа\n%CurrentPage% - поточна сторінка документа\n%TotalPages% - загальна кількість сторінок у документі\n%PlotterName% - назва обраного плотера\n%ItemContourSize% - розміри контуру порізки виробу в мм\n%ContourGap% - значення розриву між контурами в мм\n%ItemsPerPage% - кількість виробів на сторінці\n%ItemsPerDocument% - кількість виробів на весь документ\n%SheetSize% - розмір сторінки ВхШмм\n%CurrentTime% - поточний час у форматі ГГ:ХХ:СС\n%CurrentDate% - поточна дата у форматі ДД-ММ-РРРР\n%UserName% - ім\'я користувача, встановлене в меню Файл > Користувач...',
+        'Template tip': 'Ви можете використовувати заповнювачі:\n%DocumentName% - назва документа, як він збережений\n%DocumentFolder% - шлях до папки документа\n%CurrentPage% - поточна сторінка документа\n%TotalPages% - загальна кількість сторінок у документі\n%PlotterName% - назва обраного плотера\n%PlotterAlias% - абревіатура обраного плотера\n%ItemContourSize% - розміри контуру порізки виробу в мм\n%CutLength% - довжина контура порізки в мм\n%ContourGap% - значення розриву між контурами в мм\n%ItemsPerPage% - кількість виробів на сторінці\n%ItemsPerDocument% - кількість виробів на весь документ\n%SheetSize% - розмір сторінки ВхШ\n%PaperName% - назва формату паперу\n%CurrentTime% - поточний час у форматі h:m:s\n%CurrentDate% - поточна дата у форматі Д-М-РРРР\n%UserName% - ім\'я користувача, встановлене в меню Файл > Користувач...',
         'Text Orientation Label': 'Орієнтація:',
         'Text to border orientation': 'Верх тексту до межі сторінки',
         'Text to frame orientation': 'Верх тексту до рамки макета',
         'Mark Appearance Label': 'Відображення мітки:',
+        'Add placeholder': 'Додати заповнювач...',
 
         'TopLeft': 'Верхня сторона, зліва',
         'TopMiddle': 'Верхня сторона, по центру',

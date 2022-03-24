@@ -1,4 +1,4 @@
-﻿const APP_VERSION = "3.1.0a";
+﻿const APP_VERSION = "4.0.0a";
 
 // Debug level
 // Comment next line for production!
@@ -164,6 +164,7 @@ function PlacePDF(){
 							var thisFileParams = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, myCurrentDoc.SpaceBetween, true);			
 							if (thisFileParams.length) {
 								myCurrentDoc.Params = thisFileParams[0];
+								myCurrentDoc.Figure = translate('Circles');
 								okFilesCurrent = okFilesDiameters[okDiameters[i]];				
 								totalPages = 0;
 								for (var j = 0; j < okFilesCurrent.length; j++) {
@@ -184,6 +185,7 @@ function PlacePDF(){
 					}			
 				} else {
 					myCurrentDoc = myCustomDoc;
+					myCurrentDoc.Figure = translate('Circles');
 					CreateCustomDocCircles(myCurrentDoc);
 					ProcessCircles(okFiles, okFiles.length);
 				}
@@ -242,6 +244,7 @@ function PlacePDF(){
 								var thisFileParams = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);
 								if (thisFileParams.length) {
 									myCurrentDoc.Params = thisFileParams[0];
+									myCurrentDoc.Figure = translate('Rectangles');
 									okFilesCurrent = okFilesSizes[okSizes[i]];				
 									totalPages = 0;
 									for (var j = 0; j < okFilesCurrent.length; j++) {
@@ -263,6 +266,7 @@ function PlacePDF(){
 					}			
 				} else {
 					myCurrentDoc = myCustomDoc;
+					myCurrentDoc.Figure = translate('Rectangles');
 					CreateCustomDocRectangles(myCurrentDoc);
 					ProcessRectangles(okFiles, okFiles.length);
 				}
@@ -323,6 +327,7 @@ function PlacePDF(){
 					var thisFileParams = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, thisSpaceBetween, true);			
 					if (thisFileParams.length) {
 						myCurrentDoc.Params = thisFileParams[0];
+						myCurrentDoc.Figure = translate('Circles');
 						okFilesCurrent = okFilesDiameters[okDiameters[i]];				
 						totalPages = 0;
 						for (var j = 0; j < okFilesCurrent.length; j++) {
@@ -362,6 +367,7 @@ function PlacePDF(){
 						var thisFileParams = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);			
 						if (thisFileParams.length) {
 							myCurrentDoc.Params = thisFileParams[0];
+							myCurrentDoc.Figure = translate('Rectangles');
 							okFilesCurrent = okFilesSizes[okSizes[i]];				
 							totalPages = 0;
 							for (var j = 0; j < okFilesCurrent.length; j++) {
@@ -396,7 +402,7 @@ function PlacePDF(){
 		} else {
 			app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
 			
-			const SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
+			myCurrentDoc.SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 			
 			switch (myImposingMethod) {
 				case 0: // Кожен вид на окремий лист
@@ -414,7 +420,7 @@ function PlacePDF(){
 
 						progress.details(translate('Creating new document'), false);
 						CreateMyDocument(myCurrentDoc);
-						addMarksToDocument(myCurrentDoc, 'PRINT');
+
 						myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 						var theFile = File(okFilesCurrent[i].theFile);
@@ -462,7 +468,6 @@ function PlacePDF(){
 									// Створюємо новий документ, якщо не вибрано опцію "Зберегти багатосторінковий файл"		
 									progress.details(translate('Creating new document'), false);
 									CreateMyDocument(myCurrentDoc);
-									addMarksToDocument(myCurrentDoc, 'PRINT');
 									myLayer = myDocument.layers.itemByName(PRINTLayer);
 								}
 
@@ -515,11 +520,11 @@ function PlacePDF(){
 							// Якщо не вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо лише поточну сторінку
 							if (!SaveMultipageFilesAsOneFile) {
 								// Створємо вікно для документа (інакше буде експортовано порожній документ!)
+								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + "_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
+								myDocument.name = outputFile;
+								addMarksToDocument(myCurrentDoc, 'PRINT');
 								myDocument.windows.add().maximize();
 								progress.details(translate('Exporting PDF'), false);								
-								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + "_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
-								addDocTitle(outputFile);
-								myDocument.name = outputFile;
 								try {
 									myDocumentsProcessing.push({
 										myDocument: myDocument,
@@ -538,11 +543,11 @@ function PlacePDF(){
 						// Якщо вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо багатосторінковий документ
 						if (SaveMultipageFilesAsOneFile) {
 							// Створємо вікно для документа (інакше буде експортовано порожній документ!)
-							myDocument.windows.add().maximize();
-							progress.details(translate('Exporting PDF'), false);							
-							var outputFile = myFileName + "_" + fileName +"_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
-							addDocTitle(outputFile);
+							var outputFile = myFileName + "_" + fileName +"_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
 							myDocument.name = outputFile;
+							addMarksToDocument(myCurrentDoc, 'PRINT');
+							myDocument.windows.add().maximize();
+							progress.details(translate('Exporting PDF'), false);
 							try {
 								myDocumentsProcessing.push({
 									myDocument: myDocument,
@@ -662,7 +667,6 @@ function PlacePDF(){
 
 			progress.details(translate('Creating new document'), false);
 			CreateMyDocument(myCurrentDoc);
-			addMarksToDocument(myCurrentDoc, 'PRINT');
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 			var fileNames = [];
@@ -752,9 +756,7 @@ function PlacePDF(){
 				}
 			}
 
-			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
-			myDocument.windows.add().maximize();			
-			progress.details(translate('Exporting PDF'), false);		
+			// Створємо вікно для документа (інакше буде експортовано порожній документ!)		
 			var fileName = myFileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '').replace(/%names%/, fileNames.join(' + ')).replace(/%names%/g, '');
 			if (fileName.match(PaperNames)) {
 				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
@@ -766,9 +768,11 @@ function PlacePDF(){
 					fileName = myCurrentDoc.CutterType.paperName + '_' + fileName;
 				}						
 			}				
-			var outputFile = fileName + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? "_D=" + myCurrentDoc.Diameter + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
-			addDocTitle(outputFile);
+			var outputFile = fileName + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? "_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 			myDocument.name = outputFile;
+			addMarksToDocument(myCurrentDoc, 'PRINT');
+			myDocument.windows.add().maximize();			
+			progress.details(translate('Exporting PDF'), false);
 			try {
 				myDocumentsProcessing.push({
 					myDocument: myDocument,
@@ -787,9 +791,9 @@ function PlacePDF(){
 
 	function ProcessRectangles(okFilesCurrent, totalFilesLength, customRoundCornersValue, customSpaceBetween) {
 		
-		var RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
-		var IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;
-		var SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
+		myCurrentDoc.RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
+		myCurrentDoc.IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;
+		myCurrentDoc.SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 
 		if (!myCurrentDoc.Params) {
 			alert(translate('Error - Creating document'));
@@ -807,13 +811,13 @@ function PlacePDF(){
 						exit();
 					}
 					
-					progress(totalPages * itemsCopies, translate('Rectangles processing') + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + " мм" : "") + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
+					progress(totalPages * itemsCopies, translate('Rectangles processing') + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + translate('Units mm') : "") + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + translate('Units mm') : ""));
 								
 					for (var i = 0; i < okFilesCurrent.length; i++, fileCounter++) {
 
 						progress.details(translate('Creating new document'), false);
 						CreateMyDocument(myCurrentDoc);
-						addMarksToDocument(myCurrentDoc, 'PRINT');
+
 						myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 						var theFile = File(okFilesCurrent[i].theFile);
@@ -861,7 +865,6 @@ function PlacePDF(){
 									// Створюємо новий документ, якщо не вибрано опцію "Зберегти багатосторінковий файл"		
 									progress.details(translate('Creating new document'), false);
 									CreateMyDocument(myCurrentDoc);
-									addMarksToDocument(myCurrentDoc, 'PRINT');
 									myLayer = myDocument.layers.itemByName(PRINTLayer);
 								}
 							}
@@ -870,9 +873,9 @@ function PlacePDF(){
 							var newbie;
 							var last;
 
-							var refPoint = app.activeDocument.layoutWindows[0].transformReferencePoint;
-							
-							app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;
+							var refPoint = app.changeObjectPreferences.anchorPoint;
+    
+    						app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
 
 							for (var b = 0; b < itemsCopies; b++) {
 
@@ -886,8 +889,8 @@ function PlacePDF(){
 								if (b == 0 || myCurrentDoc.Params.rotationCompensation[b - 1] != myCurrentDoc.Params.rotationCompensation[b]) {
 									// Базовий елемент
 
-									var RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
-									var IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;							
+									myCurrentDoc.RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
+									myCurrentDoc.IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;							
 
 									var rectProperties = {
 										'contentType': ContentType.GRAPHIC_TYPE,			
@@ -907,15 +910,15 @@ function PlacePDF(){
 										]
 									}
 
-									if (IsRoundedCorners) {
+									if (myCurrentDoc.IsRoundedCorners) {
 										rectProperties['bottomLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
-										rectProperties['bottomLeftCornerRadius'] = RoundCornersValue || 0;
+										rectProperties['bottomLeftCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 										rectProperties['bottomRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
-										rectProperties['bottomRightCornerRadius'] = RoundCornersValue || 0;
+										rectProperties['bottomRightCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 										rectProperties['topLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
-										rectProperties['topLeftCornerRadius'] = RoundCornersValue || 0;
+										rectProperties['topLeftCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 										rectProperties['topRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
-										rectProperties['topRightCornerRadius'] = RoundCornersValue || 0;
+										rectProperties['topRightCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 									}
 
 									origin = newbie = myDocument.pages.lastItem().rectangles.add(myLayer, LocationOptions.AT_END, rectProperties);
@@ -933,7 +936,7 @@ function PlacePDF(){
 								}
 
 								// Компенсація накладання при роздвижці 0 (застосовується до попереднього)
-								if (SpaceBetween == 0) {
+								if (myCurrentDoc.SpaceBetween == 0) {
 									var curBounds;
 									if (b != 0 && last) {
 										curBounds = last.geometricBounds;
@@ -959,16 +962,16 @@ function PlacePDF(){
 								progress.increment();
 							}
 
-							app.activeDocument.layoutWindows[0].transformReferencePoint = refPoint;
+							app.changeObjectPreferences.anchorPoint = refPoint;
 							
 							// Якщо не вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо лише поточну сторінку
 							if (!SaveMultipageFilesAsOneFile) {
 								// Створємо вікно для документа (інакше буде експортовано порожній документ!)
+								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "") + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
+								myDocument.name = outputFile;
+								addMarksToDocument(myCurrentDoc, 'PRINT');
 								myDocument.windows.add().maximize();								
 								progress.details(translate('Exporting PDF'), false);
-								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
-								addDocTitle(outputFile);
-								myDocument.name = outputFile;
 								try {
 									myDocumentsProcessing.push({
 										myDocument: myDocument,
@@ -987,11 +990,11 @@ function PlacePDF(){
 						// Якщо вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо багатосторінковий документ
 						if (SaveMultipageFilesAsOneFile) {
 							// Створємо вікно для документа (інакше буде експортовано порожній документ!)
-							myDocument.windows.add().maximize();
-							progress.details(translate('Exporting PDF'), false);
-							var outputFile = myFileName + "_" + fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
-							addDocTitle(outputFile);
+							var outputFile = myFileName + "_" + fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "") + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 							myDocument.name = outputFile;
+							addMarksToDocument(myCurrentDoc, 'PRINT');
+							myDocument.windows.add().maximize();								
+							progress.details(translate('Exporting PDF'), false);
 							try {
 								myDocumentsProcessing.push({
 									myDocument: myDocument,
@@ -1108,11 +1111,10 @@ function PlacePDF(){
 		
 		function ProcessNUpDocumentRectangles(itemsCopies, itemsCount, pagesCount) {
 			
-			progress(itemsCount, translate('Rectangles processing') + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + " мм" : "") + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " мм" : ""));
+			progress(itemsCount, translate('Rectangles processing') + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + translate('Units mm') : "") + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + translate('Units mm') : ""));
 
 			progress.details(translate('Creating new document'), false);
 			CreateMyDocument(myCurrentDoc);
-			addMarksToDocument(myCurrentDoc, 'PRINT');
 			myLayer = myDocument.layers.itemByName(PRINTLayer);
 
 			var fileNames = [];
@@ -1121,9 +1123,9 @@ function PlacePDF(){
 			var newbie;
 			var last;
 
-			var refPoint = app.activeDocument.layoutWindows[0].transformReferencePoint;
+			var refPoint = app.changeObjectPreferences.anchorPoint;
 			
-			app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;			
+			app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;			
 
 			for (var i = 0, itemIndex = pagesTotalProcessedCounter, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
 				// Parse the PDF file and extract needed info
@@ -1154,8 +1156,8 @@ function PlacePDF(){
 
 						if (b == 0 || j == 1 || myCurrentDoc.Params.rotationCompensation[b - 1] != myCurrentDoc.Params.rotationCompensation[b]) {
 							// Базовий елемент
-							var RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
-							var IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;							
+							myCurrentDoc.RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
+							myCurrentDoc.IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;							
 
 							var rectProperties = {
 								'contentType': ContentType.GRAPHIC_TYPE,			
@@ -1175,15 +1177,15 @@ function PlacePDF(){
 								]
 							}
 
-							if (IsRoundedCorners) {
+							if (myCurrentDoc.IsRoundedCorners) {
 								rectProperties['bottomLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
-								rectProperties['bottomLeftCornerRadius'] = RoundCornersValue || 0;
+								rectProperties['bottomLeftCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 								rectProperties['bottomRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
-								rectProperties['bottomRightCornerRadius'] = RoundCornersValue || 0;
+								rectProperties['bottomRightCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 								rectProperties['topLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
-								rectProperties['topLeftCornerRadius'] = RoundCornersValue || 0;
+								rectProperties['topLeftCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 								rectProperties['topRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
-								rectProperties['topRightCornerRadius'] = RoundCornersValue || 0;
+								rectProperties['topRightCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 							}
 
 							origin = newbie = myDocument.pages.lastItem().rectangles.add(myLayer, LocationOptions.AT_END, rectProperties);
@@ -1201,7 +1203,7 @@ function PlacePDF(){
 						}
 
 						// Компенсація накладання при роздвижці 0 (застосовується до попереднього)
-						if (SpaceBetween == 0) {
+						if (myCurrentDoc.SpaceBetween == 0) {
 							var curBounds;
 							if (b != 0 && last) {
 								curBounds = last.geometricBounds;
@@ -1252,8 +1254,7 @@ function PlacePDF(){
 				}
 			}
 
-			app.activeDocument.layoutWindows[0].transformReferencePoint = refPoint;
-
+			app.changeObjectPreferences.anchorPoint = refPoint;
 
 			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 			myDocument.windows.add().maximize();
@@ -1269,7 +1270,7 @@ function PlacePDF(){
 					fileName = myCurrentDoc.CutterType.paperName + '_' + fileName;
 				}						
 			}				
-			var outputFile = fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
+			var outputFile = fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "") + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
 			addDocTitle(outputFile);
 			myDocument.name = outputFile;
 			try {
@@ -1391,61 +1392,6 @@ function PlacePDF(){
 			
 		BadFilesListWindow.show();
 	}	
-}
-
-// Додаємо назву документа текстовим блоком
-
-function addDocTitle(title){
-
-	//!!!!!!!!
-
-	return;
-	//if (!AddFileNameTitle) return false;
-	removeDocTitle();
-	var position = myDocument.documentPreferences.pageWidth <= myDocument.documentPreferences.pageHeight ? "top" : "left";
-	var geometricBounds, rotation;
-	if (position == "top") {
-		geometricBounds = [
-			7, 7, 14, myDocument.documentPreferences.pageWidth - 7
-		];
-		rotation = 0;
-	} else {
-		geometricBounds = [
-			7, 7, myDocument.documentPreferences.pageHeight - 7, 14
-		];
-		rotation = 90;
-	}
-	var TitleLayer = myDocument.layers.add({
-		'name': TITLELayer
-	});
-	for (var i = 0; i < myDocument.pages.length; i++) {
-		var thisPage = myDocument.pages[i];
-		var pageTitle = thisPage.textFrames.add(TitleLayer, LocationOptions.AT_END, {
-			'contents': title + (myDocument.pages.length > 0 ? (" :: Page " + (i + 1) + " of " + myDocument.pages.length) : ""),
-			'geometricBounds': geometricBounds,
-			'textFramePreferences': {
-				'verticalJustification': VerticalJustification.TOP_ALIGN
-			}
-		});
-		pageTitle.paragraphs.firstItem().properties = {
-			'justification': Justification.CENTER_ALIGN,
-			'appliedFont': defaultTitleFont,
-			'pointSize': defaultTitleSize,
-			'fillColor': defaultTitleColor,
-			'fillTint': defaultTitleColorTint,			
-		};
-		if (rotation != 0) {
-			pageTitle.absoluteRotationAngle = rotation;
-			pageTitle.geometricBounds = geometricBounds;
-		}
-	}
-}
-
-// Прибираємо назву документа текстовим блоком
-
-function removeDocTitle(){
-	var TitleLayer = myDocument.layers.itemByName(TITLELayer);
-	if (TitleLayer.isValid) TitleLayer.remove();
 }
 
 // Вікно відображення прогресу
@@ -1684,24 +1630,27 @@ function addMarksToDocument(myCurrentDoc, docType) {
 				marksFile.close();			
 				if (progress) progress.details(translate('Importing marks'), false);	
 
-				var firstPage = myDocument.pages.firstItem();
+				var pages = myDocument.pages.everyItem().getElements();
 
-				var MarksPlacement = firstPage.rectangles.add(PlotterLayer, LocationOptions.AT_BEGINNING, {
-					'contentType': ContentType.GRAPHIC_TYPE,
-					'strokeWeight': 0,
-					'strokeColor': 'None',
-					'frameFittingOptions': {
-						'properties': {
-							'fittingAlignment': AnchorPoint.CENTER_ANCHOR,
-							'fittingOnEmptyFrame': EmptyFrameFittingOptions.CONTENT_TO_FRAME
-						}
-					},
-					'geometricBounds': [0, 0, myCurrentDoc.CutterType.heightSheet, myCurrentDoc.CutterType.widthSheet]
-				});		
-				
-				app.pdfPlacePreferences.transparentBackground = true;		
-				MarksPlacement.place(marksFile)[0];			
-				app.pdfPlacePreferences.transparentBackground = false;
+				for (var i = 0; i < pages.length; i++) {
+					if (!pages[i].isValid) continue;
+					var MarksPlacement = pages[i].rectangles.add(PlotterLayer, LocationOptions.AT_BEGINNING, {
+						'contentType': ContentType.GRAPHIC_TYPE,
+						'strokeWeight': 0,
+						'strokeColor': 'None',
+						'frameFittingOptions': {
+							'properties': {
+								'fittingAlignment': AnchorPoint.CENTER_ANCHOR,
+								'fittingOnEmptyFrame': EmptyFrameFittingOptions.CONTENT_TO_FRAME
+							}
+						},
+						'geometricBounds': [0, 0, myCurrentDoc.CutterType.heightSheet, myCurrentDoc.CutterType.widthSheet]
+					});		
+					
+					app.pdfPlacePreferences.transparentBackground = true;		
+					MarksPlacement.place(marksFile)[0];			
+					app.pdfPlacePreferences.transparentBackground = false;
+				}
 			} else {
 				throw new Error(translate('Error - No access to marks file') + myCurrentDoc.CutterType.marksFile);
 			}		
@@ -1724,7 +1673,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	
 	var Params = myCurrentDoc.Params;
 	
-	const SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
+	myCurrentDoc.SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 	
 	progress(3 + Params.total, translate('Preparing document'));
 	progress.message(translate('Prepare circular cut', {Diameter: Params.Diameter}));
@@ -1815,11 +1764,11 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		case 2:
 			var totalWidthBig = Params.Diameter + Params.DistanceXCenters * (Params.countXBig - 1);
 			var totalWidthSmall = Params.Diameter + Params.DistanceXCenters * (Params.countXSmall - 1);
-			if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {
+			if (Params.DistanceYCenters > Params.Diameter / 2 + myCurrentDoc.SpaceBetween) {
 				var DistanceYCentersCurrent = Params.DistanceYCenters;
 				var totalHeight = Params.Diameter + Params.DistanceYCenters * (Params.countYBigPerekladom + Params.countYSmall - 1);
 			} else {
-				var DistanceYCentersCurrent = Params.Diameter + SpaceBetween;
+				var DistanceYCentersCurrent = Params.Diameter + myCurrentDoc.SpaceBetween;
 				var totalHeight = DistanceYCentersCurrent * Params.countYBigPerekladom + Params.DistanceYCenters * (Params.countYSmall - Params.countYBigPerekladom + 1);			
 			}
 			if (!documentRotated) {
@@ -1839,7 +1788,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 					// Small & odd row
 					if (i % 2 != 0 && countSmall < Params.countYSmall) {
 						for (var j = Params.countXSmall - 1; j >= 0; j--) {
-							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {							
+							if (Params.DistanceYCenters > Params.Diameter / 2 + myCurrentDoc.SpaceBetween) {							
 								AddOval([
 											verticalOffset + Params.DistanceYCenters * i,
 											horizontalOffsetSmall + Params.DistanceXCenters * j,
@@ -1859,7 +1808,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 					} else {
 						// Big & even row
 						for (var j = 0; j < Params.countXBig; j++) {
-							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {
+							if (Params.DistanceYCenters > Params.Diameter / 2 + myCurrentDoc.SpaceBetween) {
 								AddOval([
 											verticalOffset + Params.DistanceYCenters * i,
 											horizontalOffsetBig + Params.DistanceXCenters * j,
@@ -1896,7 +1845,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 					// Small row
 					if (i % 2 != 0 && countSmall < Params.countYSmall) {
 						for (var j = Params.countXSmall - 1; j >= 0 ; j--) {
-							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {
+							if (Params.DistanceYCenters > Params.Diameter / 2 + myCurrentDoc.SpaceBetween) {
 								AddOval([
 											verticalOffsetSmall + Params.DistanceXCenters * j,
 											horizontalOffset + DistanceYCentersCurrent * i,
@@ -1916,7 +1865,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 					} else {
 						// Big row
 						for (var j = 0; j < Params.countXBig; j++) {
-							if (Params.DistanceYCenters > Params.Diameter / 2 + SpaceBetween) {
+							if (Params.DistanceYCenters > Params.Diameter / 2 + myCurrentDoc.SpaceBetween) {
 								AddOval([
 											verticalOffsetBig + Params.DistanceXCenters * j,
 											horizontalOffset + DistanceYCentersCurrent * i,
@@ -1940,12 +1889,12 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		case 3:
 			var totalWidthBig = Params.Diameter + Params.DistanceXCenters * (Params.countXBig - 1);
 			var totalWidthSmall = Params.Diameter + Params.DistanceXCenters * (Params.countXSmall - 1);
-			var DistanceYCentersBigBig = Params.Diameter + SpaceBetween;						
+			var DistanceYCentersBigBig = Params.Diameter + myCurrentDoc.SpaceBetween;						
 			var countBigSmallRows = Params.countYBigPerekladom + Params.countYSmall - 1;
-			if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
+			if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {
 				var totalHeight = (DistanceYCentersBigBig * Params.countYBigRivni) + (Params.DistanceYCenters * countBigSmallRows) + Params.Diameter;
 			} else {
-				var DistanceYCentersCurrent = Params.Diameter + SpaceBetween;
+				var DistanceYCentersCurrent = Params.Diameter + myCurrentDoc.SpaceBetween;
 				var totalHeight = (DistanceYCentersBigBig * Params.countYBigRivni) + DistanceYCentersCurrent * Params.countYBigPerekladom + Params.DistanceYCenters * (Params.countYSmall - Params.countYBigPerekladom + 1);
 			}		
 
@@ -1992,7 +1941,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							// Small row
 							if (isSmall) {
 								for (var j = Params.countXSmall - 1; j >= 0; j--) {
-									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
+									if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {
 										AddOval([
 													verticalOffset + Params.DistanceYCenters * k,
 													horizontalOffsetSmall + Params.DistanceXCenters * j,
@@ -2013,7 +1962,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							} else {
 								// Big row
 								for (var j = Params.countXBig - 1; j >= 0; j--) {
-									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
+									if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {
 										AddOval([
 													verticalOffset + Params.DistanceYCenters * k,
 													horizontalOffsetBig + Params.DistanceXCenters * j,
@@ -2037,7 +1986,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							// Small row
 							if (isSmall) {
 								for (var j = 0; j < Params.countXSmall; j++) {
-									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {									
+									if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {									
 										AddOval([
 													verticalOffset + Params.DistanceYCenters * k,
 													horizontalOffsetSmall + Params.DistanceXCenters * j,
@@ -2058,7 +2007,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							} else {
 								// Big row
 								for (var j = 0; j < Params.countXBig; j++) {
-									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {										
+									if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {										
 										AddOval([
 													verticalOffset + Params.DistanceYCenters * k,
 													horizontalOffsetBig + Params.DistanceXCenters * j,
@@ -2123,7 +2072,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							// Small row
 							if (isSmall) {
 								for (var j = Params.countXSmall - 1; j >= 0; j--) {
-									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
+									if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {
 										AddOval([
 													verticalOffsetSmall + Params.DistanceXCenters * j,
 													horizontalOffset + Params.DistanceYCenters * k,
@@ -2144,7 +2093,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							} else {
 								// Big row
 								for (var j = Params.countXBig - 1; j >= 0; j--) {
-									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
+									if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {
 										AddOval([
 													verticalOffsetBig + Params.DistanceXCenters * j,
 													horizontalOffset + Params.DistanceYCenters * k,
@@ -2167,7 +2116,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							// Even row
 							if (isSmall) {
 								for (var j = 0; j < Params.countXSmall; j++) {
-									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
+									if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {
 										AddOval([
 													verticalOffsetSmall + Params.DistanceXCenters * j,
 													horizontalOffset + Params.DistanceYCenters * k,
@@ -2188,7 +2137,7 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 							} else {
 								// Big row
 								for (var j = 0; j < Params.countXBig; j++) {
-									if (Params.DistanceYCenters > (Params.Diameter / 2 + SpaceBetween)) {
+									if (Params.DistanceYCenters > (Params.Diameter / 2 + myCurrentDoc.SpaceBetween)) {
 										AddOval([
 													verticalOffsetBig + Params.DistanceXCenters * j,
 													horizontalOffset + Params.DistanceYCenters * k,
@@ -2220,6 +2169,12 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 	
 	myCurrentDoc.Params.contoursBounds = OvalsGroup.ovals.count() > 1 ? OvalsGroup.geometricBounds : OvalsGroup.ovals.firstItem().geometricBounds;
 
+	Params.cutLength = Math.ceil(Math.PI * Params.Diameter * Params.total);
+	
+	var outputFile = outputFolder + '/' + 'D=' + Params.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + Params.cutLength + "mm_x" + Params.total;
+
+	myDocument.name = outputFile;
+
 	addMarksToDocument(myCurrentDoc, 'CUT');
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
@@ -2228,12 +2183,6 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		myDocument.windows.add().maximize();
 
 		progress.details(translate('Exporting cut file'), false);	
-		
-		var cutLength = Math.ceil(Math.PI * Params.Diameter * Params.total);
-		
-		var outputFile = outputFolder + '/' + 'D=' + Params.Diameter + "(" + SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + cutLength + "mm_" + Params.total + " sht";
-
-		myDocument.name = outputFile;
 
 		var dontCloseDocument = false;
            
@@ -2311,10 +2260,10 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	
 	var Params = myCurrentDoc.Params;
 	
-	var SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
+	myCurrentDoc.SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDoc.SpaceBetween;
 	var Bleeds = myCurrentDoc.IsZeroBleeds ? 0 : myCurrentDoc.CutterType.minSpaceBetween / 2;
-	var RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
-	var IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;
+	myCurrentDoc.RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDoc.RoundCornersValue;
+	myCurrentDoc.IsRoundedCorners = customRoundCornersValue ? true : myCurrentDoc.IsRoundedCorners;
 	
 	const documentRotated = Params.widthSheet != myCurrentDoc.CutterType.widthSheet;
 	
@@ -2323,7 +2272,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	
 	progress(3 + Params.total, translate('Preparing document'));
 
-	progress.message(translate('Prepare rectangular cut', {widthItem: Params.widthItem, heightItem: Params.heightItem}) + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + translate('Units mm') : ""));
+	progress.message(translate('Prepare rectangular cut', {widthItem: Params.widthItem, heightItem: Params.heightItem}) + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + translate('Units mm') : ""));
 
 	progress.details(translate('Creating new document'), false);
 	CreateMyDocument(myCurrentDoc);
@@ -2357,22 +2306,22 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 			'geometricBounds': thisBounds
 		};
 
-		if (SpaceBetween > 0) {
+		if (myCurrentDoc.SpaceBetween > 0) {
 			rectProperties['strokeWeight'] = 0.5;
 			rectProperties['strokeColor'] = contourColor;
 			rectProperties['strokeType'] = 'Solid';
 			rectProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;			
 		}
 
-		if (IsRoundedCorners) {
+		if (myCurrentDoc.IsRoundedCorners) {
 			rectProperties['bottomLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
-			rectProperties['bottomLeftCornerRadius'] = RoundCornersValue || 0;
+			rectProperties['bottomLeftCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 			rectProperties['bottomRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
-			rectProperties['bottomRightCornerRadius'] = RoundCornersValue || 0;
+			rectProperties['bottomRightCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 			rectProperties['topLeftCornerOption'] = CornerOptions.ROUNDED_CORNER;
-			rectProperties['topLeftCornerRadius'] = RoundCornersValue || 0;
+			rectProperties['topLeftCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 			rectProperties['topRightCornerOption'] = CornerOptions.ROUNDED_CORNER;
-			rectProperties['topRightCornerRadius'] = RoundCornersValue || 0;
+			rectProperties['topRightCornerRadius'] = myCurrentDoc.RoundCornersValue || 0;
 		}
 
 		firstPage.rectangles.add(CutLayer, LocationOptions.AT_END, rectProperties);			
@@ -2397,8 +2346,8 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	switch (Params.method) {
 		case 1:
 			if (documentRotated) {
-				totalHeight = Params.countX * (Params.widthItem + SpaceBetween) - SpaceBetween;
-				totalWidth = Params.countY * (Params.heightItem + SpaceBetween) - SpaceBetween;
+				totalHeight = Params.countX * (Params.widthItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalWidth = Params.countY * (Params.heightItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
 				horizontalOffset = (Params.heightFrame - totalWidth) / 2 + myCurrentDoc.CutterType.marginLeft;
 				verticalOffset = (Params.widthFrame - totalHeight) / 2 + myCurrentDoc.CutterType.marginTop;	
 				var count = 0;
@@ -2413,7 +2362,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						var itemIndex = isOdd ? j : Params.countY - j - 1;
 						var bleedCompensation = [0, 0, 0, 0];
 
-						if (SpaceBetween == 0) {
+						if (myCurrentDoc.SpaceBetween == 0) {
 							var firstRow = count > 0 && count <= Params.countY;
 							var lastRow = count > (Params.total - Params.countY) && count <= Params.total;
 							var firstCol = itemIndex == 0;
@@ -2427,10 +2376,10 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						};
 
 						AddRectangle([
-										verticalOffset + (Params.widthItem + SpaceBetween) * i,
-										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
-										verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
-										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
+										verticalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * i,
+										horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * itemIndex,
+										verticalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * i + Params.widthItem,
+										horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * itemIndex + Params.heightItem
 									],
 									90,
 									bleedCompensation);
@@ -2438,8 +2387,8 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					isOdd = !isOdd;
 				}				
 			} else {
-				totalWidth = Params.countX * (Params.widthItem + SpaceBetween) - SpaceBetween;
-				totalHeight = Params.countY * (Params.heightItem + SpaceBetween) - SpaceBetween;
+				totalWidth = Params.countX * (Params.widthItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalHeight = Params.countY * (Params.heightItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
 				horizontalOffset = (Params.widthFrame - totalWidth) / 2 + myCurrentDoc.CutterType.marginLeft;
 				verticalOffset = (Params.heightFrame - totalHeight) / 2 + myCurrentDoc.CutterType.marginTop;
 				var count = 0;
@@ -2454,7 +2403,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						var bleedCompensation = [0, 0, 0, 0];
 						
 						// Створюємо масив компенсації вильотів при накладанні макетів
-						if (SpaceBetween == 0) {
+						if (myCurrentDoc.SpaceBetween == 0) {
 							var firstRow = count > 0 && count <= Params.countX;
 							var lastRow = count > (Params.total - Params.countX) && count <= Params.total;
 							var firstCol = itemIndex == 0;
@@ -2468,10 +2417,10 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						};
 
 						AddRectangle([
-										verticalOffset + (Params.heightItem + SpaceBetween) * i,
-										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
-										verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
-										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
+										verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * i,
+										horizontalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * itemIndex,
+										verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * i + Params.heightItem,
+										horizontalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * itemIndex + Params.widthItem
 									],
 									0,
 									bleedCompensation);
@@ -2485,11 +2434,11 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 			
 			if (documentRotated) {
 				
-				totalHeightOriginal = Params.countX * (Params.widthItem + SpaceBetween) - SpaceBetween;
-				totalWidthOriginal = Params.countY * (Params.heightItem + SpaceBetween) - SpaceBetween;
-				totalHeightRotated = Params.countRotatedX * (Params.heightItem + SpaceBetween) - SpaceBetween;
-				totalWidthRotated = Params.countRotatedY * (Params.widthItem + SpaceBetween) - SpaceBetween;
-				totalWidth = totalWidthOriginal + SpaceBetween + totalWidthRotated;
+				totalHeightOriginal = Params.countX * (Params.widthItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalWidthOriginal = Params.countY * (Params.heightItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalHeightRotated = Params.countRotatedX * (Params.heightItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalWidthRotated = Params.countRotatedY * (Params.widthItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalWidth = totalWidthOriginal + myCurrentDoc.SpaceBetween + totalWidthRotated;
 				totalHeight = totalHeightOriginal > totalHeightRotated ? totalHeightOriginal : totalHeightRotated;
 				horizontalOffset = (Params.heightFrame - totalWidth) / 2 + myCurrentDoc.CutterType.marginLeft;
 				verticalOffset = (Params.widthFrame - totalHeight) / 2 + myCurrentDoc.CutterType.marginTop;				
@@ -2504,10 +2453,10 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						var bleedCompensation = [0, 0, 0, 0];
 						
 						AddRectangle([
-										verticalOffset + (Params.widthItem + SpaceBetween) * i,
-										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
-										verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
-										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
+										verticalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * i,
+										horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * itemIndex,
+										verticalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * i + Params.widthItem,
+										horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * itemIndex + Params.heightItem
 									],
 									90,
 									bleedCompensation);			
@@ -2515,7 +2464,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					isOdd = !isOdd;
 				}
 				
-				horizontalOffset = horizontalOffset + (Params.heightItem + SpaceBetween) * Params.countY;
+				horizontalOffset = horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * Params.countY;
 				
 				// Rows Rotated
 				for (var i = 0; i < Params.countRotatedX; i++) {
@@ -2526,10 +2475,10 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						var bleedCompensation = [0, 0, 0, 0];
 						
 						AddRectangle([
-										verticalOffset + (Params.heightItem + SpaceBetween) * i,
-										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
-										verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
-										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
+										verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * i,
+										horizontalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * itemIndex,
+										verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * i + Params.heightItem,
+										horizontalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * itemIndex + Params.widthItem
 									],
 									0,
 									bleedCompensation);	
@@ -2537,12 +2486,12 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					isOdd = !isOdd;
 				}				
 			} else {
-				totalWidthOriginal = Params.countX * (Params.widthItem + SpaceBetween) - SpaceBetween;
-				totalHeightOriginal = Params.countY * (Params.heightItem + SpaceBetween) - SpaceBetween;
-				totalWidthRotated = Params.countRotatedX * (Params.heightItem + SpaceBetween) - SpaceBetween;
-				totalHeightRotated = Params.countRotatedY * (Params.widthItem + SpaceBetween) - SpaceBetween;
+				totalWidthOriginal = Params.countX * (Params.widthItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalHeightOriginal = Params.countY * (Params.heightItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalWidthRotated = Params.countRotatedX * (Params.heightItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
+				totalHeightRotated = Params.countRotatedY * (Params.widthItem + myCurrentDoc.SpaceBetween) - myCurrentDoc.SpaceBetween;
 				totalWidth = totalWidthOriginal > totalWidthRotated ? totalWidthOriginal : totalWidthRotated;
-				totalHeight = totalHeightOriginal + SpaceBetween + totalHeightRotated;
+				totalHeight = totalHeightOriginal + myCurrentDoc.SpaceBetween + totalHeightRotated;
 				horizontalOffset = (Params.widthFrame - totalWidth) / 2 + myCurrentDoc.CutterType.marginLeft;
 				verticalOffset = (Params.heightFrame - totalHeight) / 2 + myCurrentDoc.CutterType.marginTop;
 				
@@ -2556,10 +2505,10 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						var bleedCompensation = [0, 0, 0, 0];
 						
 						AddRectangle([
-										verticalOffset + (Params.heightItem + SpaceBetween) * i,
-										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex,
-										verticalOffset + (Params.heightItem + SpaceBetween) * i + Params.heightItem,
-										horizontalOffset + (Params.widthItem + SpaceBetween) * itemIndex + Params.widthItem
+										verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * i,
+										horizontalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * itemIndex,
+										verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * i + Params.heightItem,
+										horizontalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * itemIndex + Params.widthItem
 									],
 									0,
 									bleedCompensation);					
@@ -2567,7 +2516,7 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					isOdd = !isOdd;
 				}
 				
-				verticalOffset = verticalOffset + (Params.heightItem + SpaceBetween) * Params.countY;
+				verticalOffset = verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * Params.countY;
 				
 				// Rows Rotated
 				for (var i = 0; i < Params.countRotatedY; i++) {
@@ -2578,10 +2527,10 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 						var bleedCompensation = [0, 0, 0, 0];
 						
 						AddRectangle([
-										verticalOffset + (Params.widthItem + SpaceBetween) * i,
-										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex,
-										verticalOffset + (Params.widthItem + SpaceBetween) * i + Params.widthItem,
-										horizontalOffset + (Params.heightItem + SpaceBetween) * itemIndex + Params.heightItem
+										verticalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * i,
+										horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * itemIndex,
+										verticalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween) * i + Params.widthItem,
+										horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween) * itemIndex + Params.heightItem
 									],
 									90,
 									bleedCompensation);	
@@ -2599,18 +2548,32 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 
     myCurrentDoc.Params.contoursBounds = RectGroup.rectangles.count() > 1 ? RectGroup.geometricBounds : RectGroup.rectangles.firstItem().geometricBounds;
 
+	if (myCurrentDoc.SpaceBetween > 0) {
+		if (myCurrentDoc.IsRoundedCorners) {
+			Params.cutLength = Math.ceil(((Params.widthItem + Params.heightItem - 4 * myCurrentDoc.RoundCornersValue) * 2 + 2 * Math.PI * myCurrentDoc.RoundCornersValue) * Params.total);
+		} else {
+			Params.cutLength = Math.ceil(((Params.widthItem + Params.heightItem) * 2) * Params.total);
+		}			
+	} else {
+		Params.cutLength = Math.ceil((Params.countY + 1) * (totalHeight + 0.7) + (Params.countX + 1) * (totalWidth + 0.7));
+	}
+	
+	var outputFile = outputFolder + '/' + Params.widthItem + "x" + Params.heightItem + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "") + "(" + myCurrentDoc.SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + Params.cutLength + "mm_x" + Params.total;
+
+	myDocument.name = outputFile;
+
 	addMarksToDocument(myCurrentDoc, 'CUT');
 	
 	if (myCurrentDoc.IsSaveFileWithCut) {
 		
 		var contourOffset = myCurrentDoc.CutterType.contourOffset;
 		
-		var refPoint = app.activeDocument.layoutWindows[0].transformReferencePoint;
+		var refPoint = app.changeObjectPreferences.anchorPoint;
 		
-		app.activeDocument.layoutWindows[0].transformReferencePoint = AnchorPoint.CENTER_ANCHOR;	
+		app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;	
 		
 		// Контур порізки задається лініями, якщо макети покладено встик
-		if (SpaceBetween == 0) {
+		if (myCurrentDoc.SpaceBetween == 0) {
 			if (documentRotated) {
 				
 				// Вертикальні лінії різу
@@ -2621,9 +2584,9 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					firstPage.graphicLines.add(CutLayer, LocationOptions.AT_END, {
 						'geometricBounds': [ // [y1, x1, y2, x2], which give the coordinates of the top-left and bottom-right corners of the bounding box.
 							verticalOffset - contourOffset,
-							horizontalOffset + (Params.heightItem + SpaceBetween / 2) * i,
+							horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween / 2) * i,
 							verticalOffset + totalHeight + contourOffset,
-							horizontalOffset + (Params.heightItem + SpaceBetween / 2) * i
+							horizontalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween / 2) * i
 						],
 						'strokeWeight': 1,
 						'strokeColor': contourColor,
@@ -2641,9 +2604,9 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 				for (var i = 0; i <= Params.countX; i++) {
 					firstPage.graphicLines.add(CutLayer, LocationOptions.AT_END, {
 						'geometricBounds': [ // [y1, x1, y2, x2], which give the coordinates of the top-left and bottom-right corners of the bounding box.
-							verticalOffset + (Params.widthItem + SpaceBetween / 2) * i,
+							verticalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween / 2) * i,
 							horizontalOffset - contourOffset,
-							verticalOffset + (Params.widthItem + SpaceBetween / 2) * i,
+							verticalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween / 2) * i,
 							horizontalOffset + totalWidth + contourOffset
 						],
 						'strokeWeight': 1,
@@ -2666,9 +2629,9 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					firstPage.graphicLines.add(CutLayer, LocationOptions.AT_END, {
 						'geometricBounds': [ // [y1, x1, y2, x2], which give the coordinates of the top-left and bottom-right corners of the bounding box.
 							verticalOffset - contourOffset,
-							horizontalOffset + (Params.widthItem + SpaceBetween / 2) * i,
+							horizontalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween / 2) * i,
 							verticalOffset + totalHeight + contourOffset,
-							horizontalOffset + (Params.widthItem + SpaceBetween / 2) * i
+							horizontalOffset + (Params.widthItem + myCurrentDoc.SpaceBetween / 2) * i
 						],
 						'strokeWeight': 1,
 						'strokeColor': contourColor,
@@ -2687,9 +2650,9 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 					
 					firstPage.graphicLines.add(CutLayer, LocationOptions.AT_END, {
 						'geometricBounds': [ // [y1, x1, y2, x2], which give the coordinates of the top-left and bottom-right corners of the bounding box.
-							verticalOffset + (Params.heightItem + SpaceBetween / 2) * i,
+							verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween / 2) * i,
 							horizontalOffset - contourOffset,
-							verticalOffset + (Params.heightItem + SpaceBetween / 2) * i,
+							verticalOffset + (Params.heightItem + myCurrentDoc.SpaceBetween / 2) * i,
 							horizontalOffset + totalWidth + contourOffset
 						],
 						'strokeWeight': 1,
@@ -2703,27 +2666,11 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 			}
 		};
 		
-		app.activeDocument.layoutWindows[0].transformReferencePoint = refPoint;	
+		app.changeObjectPreferences.anchorPoint = refPoint;	
 
 		// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 		myDocument.windows.add().maximize();
 		progress.details(translate('Exporting cut file'), false);	
-		
-		var cutLength;
-		
-		if (SpaceBetween > 0) {
-			if (IsRoundedCorners) {
-				cutLength = Math.ceil(((Params.widthItem + Params.heightItem - 4 * RoundCornersValue) * 2 + 2 * Math.PI * RoundCornersValue) * Params.total);
-			} else {
-				cutLength = Math.ceil(((Params.widthItem + Params.heightItem) * 2) * Params.total);
-			}			
-		} else {
-			cutLength = Math.ceil((Params.countY + 1) * (totalHeight + 0.7) + (Params.countX + 1) * (totalWidth + 0.7));
-		}
-		
-		var outputFile = outputFolder + '/' + Params.widthItem + "x" + Params.heightItem + (IsRoundedCorners && RoundCornersValue > 0 ? " R=" + RoundCornersValue + " " : "") + "(" + SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + cutLength + "mm_" + Params.total + " sht";
-
-		myDocument.name = outputFile;
 
 		var dontCloseDocument = false;
            

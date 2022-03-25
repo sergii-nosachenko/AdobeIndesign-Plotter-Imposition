@@ -1,5 +1,5 @@
 # InDesign Imposition For Plotter Cutting script
-[![en](https://img.shields.io/badge/language-english-red?style=for-the-badge)](https://github.com/jonatasemidio/multilanguage-readme-pattern/blob/master/readme.md)
+[![en](https://img.shields.io/badge/language-english-red?style=for-the-badge)](https://github.com/sergii-nosachenko/AdobeIndesign-Plotter-Imposition/blob/master/readme.md)
 [![uk](https://img.shields.io/badge/%D0%BC%D0%BE%D0%B2%D0%B0-%D1%83%D0%BA%D1%80%D0%B0%D1%97%D0%BD%D1%81%D1%8C%D0%BA%D0%B0-yellow?style=for-the-badge)](https://github.com/sergii-nosachenko/AdobeIndesign-Plotter-Imposition/blob/master/readme-uk.md)
 
 This script allows you to easily imposition a file or group of files for plotter cutting in Adobe InDesign. Cutting ready files for each size are also generated.

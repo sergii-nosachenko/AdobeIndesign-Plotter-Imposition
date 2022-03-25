@@ -13,7 +13,7 @@ github.com/sergii-nosachenko
 
 ---------------------------------------------------------------------- */
 
-const APP_VERSION = "4.0.0a";
+const APP_VERSION = "4.0.0";
 
 // Debug level
 // Comment next line for production!

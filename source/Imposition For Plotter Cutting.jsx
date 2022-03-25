@@ -1,4 +1,7 @@
-﻿/* ----------------------------------------------------------------------
+﻿#target indesign
+#engine main
+
+/* ----------------------------------------------------------------------
 
 Цей плагін є результатом багаторічного досвіду в поліграфії та створений
 з метою спростити життя репрографам, що часто працюють з розкладками
@@ -44,17 +47,17 @@ const PLOTTERLayer = "PLOTTER";
 const CUTLayer = "CUT";
 const TITLELayer = "TITLE";
 var CUTTER_TYPES = APP_PREFERENCES.cutters;
-const PaperNames = new RegExp('(SRA[34]|SRA3 Max\+|A[34]|Ricoh ?X?L)', 'g'); // Список можливих назв форматів паперу regex
-const defaultTitleFont = 'Tahoma';
-const defaultTitleSize = 9;
-const defaultTitleColor = 'Black';
-const defaultTitleColorTint = 99.56;
 
-// Global variables
 APP_PREFERENCES.app = APP_PREFERENCES.app || {};
 APP_PREFERENCES.app.lang = APP_PREFERENCES.app.lang ? APP_PREFERENCES.app.lang : ($.locale ? $.locale : 'en_US');
 APP_PREFERENCES.app.lastPlotter = APP_PREFERENCES.app.lastPlotter ? APP_PREFERENCES.app.lastPlotter : 0;
 
+//Global RegExp patterns
+const BracketsPattern = /\[.*\]/;
+const CirclePattern = /\[[^d]*d=(\d+[,.]?\d*)[^\(]*(\((\d+[,.]?\d*)?\))?[^\)]*\]/i; // "[d=10 (0.5)]" => 10, (0.5), 0.5
+const RectanglePattern = /\[[^\d]*(\d+[,.]?\d*[xх]\d+[,.]?\d*)[^r\(]*(r\=(\d+[,.]?\d*))?[^\(]*(\((\d+[,.]?\d*)\))?.*\]/i; // "[15x10 r=3.5 (0.5)]" => 15x10, r=3.5, 3.5, (0.5), 0.5
+
+// Global variables
 var myPDFExportPreset;
 var theFiles;
 var okFiles = [];
@@ -85,10 +88,13 @@ var SaveMultipageFilesAsOneFile = true;
 var steps;
 var totalPages;
 
+// Для коректної роботи BridgeTalk функції трансформовано в текстовий тип
+const openIllustratorToConvertAI_source = '(function openIllustratorToConvertAI(fileName){var result={success:!1};fileName=eval(fileName);try{var file=File(fileName);if(!file.exists)throw new Error("File not found!");app.userInteractionLevel=UserInteractionLevel.DONTDISPLAYALERTS;var w=new Window("dialog","Processing",void 0,{closeButton:!1}),t=w.add("statictext");t.preferredSize=[450,-1],t.text="Converting EPS to AI cut file...",w.onShow=function(){app.open(file);var e=new IllustratorSaveOptions;e.compatibility=Compatibility.ILLUSTRATOR8,e.compressed=!1,e.pdfCompatible=!1;var t=file.fullName.split(".").slice(0,-1).join(".")+".ai",r=new File(t);try{app.activeDocument.saveAs(r,e),app.activeDocument.close(SaveOptions.DONOTSAVECHANGES),file.remove()}catch(e){throw new Error("Export to AI failed!")}result={success:!0},w.close()};var run=w.show();return app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}catch(e){return result={success:!1,err:e.message},app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}})';
+const openIllustratorToConvertDXF_source = '(function openIllustratorToConvertDXF(fileName){var result={success:!1};fileName=eval(fileName);try{var file=File(fileName);if(!file.exists)throw new Error("File not found!");app.userInteractionLevel=UserInteractionLevel.DONTDISPLAYALERTS;var w=new Window("dialog","Processing",void 0,{closeButton:!1}),t=w.add("statictext");t.preferredSize=[450,-1],t.text="Converting EPS to AI cut file...",w.onShow=function(){app.open(file);var e=new ExportOptionsAutoCAD;e.exportFileFormat=AutoCADExportFileFormat.DXF;for(var t=file.fullName.split(".").slice(0,-1).join(".")+".dxf",o=new File(t),r=0,l=app.activeDocument.pathItems;r<l.length;r++)l[r].fillColor instanceof NoColor||(l[r].strokeColor=l[r].fillColor,l[r].fillColor=new NoColor);try{app.activeDocument.exportFile(o,ExportType.AUTOCAD,e),app.activeDocument.close(SaveOptions.DONOTSAVECHANGES),file.remove()}catch(e){throw new Error("Export to DXF failed!")}result={success:!0},w.close()};var run=w.show();return app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}catch(e){return result={success:!1,err:e.message},app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}})';
+
 // Запуск головного діалогового вікна
 app.scriptPreferences.enableRedraw = true;
 DialogWindow();
-// app.doScript(DialogWindow, ScriptLanguage.JAVASCRIPT, undefined, UndoModes.FAST_ENTIRE_SCRIPT, "Rozkladka na plotter");
 
 function PlacePDF(){
 	
@@ -150,12 +156,14 @@ function PlacePDF(){
 					for (var i = 0; i < okFiles.length; i++) {
 						var theFile = okFiles[i].theFile;				
 						var fileName = File.decode(theFile.name).split('.').slice(0, -1).join('.');
-						var diameterMatch = fileName.match(/(_d=|^d=)(\d+(,\d+)?)/i);
-						var diameter = diameterMatch ? +diameterMatch[2] : 0;
-						var files = okFilesDiameters[diameter] || [];
+						var diameterMatch = fileName.match(CirclePattern);
+						var diameter = diameterMatch ? parseFloat(diameterMatch[1].replace(',', '.')) : 0;
+						var spacebetween = diameterMatch && diameterMatch[3] != undefined ? parseFloat(diameterMatch[3].replace(',', '.')) : myCustomDoc.SpaceBetween;
+						var key = diameter ? diameter+':'+spacebetween : diameter;
+						var files = okFilesDiameters[key] || [];
 						files.push(okFiles[i]);
-						okFilesDiameters[diameter] = files;
-						if (okDiameters.indexOf(diameter) < 0) okDiameters.push(diameter);
+						okFilesDiameters[key] = files;
+						if (okDiameters.indexOf(key) < 0) okDiameters.push(key);
 					}
 
 					if (okFilesDiameters[0]) {
@@ -172,8 +180,11 @@ function PlacePDF(){
 					// Перебираємо варіанти
 					for (var i = 0; i < okDiameters.length; i++) {
 						if (okDiameters[i] !== 0) {
-							myCurrentDoc.Diameter = okDiameters[i];
-							var thisFileParams = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, myCurrentDoc.SpaceBetween, true);			
+							myCurrentDoc.Diameter = okDiameters[i].split(':')[0];
+							var thisSpaceBetween = okDiameters[i].split(':')[1];
+							thisSpaceBetween = thisSpaceBetween > myCurrentDoc.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDoc.CutterType.minSpaceBetween;
+							thisSpaceBetween = thisSpaceBetween > myCurrentDoc.CutterType.maxSpaceBetween ? myCurrentDoc.CutterType.maxSpaceBetween : thisSpaceBetween;
+							var thisFileParams = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, thisSpaceBetween, true);			
 							if (thisFileParams.length) {
 								myCurrentDoc.Params = thisFileParams[0];
 								myCurrentDoc.Figure = translate('Circles');
@@ -182,8 +193,8 @@ function PlacePDF(){
 								for (var j = 0; j < okFilesCurrent.length; j++) {
 									totalPages = totalPages + okFilesCurrent[j].pgCount;
 								};									
-								CreateCustomDocCircles(myCurrentDoc);
-								ProcessCircles(okFilesCurrent, totalOkFilesLength);				
+								CreateCustomDocCircles(myCurrentDoc, thisSpaceBetween);
+								ProcessCircles(okFilesCurrent, totalOkFilesLength, thisSpaceBetween);				
 							} else {
 								// Запам'ятовуємо файли, для яких не вдалося розрахувати розкладку
 								for (var k = 0; k < okFilesDiameters[okDiameters[i]].length; k++) {
@@ -216,12 +227,15 @@ function PlacePDF(){
 					for (var i = 0; i < okFiles.length; i++) {
 						var theFile = okFiles[i].theFile;				
 						var fileName = File.decode(theFile.name).split('.').slice(0, -1).join('.');
-						var sizeMatch = fileName.match(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)?/i);
-						var size = sizeMatch ? sizeMatch[0].replace(/[_ \=]/g, '').replace(/,/g, '.').replace(/r/g, 'R').replace(/х/g, 'x') : 0;
-						var files = okFilesSizes[size] || [];
+						var sizeMatch = fileName.match(RectanglePattern);
+						var size = sizeMatch ? sizeMatch[1].replace(/,/g, '.').replace('х', 'x') : 0;
+						var fillet = sizeMatch && sizeMatch[3] != undefined ? parseFloat(sizeMatch[1].replace(',', '.')) : 0;
+						var spacebetween = sizeMatch && sizeMatch[5] != undefined ? parseFloat(diameterMatch[5].replace(',', '.')) : myCustomDoc.SpaceBetween;
+						var key = size ? size+':'+fillet+':'+spacebetween : size;
+						var files = okFilesSizes[key] || [];
 						files.push(okFiles[i]);
-						okFilesSizes[size] = files;
-						if (okSizes.indexOf(size) < 0) okSizes.push(size);
+						okFilesSizes[key] = files;
+						if (okSizes.indexOf(key) < 0) okSizes.push(key);
 					}
 
 					if (okFilesSizes[0]) {
@@ -238,11 +252,24 @@ function PlacePDF(){
 					// Перебираємо варіанти
 					for (var i = 0; i < okSizes.length; i++) {
 						if (okSizes[i] !== 0) {
-							var thisSize = okSizes[i].split('R')[0];
-							var thisRadius = okSizes[i].split('R')[1] ? okSizes[i].split('R')[1] : 0;
-							var thisSpaceBetween = thisRadius > 0 ? (myCurrentDoc.SpaceBetween > myCurrentDoc.CutterType.minSpaceBetween ? myCurrentDoc.SpaceBetween : myCurrentDoc.CutterType.minSpaceBetween) : myCurrentDoc.SpaceBetween;
-							myCurrentDoc.RectWidth = thisSize.split('x')[0];
-							myCurrentDoc.RectHeight = thisSize.split('x')[1];
+							var thisSize = okSizes[i].split(':')[0];
+							var thisRadius = okSizes[i].split(':')[1];
+							var thisSpaceBetween = okSizes[i].split(':')[2];
+							thisSpaceBetween = thisSpaceBetween > myCurrentDoc.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDoc.CutterType.minSpaceBetween;
+							thisSpaceBetween = thisSpaceBetween > myCurrentDoc.CutterType.maxSpaceBetween ? myCurrentDoc.CutterType.maxSpaceBetween : thisSpaceBetween;
+							thisSpaceBetween = thisRadius && thisSpaceBetween ? thisSpaceBetween : myCurrentDoc.CutterType.minSpaceBetween;
+							myCurrentDoc.RectWidth = parseFloat(thisSize.split('x')[0]);
+							myCurrentDoc.RectHeight = parseFloat(thisSize.split('x')[1]);
+							if (!myCurrentDoc.RectWidth || !myCurrentDoc.RectHeight) {
+								// Запам'ятовуємо файли, у яких відсутнія ширина або висота
+								for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
+									badFiles.push({
+										theFile: okFilesSizes[okSizes[i]][k].theFile,
+										reason: translate('Error - Not correct size')
+									});
+								}								
+								continue;
+							}
 							if (thisRadius > myCurrentDoc.RectWidth / 2 || thisRadius > myCurrentDoc.RectHeight / 2) {
 								// Запам'ятовуємо файли, радіус скругління яких більший від половини розміру
 								for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
@@ -252,28 +279,27 @@ function PlacePDF(){
 									});
 								}								
 								continue;
+							}
+							var thisFileParams = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);
+							if (thisFileParams.length) {
+								myCurrentDoc.Params = thisFileParams[0];
+								myCurrentDoc.Figure = translate('Rectangles');
+								okFilesCurrent = okFilesSizes[okSizes[i]];				
+								totalPages = 0;
+								for (var j = 0; j < okFilesCurrent.length; j++) {
+									totalPages = totalPages + okFilesCurrent[j].pgCount;
+								};										
+								CreateCustomDocRectangles(myCurrentDoc, thisRadius > 0 ? thisRadius : false, thisRadius > 0 ? thisSpaceBetween : false);
+								ProcessRectangles(okFilesCurrent, totalOkFilesLength, thisRadius > 0 ? thisRadius : false, thisRadius > 0 ? thisSpaceBetween : false);				
 							} else {
-								var thisFileParams = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);
-								if (thisFileParams.length) {
-									myCurrentDoc.Params = thisFileParams[0];
-									myCurrentDoc.Figure = translate('Rectangles');
-									okFilesCurrent = okFilesSizes[okSizes[i]];				
-									totalPages = 0;
-									for (var j = 0; j < okFilesCurrent.length; j++) {
-										totalPages = totalPages + okFilesCurrent[j].pgCount;
-									};										
-									CreateCustomDocRectangles(myCurrentDoc, thisRadius > 0 ? thisRadius : false, thisRadius > 0 ? thisSpaceBetween : false);
-									ProcessRectangles(okFilesCurrent, totalOkFilesLength, thisRadius > 0 ? thisRadius : false, thisRadius > 0 ? thisSpaceBetween : false);				
-								} else {
-									// Запам'ятовуємо файли, для яких не вдалося розрахувати розкладку
-									for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
-										badFiles.push({
-											theFile: okFilesSizes[okSizes[i]][k].theFile,
-											reason: translate('Error - No variants')
-										});
-									}
-								};								
-							}					
+								// Запам'ятовуємо файли, для яких не вдалося розрахувати розкладку
+								for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
+									badFiles.push({
+										theFile: okFilesSizes[okSizes[i]][k].theFile,
+										reason: translate('Error - No variants')
+									});
+								}
+							}				
 						}
 					}			
 				} else {
@@ -298,12 +324,14 @@ function PlacePDF(){
 			for (var i = 0; i < okFiles.length; i++) {
 				var theFile = okFiles[i].theFile;				
 				var fileName = File.decode(theFile.name).split('.').slice(0, -1).join('.');
-				var diameterMatch = fileName.match(/(_d=|^d=)(\d+(,\d+)?)/i);
-				var diameter = diameterMatch ? +diameterMatch[2] : 0;
-				var files = okFilesDiameters[diameter] || [];
+				var diameterMatch = fileName.match(CirclePattern);
+				var diameter = diameterMatch ? parseFloat(diameterMatch[1].replace(',', '.')) : 0;
+				var spacebetween = diameterMatch && diameterMatch[3] != undefined ? parseFloat(diameterMatch[3].replace(',', '.')) : myCustomDoc.SpaceBetween;
+				var key = diameter ? diameter+':'+spacebetween : diameter;
+				var files = okFilesDiameters[key] || [];
 				files.push(okFiles[i]);
-				okFilesDiameters[diameter] = files;
-				if (okDiameters.indexOf(diameter) < 0) okDiameters.push(diameter);
+				okFilesDiameters[key] = files;
+				if (okDiameters.indexOf(key) < 0) okDiameters.push(key);
 			}
 
 			// Все, що не розпізнано, як кружечки, передається на аналіз належності до прямокутників
@@ -312,12 +340,15 @@ function PlacePDF(){
 			for (var i = 0; i < badDiameterFiles.length; i++) {
 				var theFile = badDiameterFiles[i].theFile;				
 				var fileName = File.decode(theFile.name).split('.').slice(0, -1).join('.');
-				var sizeMatch = fileName.match(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)?/i);
-				var size = sizeMatch ? sizeMatch[0].replace(/[_ \=]/g, '').replace(/,/g, '.').replace(/r/g, 'R').replace(/х/g, 'x') : 0;
-				var files = okFilesSizes[size] || [];
+				var sizeMatch = fileName.match(RectanglePattern);
+				var size = sizeMatch ? sizeMatch[1].replace(/,/g, '.').replace('х', 'x') : 0;
+				var fillet = sizeMatch && sizeMatch[3] != undefined ? parseFloat(sizeMatch[3].replace(',', '.')) : 0;
+				var spacebetween = sizeMatch && sizeMatch[5] != undefined ? parseFloat(diameterMatch[5].replace(',', '.')) : myCustomDoc.SpaceBetween;
+				var key = size ? size+':'+fillet+':'+spacebetween : size;
+				var files = okFilesSizes[key] || [];
 				files.push(badDiameterFiles[i]);
-				okFilesSizes[size] = files;
-				if (okSizes.indexOf(size) < 0) okSizes.push(size);
+				okFilesSizes[key] = files;
+				if (okSizes.indexOf(key) < 0) okSizes.push(key);
 			}
 
 			if (okFilesSizes[0]) {
@@ -334,8 +365,10 @@ function PlacePDF(){
 			// Перебираємо варіанти кружечків
 			for (var i = 0; i < okDiameters.length; i++) {
 				if (okDiameters[i] !== 0) {
-					myCurrentDoc.Diameter = okDiameters[i];
-					var thisSpaceBetween = myCurrentDoc.SpaceBetween > myCurrentDoc.CutterType.minSpaceBetween ? myCurrentDoc.SpaceBetween : myCurrentDoc.CutterType.minSpaceBetween;
+					myCurrentDoc.Diameter = okDiameters[i].split(':')[0];
+					var thisSpaceBetween = okDiameters[i].split(':')[1];
+					thisSpaceBetween = thisSpaceBetween > myCurrentDoc.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDoc.CutterType.minSpaceBetween;
+					thisSpaceBetween = thisSpaceBetween > myCurrentDoc.CutterType.maxSpaceBetween ? myCurrentDoc.CutterType.maxSpaceBetween : thisSpaceBetween;
 					var thisFileParams = RozkladkaCircles(myCurrentDoc.Diameter, myCurrentDoc.CutterType, thisSpaceBetween, true);			
 					if (thisFileParams.length) {
 						myCurrentDoc.Params = thisFileParams[0];
@@ -361,11 +394,24 @@ function PlacePDF(){
 			// Перебираємо варіанти прямокутників
 			for (var i = 0; i < okSizes.length; i++) {
 				if (okSizes[i] !== 0) {
-					var thisSize = okSizes[i].split('R')[0];
-					var thisRadius = okSizes[i].split('R')[1] ? okSizes[i].split('R')[1] : 0;
-					var thisSpaceBetween = thisRadius > 0 ? (myCurrentDoc.SpaceBetween > myCurrentDoc.CutterType.minSpaceBetween ? myCurrentDoc.SpaceBetween : myCurrentDoc.CutterType.minSpaceBetween) : myCurrentDoc.SpaceBetween;
-					myCurrentDoc.RectWidth = thisSize.split('x')[0];
-					myCurrentDoc.RectHeight = thisSize.split('x')[1];
+					var thisSize = okSizes[i].split(':')[0];
+					var thisRadius = okSizes[i].split(':')[1];
+					var thisSpaceBetween = okSizes[i].split(':')[2];
+					thisSpaceBetween = thisSpaceBetween > myCurrentDoc.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDoc.CutterType.minSpaceBetween;
+					thisSpaceBetween = thisSpaceBetween > myCurrentDoc.CutterType.maxSpaceBetween ? myCurrentDoc.CutterType.maxSpaceBetween : thisSpaceBetween;
+					thisSpaceBetween = thisRadius && thisSpaceBetween ? thisSpaceBetween : myCurrentDoc.CutterType.minSpaceBetween;
+					myCurrentDoc.RectWidth = parseFloat(thisSize.split('x')[0]);
+					myCurrentDoc.RectHeight = parseFloat(thisSize.split('x')[1]);
+					if (!myCurrentDoc.RectWidth || !myCurrentDoc.RectHeight) {
+						// Запам'ятовуємо файли, у яких відсутнія ширина або висота
+						for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
+							badFiles.push({
+								theFile: okFilesSizes[okSizes[i]][k].theFile,
+								reason: translate('Error - Not correct size')
+							});
+						}								
+						continue;
+					}
 					if (thisRadius > myCurrentDoc.RectWidth / 2 || thisRadius > myCurrentDoc.RectHeight / 2) {
 						// Запам'ятовуємо файли, радіус скругління яких більший від половини розміру
 						for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
@@ -375,30 +421,29 @@ function PlacePDF(){
 							});
 						}	
 						continue;
-					} else {
-						var thisFileParams = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);			
-						if (thisFileParams.length) {
-							myCurrentDoc.Params = thisFileParams[0];
-							myCurrentDoc.Figure = translate('Rectangles');
-							okFilesCurrent = okFilesSizes[okSizes[i]];				
-							totalPages = 0;
-							for (var j = 0; j < okFilesCurrent.length; j++) {
-								totalPages = totalPages + okFilesCurrent[j].pgCount;
-							};								
-							myCurrentDoc.RoundCornersValue = thisRadius;
-							myCurrentDoc.IsRoundedCorners = thisRadius > 0;
-							CreateCustomDocRectangles(myCurrentDoc, thisRadius, thisSpaceBetween);
-							ProcessRectangles(okFilesCurrent, totalOkFilesLength, thisRadius, thisSpaceBetween);				
-						} else {
-							// Запам'ятовуємо файли, для яких не вдалося розрахувати розкладку
-							for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
-								badFiles.push({
-									theFile: okFilesSizes[okSizes[i]][k].theFile,
-									reason: translate('Error - No variants')
-								});
-							}
+					}
+					var thisFileParams = RozkladkaRectangles(myCurrentDoc.RectWidth, myCurrentDoc.RectHeight, myCurrentDoc.CutterType, thisSpaceBetween, thisSpaceBetween > 0, true);			
+					if (thisFileParams.length) {
+						myCurrentDoc.Params = thisFileParams[0];
+						myCurrentDoc.Figure = translate('Rectangles');
+						okFilesCurrent = okFilesSizes[okSizes[i]];				
+						totalPages = 0;
+						for (var j = 0; j < okFilesCurrent.length; j++) {
+							totalPages = totalPages + okFilesCurrent[j].pgCount;
 						};								
-					}					
+						myCurrentDoc.RoundCornersValue = thisRadius;
+						myCurrentDoc.IsRoundedCorners = thisRadius > 0;
+						CreateCustomDocRectangles(myCurrentDoc, thisRadius, thisSpaceBetween);
+						ProcessRectangles(okFilesCurrent, totalOkFilesLength, thisRadius, thisSpaceBetween);				
+					} else {
+						// Запам'ятовуємо файли, для яких не вдалося розрахувати розкладку
+						for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
+							badFiles.push({
+								theFile: okFilesSizes[okSizes[i]][k].theFile,
+								reason: translate('Error - No variants')
+							});
+						}
+					};				
 				}
 			}			
 			break;			
@@ -437,18 +482,8 @@ function PlacePDF(){
 
 						var theFile = File(okFilesCurrent[i].theFile);
 						var fileName = File.decode(okFilesCurrent[i].theFile.name).split('.').slice(0, -1).join('.');					
-						fileName = fileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '');
+						fileName = fileName.replace(BracketsPattern, '').replace(/^ +| +$/, '');
 						myFileName = myFileName.replace(/%names%/g, '');
-						if (myFileName.match(PaperNames)) {
-							myFileName = myFileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
-						} else {
-							const fileNumber = myFileName.match(/\#\d+/);
-							if (fileNumber) {
-								myFileName = myFileName.replace(fileNumber, fileNumber + '_' + myCurrentDoc.CutterType.paperName);
-							} else {
-								myFileName = myCurrentDoc.CutterType.paperName + '_' + myFileName;
-							}
-						}
 						var pgCount = okFilesCurrent[i].pgCount;
 						
 						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++, pagesTotalProcessedCounter++) {
@@ -531,10 +566,18 @@ function PlacePDF(){
 							
 							// Якщо не вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо лише поточну сторінку
 							if (!SaveMultipageFilesAsOneFile) {
-								// Створємо вікно для документа (інакше буде експортовано порожній документ!)
-								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + "_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
+
+								var outputFile = myFileName ? myFileName + "_" : '';
+								outputFile += fileName;
+								outputFile += pgCount > 1 ? '_page #' + currentPage : "";
+								outputFile += "_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm";
+								outputFile += myCurrentDoc.CutterType.label ? "_" + myCurrentDoc.CutterType.label : '';
+								outputFile += myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.paperName : '';
+								outputFile += !myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.widthSheet + 'x' + myCurrentDoc.CutterType.heightSheet : '';
 								myDocument.name = outputFile;
 								addMarksToDocument(myCurrentDoc, 'PRINT');
+
+								// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 								myDocument.windows.add().maximize();
 								progress.details(translate('Exporting PDF'), false);								
 								try {
@@ -554,10 +597,17 @@ function PlacePDF(){
 
 						// Якщо вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо багатосторінковий документ
 						if (SaveMultipageFilesAsOneFile) {
-							// Створємо вікно для документа (інакше буде експортовано порожній документ!)
-							var outputFile = myFileName + "_" + fileName +"_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label;
+
+							var outputFile = myFileName ? myFileName + "_" : "";
+							outputFile += fileName;
+							outputFile += "_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm";
+							outputFile += myCurrentDoc.CutterType.label ? "_" + myCurrentDoc.CutterType.label : '';
+							outputFile += myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.paperName : '';
+							outputFile += !myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.widthSheet + 'x' + myCurrentDoc.CutterType.heightSheet : '';
 							myDocument.name = outputFile;
 							addMarksToDocument(myCurrentDoc, 'PRINT');
+
+							// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 							myDocument.windows.add().maximize();
 							progress.details(translate('Exporting PDF'), false);
 							try {
@@ -688,7 +738,7 @@ function PlacePDF(){
 				var theFile = File(okFilesCurrent[i].theFile);
 				var pgCount = okFilesCurrent[i].pgCount;
 
-				fileNames.push(File.decode(theFile.name).split('.').slice(0, -1).join('.').replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, ''));
+				fileNames.push(File.decode(theFile.name).split('.').slice(0, -1).join('.').replace(BracketsPattern, '').replace(/^ +| +$/, ''));
 
 				var origin;				
 				
@@ -767,22 +817,20 @@ function PlacePDF(){
 					}
 				}
 			}
-
-			// Створємо вікно для документа (інакше буде експортовано порожній документ!)		
-			var fileName = myFileName.replace(/(_?d=|^d=)(\d+(,\d+)?) ?(мм|mm)?/i, '').replace(/%names%/, fileNames.join(' + ')).replace(/%names%/g, '');
-			if (fileName.match(PaperNames)) {
-				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
-			} else {
-				const fileNumber = fileName.match(/\#\d+/);
-				if (fileNumber) {
-					fileName = fileName.replace(fileNumber, fileNumber + '_' + myCurrentDoc.CutterType.paperName);
-				} else {
-					fileName = myCurrentDoc.CutterType.paperName + '_' + fileName;
-				}						
-			}				
-			var outputFile = fileName + (myCurrentDoc && myCurrentDoc.Diameter > 0 ? "_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
+	
+			var outputFile = myFileName
+								.replace(BracketsPattern, '')
+								.replace(/^ +| +$/, '')
+								.replace(/%names%/, fileNames.join(' + '))
+								.replace(/%names%/g, '');
+			outputFile += "_D=" + myCurrentDoc.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm";
+			outputFile += myCurrentDoc.CutterType.label ? "_" + myCurrentDoc.CutterType.label : '';
+			outputFile += myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.paperName : '';
+			outputFile += !myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.widthSheet + 'x' + myCurrentDoc.CutterType.heightSheet : '';
 			myDocument.name = outputFile;
 			addMarksToDocument(myCurrentDoc, 'PRINT');
+
+			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 			myDocument.windows.add().maximize();			
 			progress.details(translate('Exporting PDF'), false);
 			try {
@@ -834,18 +882,8 @@ function PlacePDF(){
 
 						var theFile = File(okFilesCurrent[i].theFile);
 						var fileName = File.decode(okFilesCurrent[i].theFile.name).split('.').slice(0, -1).join('.');	
-						fileName = fileName.replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, '');
+						fileName = fileName.replace(BracketsPattern, '').replace(/^ +| +$/, '');
 						myFileName = myFileName.replace(/%names%/g, '');
-						if (myFileName.match(PaperNames)) {
-							myFileName = myFileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
-						} else {
-							const fileNumber = myFileName.match(/\#\d+/);
-							if (fileNumber) {
-								myFileName = myFileName.replace(fileNumber, fileNumber + '_' + myCurrentDoc.CutterType.paperName);
-							} else {
-								myFileName = myCurrentDoc.CutterType.paperName + '_' + myFileName;
-							}						
-						}	
 						var pgCount = okFilesCurrent[i].pgCount;
 						
 						for (var currentPage = 1, countDone = 0, total = itemsCopies * pgCount; currentPage <= pgCount; currentPage++, pagesTotalProcessedCounter++) {
@@ -978,10 +1016,20 @@ function PlacePDF(){
 							
 							// Якщо не вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо лише поточну сторінку
 							if (!SaveMultipageFilesAsOneFile) {
-								// Створємо вікно для документа (інакше буде експортовано порожній документ!)
-								var outputFile = myFileName + "_" + fileName + (pgCount > 1 ? '_page #' + currentPage : "") + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "") + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
+
+								var outputFile = myFileName ? myFileName + "_" : "";
+								outputFile += fileName;
+								outputFile += pgCount > 1 ? '_page #' + currentPage : "";
+								outputFile += "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight;
+								outputFile += myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "";
+								outputFile += "(" + myCurrentDoc.SpaceBetween + ")mm";
+								outputFile += myCurrentDoc.CutterType.label ? "_" + myCurrentDoc.CutterType.label : '';
+								outputFile += myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.paperName : '';
+								outputFile += !myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.widthSheet + 'x' + myCurrentDoc.CutterType.heightSheet : '';
 								myDocument.name = outputFile;
 								addMarksToDocument(myCurrentDoc, 'PRINT');
+
+								// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 								myDocument.windows.add().maximize();								
 								progress.details(translate('Exporting PDF'), false);
 								try {
@@ -1001,10 +1049,19 @@ function PlacePDF(){
 
 						// Якщо вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо багатосторінковий документ
 						if (SaveMultipageFilesAsOneFile) {
-							// Створємо вікно для документа (інакше буде експортовано порожній документ!)
-							var outputFile = myFileName + "_" + fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "") + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
+							var outputFile = myFileName ? myFileName + "_" : "";
+							outputFile += fileName;
+							outputFile += "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight;
+							outputFile += myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "";
+							outputFile += "(" + myCurrentDoc.SpaceBetween + ")mm";
+							outputFile += myCurrentDoc.CutterType.label ? "_" + myCurrentDoc.CutterType.label : '';
+							outputFile += myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.paperName : '';
+							outputFile += !myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.widthSheet + 'x' + myCurrentDoc.CutterType.heightSheet : '';
+
 							myDocument.name = outputFile;
 							addMarksToDocument(myCurrentDoc, 'PRINT');
+
+							// Створємо вікно для документа (інакше буде експортовано порожній документ!)
 							myDocument.windows.add().maximize();								
 							progress.details(translate('Exporting PDF'), false);
 							try {
@@ -1144,7 +1201,7 @@ function PlacePDF(){
 				var theFile = File(okFilesCurrent[i].theFile);
 				var pgCount = okFilesCurrent[i].pgCount;
 
-				fileNames.push(File.decode(theFile.name).split('.').slice(0, -1).join('.').replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, ''));
+				fileNames.push(File.decode(theFile.name).split('.').slice(0, -1).join('.').replace(BracketsPattern, '').replace(/^ +| +$/, ''));
 				
 				for (var page = 1; page <= pgCount; page++, itemIndex++, pagesTotalProcessedCounter++) {
 					
@@ -1268,23 +1325,26 @@ function PlacePDF(){
 
 			app.changeObjectPreferences.anchorPoint = refPoint;
 
+			var outputFile = myFileName
+								.replace(BracketsPattern, '')
+								.replace(/^ +| +$/, '')
+								.replace(/%names%/, fileNames.join(' + '))
+								.replace(/%names%/g, '');	
+			outputFile += "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight;
+			outputFile += myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "";
+			outputFile += "(" + myCurrentDoc.SpaceBetween + ")mm";
+			outputFile += myCurrentDoc.CutterType.label ? "_" + myCurrentDoc.CutterType.label : '';
+			outputFile += myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.paperName : '';
+			outputFile += !myCurrentDoc.CutterType.paperName ? "_" + myCurrentDoc.CutterType.widthSheet + 'x' + myCurrentDoc.CutterType.heightSheet : '';
+
+			myDocument.name = outputFile;
+
+			addMarksToDocument(myCurrentDoc, 'PRINT');
+
 			// Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
 			myDocument.windows.add().maximize();
 			progress.details(translate('Exporting PDF'), false);
-			var fileName = myFileName.replace(/(_?\d+([\.,]\d+)?)([xх])(\d+([\.,]\d+)?)( ?R=?\d+([\.,]\d+)?)? ?(мм|mm)?/i, '').replace(/%names%/, fileNames.join(' + ')).replace(/%names%/g, '');
-			if (fileName.match(PaperNames)) {
-				fileName = fileName.replace(PaperNames, myCurrentDoc.CutterType.paperName);
-			} else {
-				const fileNumber = fileName.match(/\#\d+/);
-				if (fileNumber) {
-					fileName = fileName.replace(fileNumber, fileNumber + '_' + myCurrentDoc.CutterType.paperName);
-				} else {
-					fileName = myCurrentDoc.CutterType.paperName + '_' + fileName;
-				}						
-			}				
-			var outputFile = fileName + (myCurrentDoc && myCurrentDoc.RectWidth > 0 ? "_" + myCurrentDoc.RectWidth + "x" + myCurrentDoc.RectHeight + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "") + "(" + myCurrentDoc.SpaceBetween + ")mm_" + myCurrentDoc.CutterType.label : "_" + myDocument.name.replace('.indd', ''));
-			addDocTitle(outputFile);
-			myDocument.name = outputFile;
+
 			try {
 				myDocumentsProcessing.push({
 					myDocument: myDocument,
@@ -2183,9 +2243,16 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 
 	Params.cutLength = Math.ceil(Math.PI * Params.Diameter * Params.total);
 	
-	var outputFile = outputFolder + '/' + 'D=' + Params.Diameter + "(" + myCurrentDoc.SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + Params.cutLength + "mm_x" + Params.total;
+	var outputFile = "D=" + Params.Diameter;
+	outputFile += "(" + myCurrentDoc.SpaceBetween + ")mm_";
+	outputFile += myCurrentDoc.CutterType.label ? myCurrentDoc.CutterType.label + "_" : "";
+	outputFile += myCurrentDoc.CutterType.paperName ? myCurrentDoc.CutterType.paperName + "_" : "";
+	outputFile += !myCurrentDoc.CutterType.paperName ? myCurrentDoc.CutterType.widthSheet + "x" + myCurrentDoc.CutterType.heightSheet + "_" : "";
+	outputFile += "CUT=" + Params.cutLength + "mm_x" + Params.total;
 
 	myDocument.name = outputFile;
+
+	outputFile = outputFolder + '/' + outputFile;
 
 	addMarksToDocument(myCurrentDoc, 'CUT');
 	
@@ -2201,34 +2268,64 @@ function CreateCustomDocCircles(myCurrentDoc, customSpaceBetween) {
 		if (OvalsGroup.ovals.length > 0) {
 			if (myCurrentDoc.CutterType.plotterCutFormat == "AI") {
 				try {
-					myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
+					var epsFileName = outputFile + '.eps';
+					myDocument.exportFile(ExportFormat.epsType, File(epsFileName), false);
 					// Виклик Ілюстратора для перезбереження файлу до 8 версії AI
-					try {
-						var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
-						if (res && !res.success) throw(res.err);
-					} catch(err) {
+
+					var bt = new BridgeTalk();
+					bt.target = 'illustrator';
+					bt.body = openIllustratorToConvertAI_source + "(" + epsFileName.toSource() + ");";
+					bt.onError = function(resObj) {
+						res = eval(resObj.body);
 						alert(translate('Error - Illustrator cannot convert', {
 								format: myCurrentDoc.CutterType.plotterCutFormat,
-								error: err.message
+								error: res.err
 							}));
-					}
+						dontCloseDocument = true;
+					};
+					bt.onResult = function(resObj) {
+						res = eval(resObj.body);
+						if (res && !res.success) {
+							alert(translate('Error - Illustrator cannot convert', {
+									format: myCurrentDoc.CutterType.plotterCutFormat,
+									error: res.err
+								}));
+							dontCloseDocument = true;
+						};
+					};
+					bt.send(120);
 				} catch(err) {
 					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".eps"}));
 					dontCloseDocument = true;
 				}				  
 			} else if (myCurrentDoc.CutterType.plotterCutFormat == "DXF") {
 				try {
-					myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-					// Виклик Ілюстратора для перезбереження файлу до формату DXF
-					try {
-						var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
-						if (res && !res.success) throw(res.err);
-					} catch(err) {
+					var epsFileName = outputFile + ".eps";
+					myDocument.exportFile(ExportFormat.epsType, File(epsFileName), false);
+
+					// Виклик Ілюстратора для перезбереження файлу до формату DXF					
+					var bt = new BridgeTalk();
+					bt.target = 'illustrator';
+					bt.body = openIllustratorToConvertDXF_source + "(" + epsFileName.toSource() + ");";
+					bt.onError = function(resObj) {
+						res = eval(resObj.body);
 						alert(translate('Error - Illustrator cannot convert', {
 								format: myCurrentDoc.CutterType.plotterCutFormat,
-								error: err.message
+								error: res.err
 							}));
-					}
+						dontCloseDocument = true;
+					};
+					bt.onResult = function(resObj) {
+						res = eval(resObj.body);
+						if (res && !res.success) {
+							alert(translate('Error - Illustrator cannot convert', {
+									format: myCurrentDoc.CutterType.plotterCutFormat,
+									error: res.err
+								}));
+							dontCloseDocument = true;
+						};
+					};
+					bt.send(120);
 				} catch(err) {
 					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".eps"}));
 					dontCloseDocument = true;
@@ -2569,10 +2666,18 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 	} else {
 		Params.cutLength = Math.ceil((Params.countY + 1) * (totalHeight + 0.7) + (Params.countX + 1) * (totalWidth + 0.7));
 	}
-	
-	var outputFile = outputFolder + '/' + Params.widthItem + "x" + Params.heightItem + (myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue > 0 ? " R=" + myCurrentDoc.RoundCornersValue + " " : "") + "(" + myCurrentDoc.SpaceBetween + ")mm_"  + myCurrentDoc.CutterType.label + "_" + myCurrentDoc.CutterType.paperName + "_CUT=" + Params.cutLength + "mm_x" + Params.total;
+
+	var outputFile = Params.widthItem + "x" + Params.heightItem;
+	outputFile += myCurrentDoc.IsRoundedCorners && myCurrentDoc.RoundCornersValue ? " R=" + myCurrentDoc.RoundCornersValue + " " : "";
+	outputFile += "(" + myCurrentDoc.SpaceBetween + ")mm_";
+	outputFile += myCurrentDoc.CutterType.label ? myCurrentDoc.CutterType.label + "_" : "";
+	outputFile += myCurrentDoc.CutterType.paperName ? myCurrentDoc.CutterType.paperName + "_" : "";
+	outputFile += !myCurrentDoc.CutterType.paperName ? myCurrentDoc.CutterType.widthSheet + "x" + myCurrentDoc.CutterType.heightSheet + "_" : "";
+	outputFile += "CUT=" + Params.cutLength + "mm_x" + Params.total;
 
 	myDocument.name = outputFile;
+
+	outputFile = outputFolder + '/' + outputFile;
 
 	addMarksToDocument(myCurrentDoc, 'CUT');
 	
@@ -2689,34 +2794,64 @@ function CreateCustomDocRectangles(myCurrentDoc, customRoundCornersValue, custom
 		if (RectGroup.rectangles.length > 0) {
 			if (myCurrentDoc.CutterType.plotterCutFormat == "AI") {
 				try {
-					myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
+					var epsFileName = outputFile + ".eps";
+					myDocument.exportFile(ExportFormat.epsType, File(epsFileName), false);
+
 					// Виклик Ілюстратора для перезбереження файлу до 8 версії AI
-					try {
-						var res = illustrator.openIllustratorToConvertAI(File(outputFile + ".eps"));
-						if (res && !res.success) throw(res.err);
-					} catch(err) {
+					var bt = new BridgeTalk();
+					bt.target = 'illustrator';
+					bt.body = openIllustratorToConvertAI_source + "(" + epsFileName.toSource() + ");";
+					bt.onError = function(resObj) {
+						res = eval(resObj.body);
 						alert(translate('Error - Illustrator cannot convert', {
 								format: myCurrentDoc.CutterType.plotterCutFormat,
-								error: err.message
+								error: res.err
 							}));
-					}
+						dontCloseDocument = true;
+					};
+					bt.onResult = function(resObj) {
+						res = eval(resObj.body);
+						if (res && !res.success) {
+							alert(translate('Error - Illustrator cannot convert', {
+									format: myCurrentDoc.CutterType.plotterCutFormat,
+									error: res.err
+								}));
+							dontCloseDocument = true;
+						};
+					};
+					bt.send(120);
 				} catch(err) {
 					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".eps"}));
 					dontCloseDocument = true;
 				}				  
 			} else if (myCurrentDoc.CutterType.plotterCutFormat == "DXF") {
 				try {
-					myDocument.exportFile(ExportFormat.epsType, File(outputFile + ".eps"), false);
-					// Виклик Ілюстратора для перезбереження файлу до формату DXF
-					try {
-						var res = illustrator.openIllustratorToConvertDXF(File(outputFile + ".eps"));
-						if (res && !res.success) throw(res.err);
-					} catch(err) {
+					var epsFileName = outputFile + ".eps";
+					myDocument.exportFile(ExportFormat.epsType, File(epsFileName), false);
+
+					// Виклик Ілюстратора для перезбереження файлу до формату DXF					
+					var bt = new BridgeTalk();
+					bt.target = 'illustrator';
+					bt.body = openIllustratorToConvertDXF_source + "(" + epsFileName.toSource() + ");";
+					bt.onError = function(resObj) {
+						res = eval(resObj.body);
 						alert(translate('Error - Illustrator cannot convert', {
 								format: myCurrentDoc.CutterType.plotterCutFormat,
-								error: err.message
+								error: res.err
 							}));
-					}
+						dontCloseDocument = true;
+					};
+					bt.onResult = function(resObj) {
+						res = eval(resObj.body);
+						if (res && !res.success) {
+							alert(translate('Error - Illustrator cannot convert', {
+									format: myCurrentDoc.CutterType.plotterCutFormat,
+									error: res.err
+								}));
+							dontCloseDocument = true;
+						};
+					};
+					bt.send(120);
 				} catch(err) {
 					alert(translate('Error - Cannot export file', {filename: File.decode(outputFile) + ".eps"}));
 					dontCloseDocument = true;
@@ -2849,4 +2984,141 @@ function translate(value, replace, useDefault) {
 	} else if (!useDefault) {
 		return translate(value, replace, true);
 	} else return value;
+}
+
+/**
+  Do the file open and save it to AI 8 version.
+  @param {string} fileName Name of the source file
+  @return {Object}
+*/
+
+function openIllustratorToConvertAI(fileName) {
+
+	var result = {
+		success: false
+	};
+
+	fileName = eval(fileName);
+
+    try {
+
+		var file = File(fileName);
+
+		if (!file.exists) {
+			throw new Error("File not found!");
+		}
+
+        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
+
+        var w = new Window("dialog", "Processing", undefined, {closeButton: false});
+        var t = w.add("statictext");
+        t.preferredSize = [450, -1];
+        t.text = "Converting EPS to AI cut file...";
+        w.onShow = function() {
+            
+			app.open(file);
+
+            var saveOpts = new IllustratorSaveOptions();
+            saveOpts.compatibility = Compatibility.ILLUSTRATOR8;
+            saveOpts.compressed = false;
+            saveOpts.pdfCompatible = false;
+
+            var AI_fileName = file.fullName.split(".").slice(0, -1).join(".") + ".ai";
+            var AI_File = new File(AI_fileName);
+
+			try {
+				app.activeDocument.saveAs(AI_File, saveOpts);
+				app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+				file.remove();			
+			} catch(err) {
+				throw new Error("Export to AI failed!");
+			}
+			result = {
+				success: true
+			};
+            w.close();
+        }
+        
+		var run = w.show();
+        app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
+        return result.toSource();
+	} catch (err) {
+		result = {
+			success: false,
+			err: err.message
+		};
+		app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
+		return result.toSource();
+	}
+}
+
+/**
+  Do the file open and save it to DXF.
+  @param {string} fileName Name of the source file
+  @return {Object}
+*/
+
+function openIllustratorToConvertDXF(fileName) {
+
+	var result = {
+			success: false
+		};
+	fileName = eval(fileName);
+
+    try {
+
+		var file = File(fileName);
+
+		if (!file.exists) {
+			throw new Error("File not found!");
+		}
+
+        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
+
+        var w = new Window("dialog", "Processing", undefined, {closeButton: false});
+        var t = w.add("statictext");
+        t.preferredSize = [450, -1];
+        t.text = "Converting EPS to AI cut file...";
+        w.onShow = function() {
+            
+			app.open(file);
+
+			var exportOpts = new ExportOptionsAutoCAD();
+			exportOpts.exportFileFormat = AutoCADExportFileFormat.DXF;
+
+			var DXF_fileName = file.fullName.split('.').slice(0, -1).join('.') + ".dxf";
+			var DXF_File = new File(DXF_fileName);
+			for (var i = 0, items = app.activeDocument.pathItems; i < items.length; i++) {
+				if (!(items[i].fillColor instanceof NoColor)) {
+					items[i].strokeColor = items[i].fillColor;
+					items[i].fillColor = new NoColor();    
+				};
+			};
+
+			try {
+				app.activeDocument.exportFile(DXF_File, ExportType.AUTOCAD,exportOpts);
+				app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+				file.remove();			
+			} catch(err) {
+				throw new Error("Export to DXF failed!");
+			};
+            
+			result = {
+				success: true
+			};
+            w.close();
+
+         }
+        
+		var run = w.show();
+		app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
+        return result.toSource();
+	} catch (err) {
+		result = {
+			success: false,
+			err: err.message
+		};
+		app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
+		return result.toSource();
+	}
 }

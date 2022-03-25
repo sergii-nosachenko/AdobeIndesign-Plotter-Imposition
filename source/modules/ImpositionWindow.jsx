@@ -68,9 +68,11 @@ function NewImposSettingsWindow() {
 		GetCircleSizeFromFilename.value = IsGetSizeFromFilename;		
 		GetCircleSizeFromFilename.onClick = CircleCheckBoxClick;
 		
-	var GetCircleSizeFromFilenameDisclaimer = CircleDocParamsGroup.add("statictext", undefined, undefined, {name: "GetCircleSizeFromFilenameDisclaimer"}); 
+	var GetCircleSizeFromFilenameDisclaimer = CircleDocParamsGroup.add("statictext", undefined, undefined, {name: "GetCircleSizeFromFilenameDisclaimer", multiline: true}); 
 		GetCircleSizeFromFilenameDisclaimer.text = translate('Circle Filename Disclaimer'); 
-		GetCircleSizeFromFilenameDisclaimer.enabled = false;		
+		GetCircleSizeFromFilenameDisclaimer.enabled = false;
+		GetCircleSizeFromFilenameDisclaimer.preferredSize.width = 400;	
+		GetCircleSizeFromFilenameDisclaimer.preferredSize.height = 45;	
 		
 	// CIRCLESIZEGROUP
 	// =========				
@@ -132,7 +134,7 @@ function NewImposSettingsWindow() {
 		GetRectangleSizeFromFilenameDisclaimer.text = translate('Rectangles Filename Disclaimer');
 		GetRectangleSizeFromFilenameDisclaimer.enabled = false; 
 		GetRectangleSizeFromFilenameDisclaimer.preferredSize.width = 400;		
-		GetRectangleSizeFromFilenameDisclaimer.preferredSize.height = 45;		
+		GetRectangleSizeFromFilenameDisclaimer.preferredSize.height = 60;
 		
 	// RECTANGLESIZEGROUP
 	// =========	
@@ -227,15 +229,17 @@ function NewImposSettingsWindow() {
 		GetMixedSizeFromFilename.value = true;
 		GetMixedSizeFromFilename.enabled = false;
 		
-	var GetMixedSizeFromFilenameDisclaimer1 = MixedDocParamsGroup.add("statictext", undefined, undefined, {name: "GetMixedSizeFromFilenameDisclaimer1"}); 
+	var GetMixedSizeFromFilenameDisclaimer1 = MixedDocParamsGroup.add("statictext", undefined, undefined, {name: "GetMixedSizeFromFilenameDisclaimer1", multiline: true}); 
 		GetMixedSizeFromFilenameDisclaimer1.text = translate('Circle Filename Disclaimer'); 
-		GetMixedSizeFromFilenameDisclaimer1.enabled = false;		
+		GetMixedSizeFromFilenameDisclaimer1.enabled = false;
+		GetMixedSizeFromFilenameDisclaimer1.preferredSize.width = 400;		
+		GetMixedSizeFromFilenameDisclaimer1.preferredSize.height = 45;	
 		
 	var GetMixedSizeFromFilenameDisclaimer2 = MixedDocParamsGroup.add("statictext", undefined, undefined, {name: "GetMixedSizeFromFilenameDisclaimer2", multiline: true}); 
 		GetMixedSizeFromFilenameDisclaimer2.text = translate('Rectangles Filename Disclaimer');
 		GetMixedSizeFromFilenameDisclaimer2.enabled = false; 
 		GetMixedSizeFromFilenameDisclaimer2.preferredSize.width = 400;		
-		GetMixedSizeFromFilenameDisclaimer2.preferredSize.height = 45;		
+		GetMixedSizeFromFilenameDisclaimer2.preferredSize.height = 60;		
 
 	// FIGURESELECTOR
 	// ==============
@@ -575,7 +579,7 @@ function NewImposSettingsWindow() {
 	}
 	
 	function checkValidSpaceBetween() {	
-		if (!NewCustomDocSettings) return;
+		if (!NewCustomDocSettings || !CutterType) return;
         if (!CutterType.selection) {
             isOk.SpaceBetween = false;
             return;

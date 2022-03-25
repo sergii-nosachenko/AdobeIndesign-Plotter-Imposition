@@ -4,6 +4,8 @@ function CytterTypePrefsDialog(selectedIndex) {
 
     var lastSelected = 0;
 
+    var isChanged = false;
+
     var isOk = {
         name: false,
         size: false,
@@ -54,7 +56,9 @@ function CytterTypePrefsDialog(selectedIndex) {
         CytterTypePrefsWindow.margins = 15;
 
         CytterTypePrefsWindow.onShow = CutterTypeListSelected;
-        CytterTypePrefsWindow.onClose = needSave;
+        CytterTypePrefsWindow.onClose = function() {
+            checkIfNotSaved();
+        };
 
     // CUTTERTYPETOPGROUP
     // ==================
@@ -108,14 +112,14 @@ function CytterTypePrefsDialog(selectedIndex) {
         CutterNameText.text = defaults.CutterNameText; 
         CutterNameText.preferredSize.width = 250; 
         CutterNameText.alignment = ["left","fill"]; 
-        CutterNameText.onChange = isAllOk;
+        CutterNameText.onChange = prefsChanged;
         
     var CutterLabelText = NameGroup.add('edittext {properties: {name: "CutterLabelText"}}'); 
         CutterLabelText.text = defaults.CutterLabelText; 
         CutterLabelText.preferredSize.width = 80; 
         CutterLabelText.helpTip = translate('Cutter label tip'); 
         CutterLabelText.alignment = ["left","fill"]; 
-        CutterLabelText.onChange = isAllOk; 
+        CutterLabelText.onChange = prefsChanged; 
 
     // DOCUMENTSETTINGSPANEL
     // =====================
@@ -146,7 +150,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         WidthValue.text = defaults.WidthValue; 
         WidthValue.preferredSize.width = 60; 
         WidthValue.alignment = ["left","fill"]; 
-        WidthValue.onChange = isAllOk;
+        WidthValue.onChange = prefsChanged;
 
     var HeightValueLabel = SheetGroup.add("statictext", undefined, undefined, {name: "HeightValueLabel"}); 
         HeightValueLabel.text = translate('Height Label'); 
@@ -156,7 +160,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         HeightValue.text = defaults.HeightValue; 
         HeightValue.preferredSize.width = 60; 
         HeightValue.alignment = ["left","fill"]; 
-        HeightValue.onChange = isAllOk; 
+        HeightValue.onChange = prefsChanged; 
 
     var SheetNameLabel = SheetGroup.add("statictext", undefined, undefined, {name: "SheetNameLabel"}); 
         SheetNameLabel.text = translate('Paper name'); 
@@ -187,7 +191,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         TopValue.text = defaults.TopValue; 
         TopValue.preferredSize.width = 45; 
         TopValue.alignment = ["left","fill"]; 
-        TopValue.onChange = isAllOk; 
+        TopValue.onChange = prefsChanged; 
 
     var RightLabel = MarginsGroup.add("statictext", undefined, undefined, {name: "RightLabel"}); 
         RightLabel.text = translate('Right label'); 
@@ -197,7 +201,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         RightValue.text = defaults.TopValue; 
         RightValue.preferredSize.width = 45; 
         RightValue.alignment = ["left","fill"]; 
-        RightValue.onChange = isAllOk; 
+        RightValue.onChange = prefsChanged; 
 
     var BottomLabel = MarginsGroup.add("statictext", undefined, undefined, {name: "BottomLabel"}); 
         BottomLabel.text = translate('Bottom label'); 
@@ -207,7 +211,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         BottomValue.text = defaults.BottomValue; 
         BottomValue.preferredSize.width = 45; 
         BottomValue.alignment = ["left","fill"]; 
-        BottomValue.onChange = isAllOk; 
+        BottomValue.onChange = prefsChanged; 
 
     var LeftLabel = MarginsGroup.add("statictext", undefined, undefined, {name: "LeftLabel"}); 
         LeftLabel.text = translate('Left label'); 
@@ -217,8 +221,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         LeftValue.text = defaults.LeftValue; 
         LeftValue.preferredSize.width = 45; 
         LeftValue.alignment = ["left","fill"]; 
-        LeftValue.onChange = isAllOk;
-        
+        LeftValue.onChange = prefsChanged;        
 
     // ROW3
     // ====
@@ -266,7 +269,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         SBminValue.text = defaults.SBminValue; 
         SBminValue.preferredSize.width = 80; 
         SBminValue.alignment = ["left","fill"]; 
-        SBminValue.onChange = isAllOk; 
+        SBminValue.onChange = prefsChanged; 
 
     var SpaceBetweenMaxLabel = SpaceBetweenGroup.add("statictext", undefined, undefined, {name: "SpaceBetweenMaxLabel"}); 
         SpaceBetweenMaxLabel.text = translate('Space between max');
@@ -276,7 +279,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         SBmaxValue.text = defaults.SBmaxValue; 
         SBmaxValue.preferredSize.width = 80; 
         SBmaxValue.alignment = ["left","fill"]; 
-        SBmaxValue.onChange = isAllOk; 
+        SBmaxValue.onChange = prefsChanged; 
 
     // CONTOURCOLORGROUP
     // =================
@@ -298,7 +301,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         CyanValue.text = defaults.CyanValue; 
         CyanValue.preferredSize.width = 60; 
         CyanValue.alignment = ["left","fill"]; 
-        CyanValue.onChange = isAllOk; 
+        CyanValue.onChange = prefsChanged; 
 
     var MagentaLabel = ContourColorGroup.add("statictext", undefined, undefined, {name: "MagentaLabel"}); 
         MagentaLabel.text = "M"; 
@@ -308,7 +311,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         MagentaValue.text = defaults.MagentaValue; 
         MagentaValue.preferredSize.width = 60; 
         MagentaValue.alignment = ["left","fill"]; 
-        MagentaValue.onChange = isAllOk; 
+        MagentaValue.onChange = prefsChanged; 
 
     var YellowLabel = ContourColorGroup.add("statictext", undefined, undefined, {name: "YellowLabel"}); 
         YellowLabel.text = "Y"; 
@@ -318,7 +321,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         YellowValue.text = defaults.YellowValue; 
         YellowValue.preferredSize.width = 60; 
         YellowValue.alignment = ["left","fill"]; 
-        YellowValue.onChange = isAllOk; 
+        YellowValue.onChange = prefsChanged; 
 
     var BlackLabel = ContourColorGroup.add("statictext", undefined, undefined, {name: "BlackLabel"}); 
         BlackLabel.text = "K"; 
@@ -328,7 +331,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         BlackValue.text = defaults.BlackValue; 
         BlackValue.preferredSize.width = 60; 
         BlackValue.alignment = ["left","fill"]; 
-        BlackValue.onChange = isAllOk; 
+        BlackValue.onChange = prefsChanged; 
 
     // ROW1
     // ====
@@ -355,7 +358,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         OvercutValue.text = defaults.OvercutValue; 
         OvercutValue.preferredSize.width = 80; 
         OvercutValue.alignment = ["left","fill"]; 
-        OvercutValue.onChange = isAllOk;  
+        OvercutValue.onChange = prefsChanged;  
 
     // FILEFORMATGROUP
     // ===============
@@ -372,6 +375,7 @@ function CytterTypePrefsDialog(selectedIndex) {
     var FileFormats_array = ["PDF","AI","DXF"]; 
     var FileFormats = FileFormatGroup.add("dropdownlist", undefined, undefined, {name: "FileFormats", items: FileFormats_array}); 
         FileFormats.selection = defaults.FileFormats; 
+        FileFormats.onChange = prefsChanged; 
 
     // MARKSEXTERNALFILEPANEL
     // ======================
@@ -400,7 +404,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         MarksExternalFilePath.text = defaults.MarksExternalFilePath; 
         MarksExternalFilePath.preferredSize.width = 330; 
         MarksExternalFilePath.alignment = ["left","fill"]; 
-        MarksExternalFilePath.onChange = isAllOk; 
+        MarksExternalFilePath.onChange = prefsChanged; 
 
     var MarksFilePickBtn = Row2.add("button", undefined, undefined, {name: "MarksFilePickBtn"}); 
         MarksFilePickBtn.enabled = false; 
@@ -493,8 +497,7 @@ function CytterTypePrefsDialog(selectedIndex) {
             fillMarksList({
                 marksProperties: ManualMarksList_array
             }, index + 1);
-            SaveCurrentBtn.enabled = true;
-            CopyNewBtn.enabled = false;
+            prefsChanged();
         }; 
 
     var RemoveMarkBtn = ManualMarksBtnGroup.add("button", undefined, undefined, {name: "RemoveMarkBtn"}); 
@@ -515,8 +518,7 @@ function CytterTypePrefsDialog(selectedIndex) {
             fillMarksList({
                 marksProperties: ManualMarksList_array
             }, index);
-            SaveCurrentBtn.enabled = true;
-            CopyNewBtn.enabled = false;
+            prefsChanged();
         }; 
 
     /*---------------------------
@@ -526,8 +528,9 @@ function CytterTypePrefsDialog(selectedIndex) {
     function CutterTypeListSelected() {
 
         if (CutterTypeList.selection.index == 0) {
-            AddNewPlotter();
+            checkIfNotSaved(setDefaults);
         } else {
+            checkIfNotSaved();
             isOk = {
                 name: false,
                 size: false,
@@ -537,9 +540,6 @@ function CytterTypePrefsDialog(selectedIndex) {
                 overcut: false,
                 marks: false
             };
-            SaveCurrentBtn.enabled = false;
-            RemoveCurrentBtn.enabled = true;
-            CopyNewBtn.enabled = true;
             const index = CutterTypeList.selection.index - 1;
             const selectedCutter = CUTTER_TYPES[index];
             CutterNameText.text = selectedCutter.text;
@@ -564,8 +564,10 @@ function CytterTypePrefsDialog(selectedIndex) {
             MarksExternalFileChk.value = selectedCutter.marksFile && selectedCutter.marksFile != "";
             MarksExternalFilePath.text = selectedCutter.marksFile || "";
             toggleMarksSource(true);
-
+            isChanged = false;
             lastSelected = CutterTypeList.selection.index;
+            needSave();
+            RemoveCurrentBtn.enabled = true;
         }
     }
 
@@ -626,9 +628,9 @@ function CytterTypePrefsDialog(selectedIndex) {
             MarksFilePickBtn.enabled = false;
             MarksExternalFilePath.enabled = false;
         }
-        if (!skipCheckAll) isAllOk();
         WorkspaceShrinkChk.enabled = ManualMarksList.items.length && !MarksExternalFileChk.value;
         WorkspaceShrinkChk.value = WorkspaceShrinkChk.enabled ? WorkspaceShrinkChk.value : false;
+        if (!skipCheckAll) prefsChanged();
     }
 
     function setDefaults() {
@@ -666,10 +668,9 @@ function CytterTypePrefsDialog(selectedIndex) {
         MarksFilePickBtn.enabled = false;
         ManualMarksList.removeAll();
         ManualMarksList_array = [];
-        CutterTypeList.selection = 0;
         lastSelected = 0;
-        CopyNewBtn.enabled = false;
-        SaveCurrentBtn.enabled = false;
+        isChanged = true;
+        needSave();
         RemoveCurrentBtn.enabled = false;
     }
 
@@ -753,6 +754,16 @@ function CytterTypePrefsDialog(selectedIndex) {
         return rg2.test(cText);
     }
 
+    function prefsChanged() {
+        isChanged = true;
+        needSave();
+    }
+
+    function needSave() {    
+        SaveCurrentBtn.enabled = isAllOk() && isChanged;
+        CopyNewBtn.enabled = !isChanged;
+    }
+
     function isAllOk() {
         CheckName();
         CheckMargins();
@@ -761,20 +772,13 @@ function CytterTypePrefsDialog(selectedIndex) {
         CheckColor();
         CheckOvercut();
         CheckMarks();
-        if (
-            isOk.name == true &&
-            isOk.size == true &&
-            isOk.margins == true &&
-            isOk.spaceBetween == true &&
-            isOk.color == true &&
-            isOk.overcut == true &&
-            isOk.marks == true
-        ) {
-            SaveCurrentBtn.enabled = true;
-        } else {
-            SaveCurrentBtn.enabled = false;
-        }
-        CopyNewBtn.enabled = false;
+        return isOk.name == true &&
+               isOk.size == true &&
+               isOk.margins == true &&
+               isOk.spaceBetween == true &&
+               isOk.color == true &&
+               isOk.overcut == true &&
+               isOk.marks == true;
     }
 
     function editMark(mark, index) {
@@ -822,19 +826,28 @@ function CytterTypePrefsDialog(selectedIndex) {
                 alert(translate('One page alert'))
             } else {
                 MarksExternalFilePath.text = fsName;
+                prefsChanged();
             }
-		}
-	}	
+		} else {
+            MarksExternalFilePath.text = "";
+            prefsChanged();
+        }
+	}
 
-    function AddNewPlotter() {
-        setDefaults();
+    function checkIfNotSaved(callback) {
+        if (SaveCurrentBtn.enabled) {
+            var saveIt = confirm(translate('Confirm save msg'), false, translate('Confirm save title'));
+            if (saveIt) {
+                savePlotter(callback);
+            } else {
+                if (callback) callback();
+            }
+        } else {
+            if (callback) callback();
+        }
     }
 
     function CopyNewPlotter() {
-        if (CutterTypeList.selection.index == 0) {
-            CopyNewBtn.enabled = false;
-            return;
-        }
         const index = CutterTypeList.selection.index - 1;
         var copied = {};
         for (var key in CUTTER_TYPES[index]) {
@@ -858,19 +871,9 @@ function CytterTypePrefsDialog(selectedIndex) {
         savePreferencesJSON(PREFS_FILE);
     }
 
-    function needSave() {
-        if (SaveCurrentBtn.enabled) {
-            var saveIt = confirm(translate('Confirm save msg'), false, translate('Confirm save title'));
-            if (saveIt) savePlotter();
-        };
-    }
-
     function removePlotter() {
         var deleteIt = confirm(translate('Remove plotter msg', {plotterName: CutterTypeList.selection.text}), true, translate('Remove plotter title'));
         if (deleteIt) {
-            SaveCurrentBtn.enabled = false;
-            RemoveCurrentBtn.enabled = false;
-            CopyNewBtn.enabled = true;
             var index = CutterTypeList.selection.index - 1;
             if (index == -1) return;
             CUTTER_TYPES.splice(index, 1);
@@ -883,13 +886,14 @@ function CytterTypePrefsDialog(selectedIndex) {
             if (CUTTER_TYPES.length) RemoveCurrentBtn.enabled = true;
             CutterTypeList.selection = index;
             CutterTypeList.active = true;
+            isChanged = false;
             CutterTypeListSelected();
             CutterTypeList.addEventListener('change', CutterTypeListSelected);
-            savePreferencesJSON(PREFS_FILE);
+            savePreferencesJSON(PREFS_FILE);         
         }
     }
 
-    function savePlotter() {
+    function savePlotter(callback) {
         var index = lastSelected - 1;
         var selectedCutter;
         if (index == -1) {
@@ -923,18 +927,15 @@ function CytterTypePrefsDialog(selectedIndex) {
         selectedCutter.marksProperties = ManualMarksList_array;
         selectedCutter.marksFile = MarksExternalFileChk.value ? MarksExternalFilePath.text : "";
         selectedCutter.workspaceShrink = WorkspaceShrinkChk.value;
-        CutterTypeList.removeEventListener('change', CutterTypeListSelected);
-        CutterTypeList.removeAll();
-        CutterTypeList.add('item', translate('Add new'));
-        for (var i = 0; i < CUTTER_TYPES.length; i++) {
-            CutterTypeList.add('item', CUTTER_TYPES[i].text);
-        }
-        CutterTypeList.selection = index + 1;
-        CutterTypeList.addEventListener('change', CutterTypeListSelected);
-        SaveCurrentBtn.enabled = false;
-        CopyNewBtn.enabled = true; 
-        RemoveCurrentBtn.enabled = true;
+        CutterTypeList.items[lastSelected].text = CutterNameText.text;
+        isChanged = false;
+        needSave();
         savePreferencesJSON(PREFS_FILE);
+        if (callback) {
+            callback();
+        } else {
+            CutterTypeListSelected();
+        }
     }
 
     var myResult = CytterTypePrefsWindow.show();

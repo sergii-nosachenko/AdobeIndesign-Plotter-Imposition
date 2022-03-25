@@ -1,304 +1,51 @@
-# Скрипт для розкладки під плоттери
+# InDesign Imposition For Plotter Cutting script
+[![en](https://img.shields.io/badge/language-english-red?style=for-the-badge)](https://github.com/jonatasemidio/multilanguage-readme-pattern/blob/master/readme.md)
+[![uk](https://img.shields.io/badge/%D0%BC%D0%BE%D0%B2%D0%B0-%D1%83%D0%BA%D1%80%D0%B0%D1%97%D0%BD%D1%81%D1%8C%D0%BA%D0%B0-yellow?style=for-the-badge)](https://github.com/sergii-nosachenko/AdobeIndesign-Plotter-Imposition/blob/master/readme-uk.md)
 
-Даний скрипт дозволяє легко розкласти файл або групу файлів під плотерну порізку в Adobe InDesign. Також генерується файл з контуром порізки для кожного розміру.
+This script allows you to easily imposition a file or group of files for plotter cutting in Adobe InDesign. Cutting ready files for each size are also generated.
 
-## Вимоги
+## Requirements
 
-* Adobe Indesign >=14.0
-* Adobe Illustrator >=19.0
-* Adobe ExtendScript Toolkit >=4.0.0 *(для компіляції скрипта)*
+* Adobe Indesign> = 14.0
+* Adobe Illustrator> = 19.0
+* Adobe ExtendScript Toolkit> = 4.0.0 *(for script compilation)* [Download](https://github.com/Adobe-CEP/CEP-Resources/tree/master/ExtendScript-Toolkit)
 
-## Інсталяція
+## Installation
 
-### Етап 1
-
-Для початку потрібно скопіювати наступні файли з папки `dist`:
-
-```bash
-Rozkladka na plotter.jsbin
-preferences.json
-```
-
-у робочу папку скриптів InDesign (приклад для Windows):
+All you have to do is copy the following file `Imposition For Plotter Cutting.jsxbin` from the `dist` folder to the working folder of InDesign scripts (example for Windows):
 
 ```bash
 %APPDATA%\Adobe\InDesign\Version 15.0\en_GB\Scripts\Scripts Panel
 ```
 
-*Шлях, версія та мовний пакет можуть відрізнятись!*
+*Path, version and language pack may differ!*
 
-Щоб швидко знайти правильну папку:
+To quickly find the right folder:
 
-1. Запустіть Adobe InDesign
-2. Активуйте панель скриптів: `Window > Utilities > Scripts`
-3. В списку виберіть папку `Users`
-4. В контекстному меню виберіть пункт `Reveal in Explorer`
-5. Відкриється вікно провідника, в якому потрібно перейти в папку `Scripts Panel`
+1. Start Adobe InDesign
+2. Activate the script bar: `Window> Utilities> Scripts`
+3. Select the `Users` folder from the list
+4. In the context menu, select `Reveal in Explorer`
+5. Explorer window will open, where you need to navigate to the folder `Scripts Panel` and paste script inside
 
-### Етап 2
+## General settings
 
-Потрібно модифікувати файл `illustrator-20.0.jsx` *(версія залежить від встановленої)* Adobe Illistrator у наступних папках:
+*In the process of writing*
 
-```bash
-%CommonProgramFiles%\Adobe\Startup Scripts CC\Illustrator 2020\
-%CommonProgramFiles(x86)%\Adobe\Startup Scripts CC\Illustrator 2020\
-```
+## Compile the package into JSBIN format
 
-Додайте наступні функції в код `illustrator-20.0.jsx`:
+In order to compile the working file correctly, you need to do the following:
 
-```javascript
-/**
-  Do the file open and save it to AI 8 version.
-  @param  files File or Array of File to be opened.
-  @return true if all the files are successfully saved.
-*/
+### Option #1 - using the Adobe ExtendScript Toolkit menu
 
-illustrator.openIllustratorToConvertAI = function (files) {
-  if (BridgeTalk.appName == illustrator.appName) {
+1. Launch the Adobe ExtendScript Toolkit
+2. Open the file `source\Imposition For Plotter Cutting.jsx`
+3. Select correct target under the tab with the file name - `Adobe InDesign 2020` *(depends on your installed version)*
+4. Select the `File > Export As Binary ...` menu item
+5. Save the compiled file to the InDesign script working folder
 
-    BridgeTalk.bringToFront(illustrator.targetName);
+### Option #2 - using batch script (Adobe ExtendScript Toolkit is required be installed)
 
-    var fileArray = new Array;
-    if (files instanceof File)
-      fileArray.push(files);
-    else 
-      fileArray = files.concat(fileArray);
-    
-    var reply = {
-      success: true
-    };
-
-    for (var i = 0; i < fileArray.length; i++) {
-      try {
-        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
-
-        var w = new Window("window", "Зачекай, обробляю файл", undefined, {closeButton: false});
-        var t = w.add("statictext");
-        t.preferredSize = [450, -1];
-        t.text = "Конвертую EPS в AI для порізки...";
-        w.show();
-
-        app.open(fileArray[i]);
-
-        var saveOpts = new IllustratorSaveOptions();
-        saveOpts.compatibility = Compatibility.ILLUSTRATOR8;
-        saveOpts.compressed = false;
-        saveOpts.pdfCompatible = false;
-
-        var fileName = fileArray[i].fullName.split('.').slice(0, -1).join('.') + ".ai";
-        var AI_File = new File(fileName);
-        fileArray[i].remove();  
-
-        app.activeDocument.saveAs( AI_File, saveOpts );
-        app.activeDocument.close();
-        app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
-
-        w.close();
-      } catch (err) {
-        reply = {
-          success: false,
-          err: "Error on open(): " + (err.number & 0xFFFF) + ", " + err.description + ", " + fileArray[i].toString()
-        }
-      }
-    }
-    indesign15.activate();
-    return reply;
-  } else {
-    // create a BridgeTalk message for Illustrator to invoke open
-    var filesString = illustrator.fileArrayToString (files);
-
-    var btMessage = new BridgeTalk;
-    btMessage.target = illustrator.targetName;
-    btMessage.body = "illustrator.openIllustratorToConvertAI (" + filesString + ");";
-    btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender)};
-    btMessage.send();
-  }
-}
-
-/**
-  Do the file open and save it to DXF.
-  @param  files File or Array of File to be opened.
-  @return true if all the files are successfully saved.
-*/
-
-illustrator.openIllustratorToConvertDXF = function (files) {
-  if (BridgeTalk.appName == illustrator.appName) {
-
-    BridgeTalk.bringToFront(illustrator.targetName);
-
-    var fileArray = new Array;
-    if (files instanceof File)
-      fileArray.push(files);
-    else 
-      fileArray = files.concat(fileArray);
-    
-    var reply = {
-      success: true
-    };
-
-    for (var i = 0; i < fileArray.length; i++) {
-      try {
-        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
-
-        var w = new Window("window", "Зачекай, обробляю файл", undefined, {closeButton: false});
-        var t = w.add("statictext");
-        t.preferredSize = [450, -1];
-        t.text = "Конвертую EPS в DXF для порізки...";
-        w.show();
-
-        app.open(fileArray[i]);
-
-        var exportOpts = new ExportOptionsAutoCAD();
-        exportOpts.exportFileFormat = AutoCADExportFileFormat.DXF;
-
-        var fileName = fileArray[i].fullName.split('.').slice(0, -1).join('.') + ".dxf";
-        var DXF_File = new File(fileName);
-        fileArray[i].remove();
-        for (var i = 0, items = app.activeDocument.pathItems; i < items.length; i++) {
-          if (!(items[i].fillColor instanceof NoColor)) {
-            items[i].strokeColor = items[i].fillColor;
-            items[i].fillColor = new NoColor();    
-          };
-        };
-
-        app.activeDocument.exportFile(DXF_File, ExportType.AUTOCAD,exportOpts);
-        app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
-        app.userInteractionLevel = UserInteractionLevel.DISPLAYALERTS;
-
-        w.close();
-      } catch (err) {
-        reply = {
-          success: false,
-          err: "Error on open(): " + (err.number & 0xFFFF) + ", " + err.description + ", " + fileArray[i].toString()
-        }
-      }
-    }
-    indesign15.activate();
-    return reply;
-  } else {
-    // create a BridgeTalk message for Illustrator to invoke open
-    var filesString = illustrator.fileArrayToString (files);
-
-    var btMessage = new BridgeTalk;
-    btMessage.target = illustrator.targetName;
-    btMessage.body = "illustrator.openIllustratorToConvertDXF (" + filesString + ");";
-    btMessage.onResult = function(bto) {BridgeTalk.bringToFront(bto.sender)};
-    btMessage.send();
-  }
-}
-
-```
-
-**Важливо: потрібно саме додати, а не заміняти наявний код! Видалення стандартних функцій може викликати проблеми в роботі пакету Adobe**
-
-### Етап 3
-
-Налаштуйте параметри плоттерів у файлі `preferences.json` (детальніше у розділі **Налаштування параметрів плоттерів** нижче).
-
-### Етап 4
-Закрийте всі вікна Adobe InDesign та Illistrator.
-Запустіть по черзі **спочатку** Illistrator, а потім InDesign.
-Це потрібно лише першого разу для правильної реєстрації скриптів. Далі можна запускати лише InDesign, надалі Illustrator запуститься за потреби.
-
-## Налаштування параметрів плоттерів
-
-Налаштування плоттерів знаходяться у файлі `preferences.json`.
-Структура файлу наступна:
-
-```javascript
-{
-  // Масив параметрів для плоттерів
-  "cutters": [
-    {
-      // Назва плоттера для відображення в меню
-      "text": "", 
-      // Мітка плоттера (буде розміщена в назві файлу)
-      "label": "",
-      // Назва формату паперу (буде розміщена в назві файлу)            
-      "paperName": "",
-      // Ширина листа в мм
-      "widthSheet": 0,
-      // Висота листа в мм
-      "heightSheet": 0,
-      // Службовий відступ від лівого краю листа (там не будуть розміщуватись макети при розкладці)
-      "marginLeft": 0,
-      // Службовий відступ від правого краю листа (там не будуть розміщуватись макети при розкладці)
-      "marginRight": 0,
-      // Службовий відступ від верхнього краю листа (там не будуть розміщуватись макети при розкладці)
-      "marginTop": 0,  
-      // Службовий відступ від нижнього краю листа (там не будуть розміщуватись макети при розкладці)
-      "marginBottom": 0,
-      // Мінімальний дозволений відступ в мм між контурами (АЛЕ! 0 мм буде доступним автоматично для прямокутників без скругління)
-      "minSpaceBetween": 0,
-      // Максимальний дозволений відступ в мм між контурами
-      "maxSpaceBetween": 0,
-      // Колір ліній порізки, масив значень від 0 до 100 в палітрі [C,M,Y,K] або стандартний колір з палітри InDesign, напр. "Black", "None"
-      "contourColor": [0, 0, 0, 0],
-      // Додатковий вихід лінії за межі контуру в мм (для порізки встик, щоб плоттер дорізав лінію в кінці)
-      "contourOffset": 0.0,
-      // Формат файлу зі згенерованим контуром порізки (залежить від моделі плоттера)
-      // Доступні формати: "PDF", "AI" або "DXF"
-      "plotterCutFormat": "",      
-      // Якщо false - скрипт шукатиме файл з міткам порізки в параметрі "marksFile", якщо true - братиме дані з параметру "marksProperties"
-      "marksGenerate": false,
-      // Шлях до файлу з мітками порізки для цього формату та плоттеру (якщо "marksGenerate": false)
-      "marksFile": "//path/to/marks/marks.pdf",
-      // Масив налаштувань для кожної мітки (якщо "marksGenerate": true)
-      "marksProperties": [
-        {
-          // Розміщення мітки відносно робочої області (обмежена службовими відступами)
-          // Може бути одним із:
-          // "left-top", "left-middle", "left-bottom" (на лівій службовій зоні зверху, по центру або знизу)
-          // "right-top", "right-middle", "right-bottom" (на правій службовій зоні зверху, по центру або знизу)
-          // "top-left", "top-middle", "top-right" (на верхній службовій зоні зліва, по центру або справа)
-          // "bottom-left", "bottom-middle", "bottom-right" (на нижній службовій зоні зліва, по центру або справа)
-          "position": "",
-          // Форма мітки
-          // Може бути одним із:
-          // "oval" - овал/коло
-          // "rectangle" - прямокутник
-          // "line" - лінія
-          "shape": "",
-          // Товщина лінії обводки
-          "strokeWeight": 0,
-          // Колір лінії обводки по [C, M, Y, K] або стандартне значення, напр. "Black", "None"
-          "strokeColor": [],
-          // Колір заливки по [C, M, Y, K] або стандартне значення, напр. "Black", "None"
-          "fillColor": [],
-          // Ширина в мм
-          "width": 0,
-          // Висота в мм
-          "height": 0,
-          // Масив відступів в мм [зверху, справа, знизу, зліва]
-          "margins": [0, 0, 0, 0],
-          // Напрям лінії (лише для "shape": "line")
-          // Може бути:
-          // "vertical" - для вертикальної лінії (параметр "width" буде проігноровано)
-          // "horizontal" - для горизонтальної лінії (параметр "height" буде проігноровано)
-          // "top-bottom" - для діагональної лінії з лівого верхнього в правий нижній кут прямокутника з параметрами "width" та "height"
-          // "bottom-top" - для діагональної лінії з лівого нижнього в правий верхній кут прямокутника з параметрами "width" та "height"
-          "lineDirection": ""
-        }      
-      ]
-    }      
-  ]
-}
-```
-
-## Компіляція пакету в формат JSBIN
-
-Для того, щоб правильно скомпілювати робочий файл, потрібно виконати наступні дії:
-
-### Варіант №1 - за допомогою меню Adobe ExtendScript Toolkit
-
-1. Запустіть Adobe ExtendScript Toolkit
-2. Відкрийте файл `source\Rozkladka na plotter.jsx`
-3. У відкритому файлі під вкладкою з назвою файла потрібно вибрати правильний target - `Adobe InDesign 2020` *(версія залежатиме від встановленої)*
-4. Виберіть меню `File > Export As Binary...`
-5. Збережіть скомпільований файл до робочої папки скриптів InDesign
-
-### Варіант №2 - за допомогою bat-скрипта (Adobe ExtendScript Toolkit має бути встановлений)
-
-1. Запустіть командний скрипт `compile-jsxbin.bat` або `num run compile`
-2. Виберіть файл `source\Rozkladka na plotter.jsx`
-3. Виберіть папку для збереження скомпільованого скрипта
+1. Run the `compile-jsxbin.bat` or` npm run compile` command script (bundled with [Node.js](https://nodejs.org/))
+2. Select the file `source\Imposition For Plotter Cutting.jsx`
+3. Select a folder to save the compiled script

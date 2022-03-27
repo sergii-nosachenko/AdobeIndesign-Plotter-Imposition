@@ -277,7 +277,7 @@ function DialogWindow() {
 
 	// DOCUMENTGROUP
 	// =============
-	var DocumentGroup = MultiplePDFImposing.add("group", undefined, {name: "DocumentGroup"}); 
+	var DocumentGroup = ExportSettingsTab.add("group", undefined, {name: "DocumentGroup"}); 
 		DocumentGroup.orientation = "row"; 
 		DocumentGroup.alignChildren = ["left","center"]; 
 		DocumentGroup.spacing = 10; 
@@ -323,7 +323,7 @@ function DialogWindow() {
 
 	// PRESETGROUP
 	// ===========
-	var PresetGroup = MultiplePDFImposing.add("group", undefined, {name: "PresetGroup"}); 
+	var PresetGroup = ExportSettingsTab.add("group", undefined, {name: "PresetGroup"}); 
 		PresetGroup.orientation = "row"; 
 		PresetGroup.alignChildren = ["left","center"]; 
 		PresetGroup.spacing = 10; 

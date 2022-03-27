@@ -125,6 +125,8 @@ LANG['uk_UA'] = {
         'Space between max tip': 'Має бути числом >= мін.значення',
         'Contour color': 'Колір контура',
         'Contour color tip': 'Має бути числом від 0 до 100 у %',
+        'Line Width label': 'Товщина лінії',
+        'Line Width tip': 'Має бути числом > 0 мм',
         'Overcut label': 'Перерізання',
         'Overcut value tip': 'Має бути числом >= 0 мм\nПотрібно для порізки в табличному вигляді',
         'File format label': 'Формат файлу',

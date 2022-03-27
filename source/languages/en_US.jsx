@@ -125,6 +125,8 @@ LANG['en_US'] = {
         'Space between max tip': 'Must be a number >= min value in mm',
         'Contour color': 'Contour color',
         'Contour color tip': 'Must be a number from 0 to 100 in %',
+        'Line Width label': 'Line width',
+        'Line Width tip': 'Must be a number > 0 in mm',
         'Overcut label': 'Overcut',
         'Overcut value tip': 'Must be a number >= 0 in mm\nNeeds for table-style cutting',
         'File format label': 'File format',

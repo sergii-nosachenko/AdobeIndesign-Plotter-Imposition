@@ -63,7 +63,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
 
     var placeholders = {
         'DocumentName': File.decode(myDocument.name),
-        'DocumentFolder': Folder.decode(outputFolder),
+        'DocumentFolder': Folder.decode(myCurrentDocSettings.outputFolder),
         'CurrentPage': 0,
         'TotalPages': myDocument.pages.count(),
         'PlotterName': myCurrentDocSettings.CutterType.text,
@@ -287,13 +287,13 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
                 if (pages[k].isValid) {
                     switch (markShape) {
                         case "oval":
-                            pages[k].ovals.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
+                            pages[k].ovals.add(MarksLayer, LocationOptions.AT_BEGINNING, shapeProperties);
                             break;
                         case "rectangle":
-                            pages[k].rectangles.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
+                            pages[k].rectangles.add(MarksLayer, LocationOptions.AT_BEGINNING, shapeProperties);
                             break;
                         case "line":
-                            pages[k].graphicLines.add(MarksLayer, LocationOptions.AT_END, shapeProperties);
+                            pages[k].graphicLines.add(MarksLayer, LocationOptions.AT_BEGINNING, shapeProperties);
                             break;
                         case "text":
                             placeholders.CurrentPage = current;
@@ -323,7 +323,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
                                     break;
                             }
 
-                            var pageText = pages[k].textFrames.add(MarksLayer, LocationOptions.AT_END, {
+                            var pageText = pages[k].textFrames.add(MarksLayer, LocationOptions.AT_BEGINNING, {
                                 'contents': template,
                                 'geometricBounds': marksCoordinates[i],
                                 'textFramePreferences': {

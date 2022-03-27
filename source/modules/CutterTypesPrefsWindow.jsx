@@ -32,6 +32,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         MagentaValue: 0,
         YellowValue: 0,
         BlackValue: 0,
+        LineWidthValue: 0.1,
         OvercutValue: 0,
         FileFormats: 0,
         MarksExternalFileChk: false,
@@ -354,7 +355,26 @@ function CytterTypePrefsDialog(selectedIndex) {
         Row1.orientation = "row"; 
         Row1.alignChildren = ["left","center"]; 
         Row1.spacing = 10; 
-        Row1.margins = 0; 
+        Row1.margins = 0;
+
+    // LINEWIDTHGROUP
+    // ==============
+    var LineWidthGroup = Row1.add("group", undefined, {name: "LineWidthGroup"}); 
+        LineWidthGroup.orientation = "row"; 
+        LineWidthGroup.alignChildren = ["left","center"]; 
+        LineWidthGroup.spacing = 10; 
+        LineWidthGroup.margins = 0; 
+        LineWidthGroup.alignment = ["left","fill"]; 
+
+    var LineWidthLabel = LineWidthGroup.add("statictext", undefined, undefined, {name: "LineWidthLabel"}); 
+        LineWidthLabel.text = translate('Line Width label');
+
+    var LineWidthValue = LineWidthGroup.add('edittext {properties: {name: "LineWidthValue"}}'); 
+        LineWidthValue.helpTip = translate('Line Width tip');
+        LineWidthValue.text = defaults.LineWidthValue; 
+        LineWidthValue.preferredSize.width = 60; 
+        LineWidthValue.alignment = ["left","fill"]; 
+        LineWidthValue.onChange = prefsChanged; 
 
     // OVERCUTGROUP
     // ============
@@ -371,7 +391,7 @@ function CytterTypePrefsDialog(selectedIndex) {
     var OvercutValue = OvercutGroup.add('edittext {properties: {name: "OvercutValue"}}'); 
         OvercutValue.helpTip = translate('Overcut value tip');
         OvercutValue.text = defaults.OvercutValue; 
-        OvercutValue.preferredSize.width = 80; 
+        OvercutValue.preferredSize.width = 60; 
         OvercutValue.alignment = ["left","fill"]; 
         OvercutValue.onChange = prefsChanged;  
 
@@ -573,6 +593,7 @@ function CytterTypePrefsDialog(selectedIndex) {
             YellowValue.text = selectedCutter.contourColor[2];
             BlackValue.text = selectedCutter.contourColor[3];
             OvercutValue.text = selectedCutter.contourOffset;
+            LineWidthValue.text = selectedCutter.contourWidth;
             WorkspaceShrinkChk.value = selectedCutter.workspaceShrink;
             FileFormats.find(selectedCutter.plotterCutFormat).selected = true;
             fillMarksList(selectedCutter);
@@ -673,6 +694,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         MagentaValue.text = defaults.MagentaValue;
         YellowValue.text = defaults.YellowValue;
         BlackValue.text = defaults.BlackValue;
+        LineWidthValue.text = defaults.LineWidthValue;
         OvercutValue.text = defaults.OvercutValue;
         FileFormats.selection = defaults.FileFormats;
         MarksExternalFileChk.value = defaults.MarksExternalFileChk;
@@ -752,6 +774,12 @@ function CytterTypePrefsDialog(selectedIndex) {
         isOk.overcut = true;
     }
 
+    function CheckLineWidth() {
+        LineWidthValue.text = LineWidthValue.text.replace(',', '.');
+        if (!isValidNumber(LineWidthValue.text) || LineWidthValue.text <= 0) LineWidthValue.text = defaults.LineWidthValue;
+        if (LineWidthValue.text > 100) LineWidthValue.text = 100;
+    }
+
     function CheckMarks() {
         if (MarksExternalFileChk.value) {
             if (MarksExternalFilePath.text == "") {
@@ -785,6 +813,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         CheckSize();
         CheckSpaceBetween();
         CheckColor();
+        CheckLineWidth();
         CheckOvercut();
         CheckMarks();
         return isOk.name == true &&
@@ -936,6 +965,7 @@ function CytterTypePrefsDialog(selectedIndex) {
             +BlackValue.text
         ];
         selectedCutter.contourOffset = +OvercutValue.text;
+        selectedCutter.contourWidth = +LineWidthValue.text;
         selectedCutter.plotterCutFormat = FileFormats.selection.text;
         selectedCutter.marksProperties = ManualMarksList_array;
         selectedCutter.marksFile = MarksExternalFileChk.value ? MarksExternalFilePath.text : "";

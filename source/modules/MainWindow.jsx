@@ -473,13 +473,15 @@ function DialogWindow() {
 		
 		var folder = new Folder(MY_DOC_SETTINGS.okFiles[0].theFile.path);
 		
-		MY_DOC_SETTINGS.outputFolder = folder.selectDlg(translate('Folder Dialog Title'));
+		var outputFolder = folder.selectDlg(translate('Folder Dialog Title'));
 		
+		MY_DOC_SETTINGS.outputFolder = "";
 		FolderName.text = ""; 
 		isOk.folder = false;		
 		
-		if (MY_DOC_SETTINGS.outputFolder != null && MY_DOC_SETTINGS.outputFolder.exists) {
-			FolderName.text = Folder.decode(MY_DOC_SETTINGS.outputFolder.fullName); 
+		if (outputFolder != null && outputFolder.exists) {
+			MY_DOC_SETTINGS.outputFolder = Folder.decode(outputFolder.fsName); 
+			FolderName.text = MY_DOC_SETTINGS.outputFolder; 
 			isOk.folder = true;
 		}
 		

@@ -173,8 +173,8 @@ function PlacePDF(){
 					// Перебираємо варіанти
 					for (var i = 0; i < okDiameters.length; i++) {
 						if (okDiameters[i] !== 0) {
-							myCurrentDocSettings.Diameter = okDiameters[i].split(':')[0];
-							var thisSpaceBetween = okDiameters[i].split(':')[1];
+							myCurrentDocSettings.Diameter = parseFloat(okDiameters[i].split(':')[0]);
+							var thisSpaceBetween = parseFloat(okDiameters[i].split(':')[1]);
 							thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
 							thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;
 							var thisFileParams = RozkladkaCircles(myCurrentDocSettings.Diameter, myCurrentDocSettings.CutterType, thisSpaceBetween, true);			
@@ -246,8 +246,8 @@ function PlacePDF(){
 					for (var i = 0; i < okSizes.length; i++) {
 						if (okSizes[i] !== 0) {
 							var thisSize = okSizes[i].split(':')[0];
-							var thisRadius = okSizes[i].split(':')[1];
-							var thisSpaceBetween = okSizes[i].split(':')[2];
+							var thisRadius = parseFloat(okSizes[i].split(':')[1]);
+							var thisSpaceBetween = parseFloat(okSizes[i].split(':')[2]);
 							thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
 							thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;
 							thisSpaceBetween = thisRadius && thisSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
@@ -358,8 +358,8 @@ function PlacePDF(){
 			// Перебираємо варіанти кружечків
 			for (var i = 0; i < okDiameters.length; i++) {
 				if (okDiameters[i] !== 0) {
-					myCurrentDocSettings.Diameter = okDiameters[i].split(':')[0];
-					var thisSpaceBetween = okDiameters[i].split(':')[1];
+					myCurrentDocSettings.Diameter = parseFloat(okDiameters[i].split(':')[0]);
+					var thisSpaceBetween = parseFloat(okDiameters[i].split(':')[1]);
 					thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
 					thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;
 					var thisFileParams = RozkladkaCircles(myCurrentDocSettings.Diameter, myCurrentDocSettings.CutterType, thisSpaceBetween, true);			
@@ -388,8 +388,8 @@ function PlacePDF(){
 			for (var i = 0; i < okSizes.length; i++) {
 				if (okSizes[i] !== 0) {
 					var thisSize = okSizes[i].split(':')[0];
-					var thisRadius = okSizes[i].split(':')[1];
-					var thisSpaceBetween = okSizes[i].split(':')[2];
+					var thisRadius = parseFloat(okSizes[i].split(':')[1]);
+					var thisSpaceBetween = parseFloat(okSizes[i].split(':')[2]);
 					thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
 					thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;
 					thisSpaceBetween = thisRadius && thisSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
@@ -1698,7 +1698,7 @@ function addMarksToDocument(myDocument, myCurrentDocSettings, docType) {
 
 				for (var i = 0, pages = myDocument.pages.everyItem().getElements(); i < pages.length; i++) {
 					if (!pages[i].isValid) continue;
-					var MarksPlacement = pages[i].rectangles.add(PlotterLayer, LocationOptions.AT_BEGINNING, {
+					var MarksPlacement = pages[i].rectangles.add(PlotterLayer, LocationOptions.AT_END, {
 						'contentType': ContentType.GRAPHIC_TYPE,
 						'strokeWeight': 0,
 						'strokeColor': 'None',
@@ -1795,7 +1795,7 @@ function CreateCustomDocCircles(myCurrentDocSettings, customSpaceBetween) {
 		};
 
 		if (myCurrentDocSettings.IsSaveFileWithCut) {
-			ovalsProperties['strokeWeight'] = 0.5;
+			ovalsProperties['strokeWeight'] = myCurrentDocSettings.CutterType.contourWidth;
 			ovalsProperties['strokeColor'] = contourColor;
 			ovalsProperties['strokeType'] = 'Solid';
 			ovalsProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;
@@ -2444,7 +2444,7 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 		};
 
 		if (myCurrentDocSettings.SpaceBetween > 0) {
-			rectProperties['strokeWeight'] = 0.5;
+			rectProperties['strokeWeight'] = myCurrentDocSettings.CutterType.contourWidth;
 			rectProperties['strokeColor'] = contourColor;
 			rectProperties['strokeType'] = 'Solid';
 			rectProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;			
@@ -2733,7 +2733,7 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 							verticalOffset + totalHeight + contourOffset,
 							horizontalOffset + (Params.heightItem + myCurrentDocSettings.SpaceBetween / 2) * i
 						],
-						'strokeWeight': 0.5,
+						'strokeWeight': myCurrentDocSettings.CutterType.contourWidth,
 						'strokeColor': contourColor,
 						'strokeType': 'Solid',
 						'strokeAlignment': StrokeAlignment.CENTER_ALIGNMENT,
@@ -2754,7 +2754,7 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 							verticalOffset + (Params.widthItem + myCurrentDocSettings.SpaceBetween / 2) * i,
 							horizontalOffset + totalWidth + contourOffset
 						],
-						'strokeWeight': 0.5,
+						'strokeWeight': myCurrentDocSettings.CutterType.contourWidth,
 						'strokeColor': contourColor,
 						'strokeType': 'Solid',
 						'strokeAlignment': StrokeAlignment.CENTER_ALIGNMENT,
@@ -2778,7 +2778,7 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 							verticalOffset + totalHeight + contourOffset,
 							horizontalOffset + (Params.widthItem + myCurrentDocSettings.SpaceBetween / 2) * i
 						],
-						'strokeWeight': 0.5,
+						'strokeWeight': myCurrentDocSettings.CutterType.contourWidth,
 						'strokeColor': contourColor,
 						'strokeType': 'Solid',
 						'strokeAlignment': StrokeAlignment.CENTER_ALIGNMENT,
@@ -2800,7 +2800,7 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 							verticalOffset + (Params.heightItem + myCurrentDocSettings.SpaceBetween / 2) * i,
 							horizontalOffset + totalWidth + contourOffset
 						],
-						'strokeWeight': 0.5,
+						'strokeWeight': myCurrentDocSettings.CutterType.contourWidth,
 						'strokeColor': contourColor,
 						'strokeType': 'Solid',
 						'strokeAlignment': StrokeAlignment.CENTER_ALIGNMENT,

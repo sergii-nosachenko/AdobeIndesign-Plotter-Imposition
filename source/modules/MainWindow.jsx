@@ -100,14 +100,14 @@ function DialogWindow() {
 	// ===================
 	var ImposingMethodGroup = ImposingGroup.add("group", undefined, {name: "ImposingMethodGroup"}); 
 		ImposingMethodGroup.orientation = "row"; 
-		ImposingMethodGroup.alignChildren = ["left","center"]; 
+		ImposingMethodGroup.alignChildren = ["left","fill"]; 
 		ImposingMethodGroup.spacing = 10; 
 		ImposingMethodGroup.margins = 0; 
-		ImposingMethodGroup.alignment = ["fill","center"]; 
+		ImposingMethodGroup.alignment = ["fill","fill"]; 
 
 	var ImposingMethodLabel = ImposingMethodGroup.add("statictext", undefined, undefined, {name: "ImposingMethodLabel"}); 
 		ImposingMethodLabel.text = translate('Imposing Method Label');
-		ImposingMethodLabel.alignment = ["left","center"]; 
+		ImposingMethodLabel.alignment = ["left","fill"]; 
 
 	var ImposingMethod_array = [
 			translate('Imposing Method 1'),
@@ -116,6 +116,7 @@ function DialogWindow() {
 		]; 
 	var ImposingMethod = ImposingMethodGroup.add("dropdownlist", undefined, undefined, {name: "ImposingMethod", items: ImposingMethod_array}); 
 		ImposingMethod.selection = 0;
+		ImposingMethod.alignChildren = ["left","fill"]; 
 		ImposingMethod.onChange = function() {
 			MY_DOC_SETTINGS.ImposingMethod = ImposingMethod.selection.index;
 			ImposingCustom.text = translate('Imposing Method 3 Text');
@@ -154,6 +155,7 @@ function DialogWindow() {
 	var MultipageFileSave = ImposingMethodGroup.add("checkbox", undefined, undefined, {name: "MultipageFileSave"}); 
 		MultipageFileSave.text = translate('Multipage File Save');
 		MultipageFileSave.value = MY_DOC_SETTINGS.SaveMultipageFilesAsOneFile; 
+		MultipageFileSave.alignment = ["left","center"];
 		MultipageFileSave.onClick = function() {
 			MY_DOC_SETTINGS.SaveMultipageFilesAsOneFile = MultipageFileSave.value;
 		};		

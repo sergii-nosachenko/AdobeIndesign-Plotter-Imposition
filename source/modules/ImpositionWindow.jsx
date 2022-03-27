@@ -4,10 +4,10 @@ function NewImposSettingsWindow() {
 	
 	var Params = false;
 	var VariantsRozkladka = [];
-	var IsGetSizeFromFilename = myCustomDoc.IsGetSizeFromFilename;
-	var IsSaveFileWithCut = myCustomDoc.IsSaveFileWithCut;
-	var IsRoundedCorners = myCustomDoc.IsRoundedCorners;
-	var IsZeroBleeds = myCustomDoc.IsZeroBleeds;
+	var IsGetSizeFromFilename = MY_DOC_SETTINGS.IsGetSizeFromFilename;
+	var IsSaveFileWithCut = MY_DOC_SETTINGS.IsSaveFileWithCut;
+	var IsRoundedCorners = MY_DOC_SETTINGS.IsRoundedCorners;
+	var IsZeroBleeds = MY_DOC_SETTINGS.IsZeroBleeds;
 	
 	var minSpaceBetween;
 	
@@ -87,7 +87,7 @@ function NewImposSettingsWindow() {
 		DiameterLabel.text = translate('Diameter Label'); 
 
 	var Diameter = CircleSizeGroup.add('edittext {properties: {name: "Diameter"}}'); 
-		Diameter.text = myCustomDoc.Diameter; 
+		Diameter.text = MY_DOC_SETTINGS.Diameter; 
 		Diameter.preferredSize.width = 100;
 		Diameter.helpTip = translate('Diameter Tip');
 		Diameter.onChange = totalFieldsCheck;
@@ -149,7 +149,7 @@ function NewImposSettingsWindow() {
 		WidthLabel.text = translate('Width Label');
 
 	var RectWidth = RectangleSizeGroup.add('edittext {properties: {name: "RectWidth"}}'); 
-		RectWidth.text = myCustomDoc.RectWidth; 
+		RectWidth.text = MY_DOC_SETTINGS.RectWidth; 
 		RectWidth.preferredSize.width = 100;
 		RectWidth.helpTip = translate('Width Tip');
 		RectWidth.onChange = totalFieldsCheck;
@@ -161,7 +161,7 @@ function NewImposSettingsWindow() {
 		HeightLabel.text = translate('Height Label');
 
 	var RectHeight = RectangleSizeGroup.add('edittext {properties: {name: "RectHeight"}}'); 
-		RectHeight.text = myCustomDoc.RectHeight; 
+		RectHeight.text = MY_DOC_SETTINGS.RectHeight; 
 		RectHeight.preferredSize.width = 100;
 		RectHeight.helpTip = translate('Height Tip');
 		RectHeight.onChange = totalFieldsCheck;
@@ -187,7 +187,7 @@ function NewImposSettingsWindow() {
 		RoundCornersValueGroup.enabled = IsRoundedCorners;
 		
 	var RoundCornersValue = RoundCornersValueGroup.add('edittext {properties: {name: "RoundCornersValue"}}'); 
-		RoundCornersValue.text = myCustomDoc.RoundCornersValue || 0; 
+		RoundCornersValue.text = MY_DOC_SETTINGS.RoundCornersValue || 0; 
 		RoundCornersValue.preferredSize.width = 100;
 		RoundCornersValue.onChange = totalFieldsCheck;
 
@@ -244,9 +244,9 @@ function NewImposSettingsWindow() {
 	// FIGURESELECTOR
 	// ==============
 	FigureSelector.selection = RectanglesSettings;
-	if (!myCustomDoc.Figure || myCustomDoc.Figure == translate('Circles')) {
+	if (!MY_DOC_SETTINGS.Figure || MY_DOC_SETTINGS.Figure == translate('Circles')) {
 		FigureSelector.selection = CirclesSettings;
-	} else if (myCustomDoc.Figure == translate('Rectangles')) {
+	} else if (MY_DOC_SETTINGS.Figure == translate('Rectangles')) {
 		FigureSelector.selection = RectanglesSettings;
 	} else {
 		FigureSelector.selection = MixedSettings;
@@ -291,8 +291,8 @@ function NewImposSettingsWindow() {
 	var CutterType = CutterTypeGroup.add("dropdownlist", undefined, undefined, {name: "CutterType", items: CutterType_array}); 
 	    CutterType.preferredSize.width = 250;
         CutterType.alignment = ["left","fill"];
-	if (myCustomDoc.CutterType) {
-		CutterType.find(myCustomDoc.CutterType.text).selected = true;
+	if (MY_DOC_SETTINGS.CutterType) {
+		CutterType.find(MY_DOC_SETTINGS.CutterType.text).selected = true;
 	} else {
 		CutterType.selection = APP_PREFERENCES.app.lastPlotter < CutterType_array.length ? APP_PREFERENCES.app.lastPlotter : 0;			
 	}
@@ -340,7 +340,7 @@ function NewImposSettingsWindow() {
 		} else {
 			minSpaceBetween = CutterType.selection ? CUTTER_TYPES[CutterType.selection.index].minSpaceBetween : 0;
 		};
-		SpaceBetween.text = myCustomDoc.SpaceBetween >= 0 ? myCustomDoc.SpaceBetween : minSpaceBetween;
+		SpaceBetween.text = MY_DOC_SETTINGS.SpaceBetween >= 0 ? MY_DOC_SETTINGS.SpaceBetween : minSpaceBetween;
 		SpaceBetween.helpTip = translate('Space Between Tip', {
 			min: minSpaceBetween,
 			max: CutterType.selection ? CUTTER_TYPES[CutterType.selection.index].maxSpaceBetween : 0
@@ -397,12 +397,7 @@ function NewImposSettingsWindow() {
 		Variants.onChange = function() {
 			if (Variants.selection) {
 				isOk.Variant = true;
-				for (var i = 0; i < Variants.items.length; i++) {
-					if (Variants.items[i].selected) {
-						Params = VariantsRozkladka[i];
-						break;
-					}
-				}
+				Params = VariantsRozkladka[Variants.selection.index];
 			} else {
 				isOk.Variant = false;
 			}
@@ -411,36 +406,8 @@ function NewImposSettingsWindow() {
 		Variants.onDoubleClick = function() {
 			if (Variants.selection) {
 				isOk.Variant = true;
-				for (var i = 0; i < Variants.items.length; i++) {
-					if (Variants.items[i].selected) {
-						Params = VariantsRozkladka[i];
-						break;
-					}
-				}
-				APP_PREFERENCES.app.lastPlotter = CutterType.selection.index;
-				savePreferencesJSON(PREFS_FILE);
-				myCustomDoc = {
-					CutterType: CUTTER_TYPES[APP_PREFERENCES.app.lastPlotter],
-					Figure: FigureSelector.selection.text,
-					Diameter: +Diameter.text,
-					RectWidth: +RectWidth.text,
-					RectHeight: +RectHeight.text,
-					SpaceBetween: +SpaceBetween.text,
-					RoundCornersValue: IsRoundedCorners ? +RoundCornersValue.text : 0,
-					Params: Params,
-					IsZeroBleeds: IsZeroBleeds,
-					IsGetSizeFromFilename: IsGetSizeFromFilename,
-					IsSaveFileWithCut: IsSaveFileWithCut,
-					IsRoundedCorners: IsRoundedCorners
-				};
-				if (FigureSelector.selection.text == translate('Circles')) {
-					myCustomDoc.title = "\u25CB D=" + myCustomDoc.Diameter + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');	
-				};
-				if (FigureSelector.selection.text == translate('Rectangles')) {
-					myCustomDoc.title = "\u25A1 " + myCustomDoc.RectWidth + "x" + myCustomDoc.RectHeight + (IsRoundedCorners ? " R=" + myCustomDoc.RoundCornersValue : "") + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');
-				};	
-				NewCustomDocSettings.close(1);
-				NewCustomDocSettings = null;			
+				Params = VariantsRozkladka[Variants.selection.index];
+				SaveDocSettings();
 			} else {
 				isOk.Variant = false;
 			}
@@ -466,45 +433,7 @@ function NewImposSettingsWindow() {
 	var SaveDocBtn = DocBtnsGroup.add("button", undefined, undefined, {name: "SaveDocBtn"}); 
 		SaveDocBtn.text = translate('Save Btn'); 
 		SaveDocBtn.enabled = false;  
-		SaveDocBtn.onClick = function() {
-			APP_PREFERENCES.app.lastPlotter = CutterType.selection.index;
-			savePreferencesJSON(PREFS_FILE);
-			myCustomDoc = {
-				CutterType: CUTTER_TYPES[APP_PREFERENCES.app.lastPlotter],
-				Figure: FigureSelector.selection.text,
-				Diameter: +Diameter.text,
-				RectWidth: +RectWidth.text,
-				RectHeight: +RectHeight.text,				
-				SpaceBetween: +SpaceBetween.text,
-				RoundCornersValue: IsRoundedCorners ? +RoundCornersValue.text : 0,
-				IsZeroBleeds: IsZeroBleeds,
-				IsGetSizeFromFilename: IsGetSizeFromFilename,
-				IsSaveFileWithCut: IsSaveFileWithCut,
-				IsRoundedCorners: IsRoundedCorners
-			};			
-			if (!IsGetSizeFromFilename) {
-				myCustomDoc.Params = Params;				
-				if (FigureSelector.selection.text == translate('Circles')) {
-					myCustomDoc.title = "\u25CB D=" + myCustomDoc.Diameter + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');	
-				};
-				if (FigureSelector.selection.text == translate('Rectangles')) {
-					myCustomDoc.title = "\u25A1 " + myCustomDoc.RectWidth + "x" + myCustomDoc.RectHeight + (IsRoundedCorners ? " R=" + myCustomDoc.RoundCornersValue : "") + " (" + myCustomDoc.SpaceBetween + ") " + translate('Units mm') + " | " + myCustomDoc.CutterType.text + " | " + myCustomDoc.Params.total + translate('Units pieces');
-				};
-			} else {
-				if (FigureSelector.selection.text == translate('Circles')) {
-					myCustomDoc.title = "\u25CB " + translate('As In Files Names') + " | " + myCustomDoc.CutterType.text;
-				};
-				if (FigureSelector.selection.text == translate('Rectangles')) {
-					myCustomDoc.title = "\u25A1 " + translate('As In Files Names') + " | " + myCustomDoc.CutterType.text;
-				};
-				if (FigureSelector.selection.text == translate('Mixed')) {
-					myCustomDoc.title = "\u25CB ? \u25A1 " + translate('As In Files Names') + " | " + myCustomDoc.CutterType.text;
-				};				
-				myCustomDoc.Params = false;
-			}
-			NewCustomDocSettings.close(1);
-			NewCustomDocSettings = null;			
-		};
+		SaveDocBtn.onClick = SaveDocSettings;
 
 	function CircleCheckBoxClick() {
 		IsGetSizeFromFilename = GetCircleSizeFromFilename.value;
@@ -649,9 +578,9 @@ function NewImposSettingsWindow() {
 				}
 			}
 			if (preselected) {
-				Variants.selection = myCustomDoc.Params.listItem;
+				Variants.selection = MY_DOC_SETTINGS.Params.listItem;
 				for (var i = 0; i < Variants.items.length; i++) {
-					if (Variants.items[i].text == myCustomDoc.Params.listItem) {
+					if (Variants.items[i].text == MY_DOC_SETTINGS.Params.listItem) {
 						Variants.items[i].selected = true;
 						break;
 					}
@@ -676,9 +605,9 @@ function NewImposSettingsWindow() {
 				}
 			}
 			if (preselected) {
-				Variants.selection = myCustomDoc.Params.listItem;
+				Variants.selection = MY_DOC_SETTINGS.Params.listItem;
 				for (var i = 0; i < Variants.items.length; i++) {
-					if (Variants.items[i].text == myCustomDoc.Params.listItem) {
+					if (Variants.items[i].text == MY_DOC_SETTINGS.Params.listItem) {
 						Variants.items[i].selected = true;
 						break;
 					}
@@ -698,7 +627,47 @@ function NewImposSettingsWindow() {
 		if (CutterType.selection) SaveDocBtn.enabled = true;
 	}
 
-	totalFieldsCheck(myCustomDoc.Params);		
+	function SaveDocSettings() {
+		APP_PREFERENCES.app.lastPlotter = CutterType.selection.index;
+		savePreferencesJSON(PREFS_FILE, APP_PREFERENCES);
+		
+		MY_DOC_SETTINGS.CutterType = CUTTER_TYPES[APP_PREFERENCES.app.lastPlotter];
+		MY_DOC_SETTINGS.Figure = FigureSelector.selection.text;
+		MY_DOC_SETTINGS.Diameter = +Diameter.text;
+		MY_DOC_SETTINGS.RectWidth = +RectWidth.text;
+		MY_DOC_SETTINGS.RectHeight = +RectHeight.text;
+		MY_DOC_SETTINGS.SpaceBetween = +SpaceBetween.text;
+		MY_DOC_SETTINGS.IsRoundedCorners = IsRoundedCorners;
+		MY_DOC_SETTINGS.RoundCornersValue = IsRoundedCorners ? +RoundCornersValue.text : 0;
+		MY_DOC_SETTINGS.IsZeroBleeds = IsZeroBleeds;
+		MY_DOC_SETTINGS.IsGetSizeFromFilename = IsGetSizeFromFilename;
+		MY_DOC_SETTINGS.IsSaveFileWithCut = IsSaveFileWithCut;
+			
+		if (!IsGetSizeFromFilename) {
+			MY_DOC_SETTINGS.Params = Params;				
+			if (FigureSelector.selection.text == translate('Circles')) {
+				MY_DOC_SETTINGS.title = "\u25CB D=" + MY_DOC_SETTINGS.Diameter + " (" + MY_DOC_SETTINGS.SpaceBetween + ") " + translate('Units mm') + " | " + MY_DOC_SETTINGS.CutterType.text + " | " + MY_DOC_SETTINGS.Params.total + translate('Units pieces');	
+			};
+			if (FigureSelector.selection.text == translate('Rectangles')) {
+				MY_DOC_SETTINGS.title = "\u25A1 " + MY_DOC_SETTINGS.RectWidth + "x" + MY_DOC_SETTINGS.RectHeight + (IsRoundedCorners ? " R=" + MY_DOC_SETTINGS.RoundCornersValue : "") + " (" + MY_DOC_SETTINGS.SpaceBetween + ") " + translate('Units mm') + " | " + MY_DOC_SETTINGS.CutterType.text + " | " + MY_DOC_SETTINGS.Params.total + translate('Units pieces');
+			};
+		} else {
+			if (FigureSelector.selection.text == translate('Circles')) {
+				MY_DOC_SETTINGS.title = "\u25CB " + translate('As In Files Names') + " (" + MY_DOC_SETTINGS.SpaceBetween + ") " + " | " + MY_DOC_SETTINGS.CutterType.text;
+			};
+			if (FigureSelector.selection.text == translate('Rectangles')) {
+				MY_DOC_SETTINGS.title = "\u25A1 " + translate('As In Files Names') + " (" + MY_DOC_SETTINGS.SpaceBetween + ") " + " | " + MY_DOC_SETTINGS.CutterType.text;
+			};
+			if (FigureSelector.selection.text == translate('Mixed')) {
+				MY_DOC_SETTINGS.title = "\u25CB ? \u25A1 " + translate('As In Files Names') + " (" + MY_DOC_SETTINGS.SpaceBetween + ") " + " | " + MY_DOC_SETTINGS.CutterType.text;
+			};				
+			MY_DOC_SETTINGS.Params = false;
+		}
+		NewCustomDocSettings.close(1);
+		NewCustomDocSettings = null;			
+	};
+
+	totalFieldsCheck(MY_DOC_SETTINGS.Params);		
 
 	var myResult = NewCustomDocSettings.show();
 

@@ -33,6 +33,7 @@ LANG['en_US'] = {
         'Impose Btn': 'Impose',
         'Files Dialog Title': 'Select one or more PDF, AI or TIF files',
         'Folder Dialog Title': 'Choose folder for export',
+        'Page #': 'page №%page%',
         'File Name Bad Alert': 'Invalid characters in filename!',
         'Imposition Template Settings Title': 'Imposition parameters',
         'Circles': 'Circles',
@@ -85,6 +86,8 @@ LANG['en_US'] = {
         'minutes': 'min',
         'seconds': 'sec',
         'Importing marks': 'Importing marks...',
+        'No access to marks file question': 'Cannot access marks file:\n%filePath%\nTemporarily replace it?',
+        'No access to marks file title': 'Replace marks file',
         'Generating marks': 'Generating marks...',
         'Preparing document': 'Preparing document',
         'Prepare circular cut': 'Preparing imposition D=%Diameter%mm',
@@ -101,6 +104,7 @@ LANG['en_US'] = {
         'copy': '(copy)',
         'Save': 'Save',
         'Remove': 'Remove',
+        'Close': 'Close',
         'Cutter name label': 'Cutter name',
         'Cutter label tip': 'Short alias for contour file name (max 6 chars)',
         'Document settings': 'Document settings',
@@ -214,8 +218,9 @@ LANG['en_US'] = {
         'Error - Unknown mark direction': 'Error creating marks for cutting - unknown direction for mark #',
         'Error - Unknown mark shape': 'Error creating marks for cutting - unknown shape for mark #%index%: %markShape%',
         'Error - cant create file': 'Cannot create file in path ',
-        'Error - Illustrator cannot convert': 'Illustrator can\'t convert contours file to %format%\n%error%',
-        'Error - Cannot export file': 'Can\'t export file %filename%. Maybe file is already opened or output folder doesn\'t accessible',
+        'Error - Illustrator cannot convert': 'Adobe Illustrator can\'t convert contours file to %format%\n%error%',
+        'Error - Illustrator not installed': 'Adobe Illustrator doesn\'t installed',
+        'Error - Cannot export file': 'Can\'t export file %filename%.\nMaybe file is already opened or output folder doesn\'t accessible',
     }
 };
 

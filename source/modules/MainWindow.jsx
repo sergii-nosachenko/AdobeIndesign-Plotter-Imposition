@@ -15,7 +15,7 @@ function DialogWindow() {
 		preset: false
 	}
 
-	var myPDFExportPresets = new Array;
+	var myPDFExportPresets = [];
     //Get the names of the documents
     for (var myCounter = 0; myCounter < app.pdfExportPresets.length; myCounter++){
         myPDFExportPresets.push(app.pdfExportPresets.item(myCounter).name);
@@ -117,11 +117,11 @@ function DialogWindow() {
 	var ImposingMethod = ImposingMethodGroup.add("dropdownlist", undefined, undefined, {name: "ImposingMethod", items: ImposingMethod_array}); 
 		ImposingMethod.selection = 0;
 		ImposingMethod.onChange = function() {
-			myImposingMethod = ImposingMethod.selection.index;
+			MY_DOC_SETTINGS.ImposingMethod = ImposingMethod.selection.index;
 			ImposingCustom.text = translate('Imposing Method 3 Text');
-			myImposing = "";					
-			myFileName = "";			
-			switch (myImposingMethod) {
+			MY_DOC_SETTINGS.customItemsCount = "";					
+			MY_DOC_SETTINGS.customFileName = "";			
+			switch (MY_DOC_SETTINGS.ImposingMethod) {
 				case 0:
 					isOk.Imposing = true;
 					MultipageFileSave.enabled = true;
@@ -145,7 +145,7 @@ function DialogWindow() {
 					FileName.text = translate('File Name Text Full');
 					isOk.filename = false;			
 					ImposingCustomGroup.show();	
-					ImposingCustomLabel.text = "- / " + (totalPages ? totalPages : '-') + ' (!)';
+					ImposingCustomLabel.text = "- / " + (MY_DOC_SETTINGS.totalPages ? MY_DOC_SETTINGS.totalPages : '-') + ' (!)';
 					break;
 			}
 			totalFieldsCheckMain();
@@ -153,9 +153,9 @@ function DialogWindow() {
 		
 	var MultipageFileSave = ImposingMethodGroup.add("checkbox", undefined, undefined, {name: "MultipageFileSave"}); 
 		MultipageFileSave.text = translate('Multipage File Save');
-		MultipageFileSave.value = SaveMultipageFilesAsOneFile; 
+		MultipageFileSave.value = MY_DOC_SETTINGS.SaveMultipageFilesAsOneFile; 
 		MultipageFileSave.onClick = function() {
-			SaveMultipageFilesAsOneFile = MultipageFileSave.value;
+			MY_DOC_SETTINGS.SaveMultipageFilesAsOneFile = MultipageFileSave.value;
 		};		
 
 	// IMPOSINGCUSTOMGROUP
@@ -177,13 +177,13 @@ function DialogWindow() {
 		ImposingCustom.onActivate = function() {
 			if (ImposingCustom.text == translate('Imposing Method 3 Text')) {
 				ImposingCustom.text = "";
-				myImposing = "";
+				MY_DOC_SETTINGS.customItemsCount = "";
 			}
 		};		
 		ImposingCustom.onDeactivate = function() {
 			if (ImposingCustom.text == "") {
 				ImposingCustom.text = translate('Imposing Method 3 Text'); 
-				myImposing = "";
+				MY_DOC_SETTINGS.customItemsCount = "";
 			}
 		};		
 		ImposingCustom.onChanging = checkValidImposingCustom;
@@ -253,7 +253,7 @@ function DialogWindow() {
 		FileName.onChange = checkValidFileName;
 		FileName.onActivate = function() {
 			if (FileName.text == translate('File Name Text Only Prefix') || FileName.text == translate('File Name Text Full')) {
-				myFileName = "";
+				MY_DOC_SETTINGS.customFileName = "";
 				FileName.text = "";
 			}
 		};		
@@ -264,7 +264,7 @@ function DialogWindow() {
 				} else {
 					FileName.text = translate('File Name Text Full');						
 				};
-				myFileName = "";
+				MY_DOC_SETTINGS.customFileName = "";
 			};
 		};		
 
@@ -305,20 +305,16 @@ function DialogWindow() {
 		ImpositionMethod.text = translate('Imposition Not Defined');
 		ImpositionMethod.alignment = ["left","center"];
 		isOk.document = false;
-		myDocument = false;
-		myLayer = false;	
 
 	var CreateImposBtn = DocGroup2.add("button", undefined, undefined, {name: "CreateImposBtn"}); 
 		CreateImposBtn.enabled = true;
 		CreateImposBtn.text = "⚙";
 		CreateImposBtn.preferredSize.width = 50;
 		CreateImposBtn.onClick = function() {
-			var res = NewImposSettingsWindow();
-			if (res && (myCustomDoc.IsGetSizeFromFilename || myCustomDoc.title != "")) {
-				ImpositionMethod.text = myCustomDoc.title;
-				isOk.document = true;
-				myDocument = false;
-				myLayer = false;				
+			const res = NewImposSettingsWindow();
+			if (res && (MY_DOC_SETTINGS.IsGetSizeFromFilename || MY_DOC_SETTINGS.title != "")) {
+				ImpositionMethod.text = MY_DOC_SETTINGS.title;
+				isOk.document = true;		
 			};
 			totalFieldsCheckMain();
 		}
@@ -355,7 +351,7 @@ function DialogWindow() {
 		PresetsList.alignment = ["left","center"];
 		if (myPDFExportPresets.length > 0) {
 			isOk.preset = true;
-			myPDFExportPreset = app.pdfExportPresets.item(0);
+			MY_DOC_SETTINGS.PDFExportPreset = app.pdfExportPresets.item(0);
 		};
 		PresetsList.onChange = presetSelection;		
 
@@ -383,7 +379,7 @@ function DialogWindow() {
 		AppLanguage.alignment = ["left","fill"];
 		AppLanguage.onChange = function() {
 			APP_PREFERENCES.app.lang = Languages_keys[AppLanguage.selection.index];
-			savePreferencesJSON(PREFS_FILE);
+			savePreferencesJSON(PREFS_FILE, APP_PREFERENCES);
 			alert(translate('Language change restart'), translate('Language change title'));
 		}
 
@@ -407,16 +403,14 @@ function DialogWindow() {
 
 	function getFiles() {
 		
-		theFiles = null;
-		okFiles = [];
+		MY_DOC_SETTINGS.okFiles = [];
 		FilesNameList.text = "";
-		totalPages = 0;
+		MY_DOC_SETTINGS.totalPages = 0;
 		AddFolderBtn.enabled = false;
 		isOk.files = false;	
-		steps = 0;		
 		
-		var askIt = translate('Files Dialog Title');
-		theFiles = File.openDialog(askIt, "*.pdf;*.ai;*.tif;*.eps", true);
+		const title = translate('Files Dialog Title');
+		var theFiles = File.openDialog(title, "*.pdf;*.ai;*.tif;*.eps", true);
 
 		if (theFiles != null) {
 			for (var i = 0; i < theFiles.length; i++) {
@@ -426,11 +420,11 @@ function DialogWindow() {
 				if (fileName.indexOf(".tif") == -1 && fileName.indexOf(".eps") == -1) pgCount = getPDFInfo(theFile);
 				if (pgCount > 0) {
 					for (var page = 1; page <= pgCount; page++) {
-						totalPages++;
-						FilesNameList.text += totalPages + ") " + fileName + " (сторінка №" + page + ")";
+						MY_DOC_SETTINGS.totalPages++;
+						FilesNameList.text += MY_DOC_SETTINGS.totalPages + ") " + fileName + " (" + translate('Page #', {page: page}) + ")";
 						if (page != pgCount) FilesNameList.text += "\n";	
 					}
-					okFiles.push({theFile: theFile, pgCount: pgCount});
+					MY_DOC_SETTINGS.okFiles.push({theFile: theFile, pgCount: pgCount});
 					if (i != theFiles.length - 1) FilesNameList.text += "\n";
 				}
 			}
@@ -445,7 +439,7 @@ function DialogWindow() {
 	function checkValidImposingCustom() {
 		if (ImposingCustom.text == translate('Imposing Method 3 Text')) {
 			isOk.Imposing = true;
-			myImposing = "";
+			MY_DOC_SETTINGS.customItemsCount = "";
 		} else {
 			isOk.Imposing = isValidImposingCustom(ImposingCustom.text);
 			if (isOk.Imposing) {
@@ -457,14 +451,14 @@ function DialogWindow() {
 						countCustomPages++;
 					}
 				}
-				if (countCustomPages != totalPages) {
-					ImposingCustomLabel.text = countCustomPages + " / " + (totalPages ? totalPages : '-') + ' (!)';
+				if (countCustomPages != MY_DOC_SETTINGS.totalPages) {
+					ImposingCustomLabel.text = countCustomPages + " / " + (MY_DOC_SETTINGS.totalPages ? MY_DOC_SETTINGS.totalPages : '-') + ' (!)';
 				} else {
-					ImposingCustomLabel.text = countCustomPages + " / " + totalPages;
-					myImposing = ImposingCustom.text;
+					ImposingCustomLabel.text = countCustomPages + " / " + MY_DOC_SETTINGS.totalPages;
+					MY_DOC_SETTINGS.customItemsCount = ImposingCustom.text;
 				}
 			} else {
-				ImposingCustomLabel.text = "- / " + (totalPages ? totalPages : '-')  + ' (!)';
+				ImposingCustomLabel.text = "- / " + (MY_DOC_SETTINGS.totalPages ? MY_DOC_SETTINGS.totalPages : '-')  + ' (!)';
 			}
 		}
 		totalFieldsCheckMain();	
@@ -477,15 +471,15 @@ function DialogWindow() {
 	
 	function getFolder() {
 		
-		var folder = new Folder(okFiles[0].theFile.path);
+		var folder = new Folder(MY_DOC_SETTINGS.okFiles[0].theFile.path);
 		
-		outputFolder = folder.selectDlg(translate('Folder Dialog Title'));
+		MY_DOC_SETTINGS.outputFolder = folder.selectDlg(translate('Folder Dialog Title'));
 		
 		FolderName.text = ""; 
 		isOk.folder = false;		
 		
-		if (outputFolder != null && outputFolder.exists) {
-			FolderName.text = Folder.decode(outputFolder.fullName); 
+		if (MY_DOC_SETTINGS.outputFolder != null && MY_DOC_SETTINGS.outputFolder.exists) {
+			FolderName.text = Folder.decode(MY_DOC_SETTINGS.outputFolder.fullName); 
 			isOk.folder = true;
 		}
 		
@@ -496,17 +490,17 @@ function DialogWindow() {
 		if (ImposingMethod.selection.index == 0) {
 			isOk.filename = isValidFileName(FileName.text);
 			if (FileName.text == translate('File Name Text Only Prefix') || FileName.text == translate('File Name Text Full')) {
-				myFileName = "";
+				MY_DOC_SETTINGS.customFileName = "";
 			} else if (isOk.filename) {
-				myFileName = FileName.text;
+				MY_DOC_SETTINGS.customFileName = FileName.text;
 			} else if (!isOk.filename) alert(translate('File Name Bad Alert'));	
 		} else {
 			if (FileName.text == "" || FileName.text == translate('File Name Text Full')) {
 				isOk.filename = false;
-				myFileName = "";				
+				MY_DOC_SETTINGS.customFileName = "";				
 			} else {
 				isOk.filename = isValidFileName(FileName.text);
-				if (isOk.filename) myFileName = FileName.text;
+				if (isOk.filename) MY_DOC_SETTINGS.customFileName = FileName.text;
 				if (!isOk.filename) alert(translate('File Name Bad Alert'));
 			}
 		}
@@ -520,7 +514,7 @@ function DialogWindow() {
 	
 	function presetSelection() {
 		for (i = 0; i < PresetsList.items.length; i++) {
-			if (PresetsList.items[i].selected) myPDFExportPreset = app.pdfExportPresets.item(i);
+			if (PresetsList.items[i].selected) MY_DOC_SETTINGS.PDFExportPreset = app.pdfExportPresets.item(i);
 		}
 		totalFieldsCheckMain();
 	}	

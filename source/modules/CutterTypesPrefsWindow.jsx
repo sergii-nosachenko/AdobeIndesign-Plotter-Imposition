@@ -63,7 +63,7 @@ function CytterTypePrefsDialog(selectedIndex) {
     // CUTTERTYPETOPGROUP
     // ==================
     var CutterTypeTopGroup = CytterTypePrefsWindow.add("group", undefined, {name: "CutterTypeTopGroup"}); 
-        CutterTypeTopGroup.orientation = "row"; 
+        CutterTypeTopGroup.orientation = "column"; 
         CutterTypeTopGroup.alignChildren = ["left","center"]; 
         CutterTypeTopGroup.spacing = 10; 
         CutterTypeTopGroup.margins = 0; 
@@ -71,25 +71,40 @@ function CytterTypePrefsDialog(selectedIndex) {
     var CutterTypeList_array = CutterType_array; 
     var CutterTypeList = CutterTypeTopGroup.add("dropdownlist", undefined, undefined, {name: "CutterTypeList", items: CutterTypeList_array}); 
         CutterTypeList.selection = 0; 
-        CutterTypeList.preferredSize.width = 220; 
+        CutterTypeList.preferredSize.width = 300; 
         CutterTypeList.alignment = ["left","fill"]; 
         CutterTypeList.selection = CutterTypeList_array.length > selectedIndex + 1 ? selectedIndex + 1 : 0;
         CutterTypeList.addEventListener('change', CutterTypeListSelected);
 
-    var CopyNewBtn = CutterTypeTopGroup.add("button", undefined, undefined, {name: "CopyNewBtn"}); 
+    var CutterTypeBtnsGroup = CutterTypeTopGroup.add("group", undefined, {name: "CutterTypeBtnsGroup"}); 
+        CutterTypeBtnsGroup.orientation = "row"; 
+        CutterTypeBtnsGroup.alignChildren = ["left","center"]; 
+        CutterTypeBtnsGroup.spacing = 10; 
+        CutterTypeBtnsGroup.margins = 0; 
+        CutterTypeBtnsGroup.alignment = ["fill","fill"]; 
+
+    var CopyNewBtn = CutterTypeBtnsGroup.add("button", undefined, undefined, {name: "CopyNewBtn"}); 
         CopyNewBtn.enabled = false;
         CopyNewBtn.text = translate('Duplicate');
         CopyNewBtn.onClick = CopyNewPlotter; 
 
-    var SaveCurrentBtn = CutterTypeTopGroup.add("button", undefined, undefined, {name: "SaveCurrentBtn"}); 
+    var SaveCurrentBtn = CutterTypeBtnsGroup.add("button", undefined, undefined, {name: "SaveCurrentBtn"}); 
         SaveCurrentBtn.enabled = false;
         SaveCurrentBtn.text = translate('Save'); 
         SaveCurrentBtn.onClick = savePlotter;
 
-    var RemoveCurrentBtn = CutterTypeTopGroup.add("button", undefined, undefined, {name: "RemoveCurrentBtn"}); 
+    var RemoveCurrentBtn = CutterTypeBtnsGroup.add("button", undefined, undefined, {name: "RemoveCurrentBtn"}); 
         RemoveCurrentBtn.enabled = false;
         RemoveCurrentBtn.text = translate('Remove'); 
         RemoveCurrentBtn.onClick = removePlotter; 
+
+    var CloseBtn = CutterTypeBtnsGroup.add("button", undefined, undefined, {name: "CloseBtn"}); 
+        CloseBtn.enabled = true;
+        CloseBtn.text = translate('Close');
+        CloseBtn.alignment = ["right","fill"];
+        CloseBtn.onClick = function() {
+            CytterTypePrefsWindow.close();
+        }; 
 
     // CYTTERTYPEPREFSWINDOW
     // =====================
@@ -816,8 +831,8 @@ function CytterTypePrefsDialog(selectedIndex) {
 
 	function getFile() {	
 		
-		var askIt = translate('Get marks file title');
-		var theFile = File.openDialog(askIt, "*.pdf", false);
+		const title = translate('Get marks file title');
+		var theFile = File.openDialog(title, "*.pdf", false);
 
 		if (theFile != null) {
             const fsName = File.decode(theFile.fsName);				
@@ -868,7 +883,7 @@ function CytterTypePrefsDialog(selectedIndex) {
         CutterTypeList.active = true;
         CutterTypeListSelected();
         CutterTypeList.addEventListener('change', CutterTypeListSelected);
-        savePreferencesJSON(PREFS_FILE);
+        savePreferencesJSON(PREFS_FILE, APP_PREFERENCES);
     }
 
     function removePlotter() {
@@ -889,7 +904,7 @@ function CytterTypePrefsDialog(selectedIndex) {
             isChanged = false;
             CutterTypeListSelected();
             CutterTypeList.addEventListener('change', CutterTypeListSelected);
-            savePreferencesJSON(PREFS_FILE);         
+            savePreferencesJSON(PREFS_FILE, APP_PREFERENCES);         
         }
     }
 
@@ -910,8 +925,6 @@ function CytterTypePrefsDialog(selectedIndex) {
         selectedCutter.marginRight = +RightValue.text;
         selectedCutter.marginBottom = +BottomValue.text;
         selectedCutter.marginLeft = +LeftValue.text;
-        if (selectedCutter.widthSheet <= selectedCutter.heightSheet) selectedCutter.pageOrientation = PageOrientation.PORTRAIT.valueOf();
-        if (selectedCutter.widthSheet > selectedCutter.heightSheet) selectedCutter.pageOrientation = PageOrientation.LANDSCAPE.valueOf();
         selectedCutter.widthFrame = selectedCutter.widthSheet - (selectedCutter.marginLeft + selectedCutter.marginRight);
         selectedCutter.heightFrame = selectedCutter.heightSheet - (selectedCutter.marginTop + selectedCutter.marginBottom);
         selectedCutter.minSpaceBetween = +SBminValue.text;
@@ -930,11 +943,12 @@ function CytterTypePrefsDialog(selectedIndex) {
         CutterTypeList.items[lastSelected].text = CutterNameText.text;
         isChanged = false;
         needSave();
-        savePreferencesJSON(PREFS_FILE);
+        savePreferencesJSON(PREFS_FILE, APP_PREFERENCES);
         if (callback) {
             callback();
         } else {
             CutterTypeListSelected();
+            CloseBtn.active = true;
         }
     }
 

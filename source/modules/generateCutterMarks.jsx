@@ -1,43 +1,41 @@
 /**
 	Генерація міток порізки, якщо така опція прописана в налаштуваннях плоттера.
-	@param {Object} myDocument Поточний документ Adobe InDesign
-	@param {Object} myCurrentDoc Параметри та налаштування розкладки, які необхідно опрацювати
-	@param {string} MarksLayer Назва шару для розміщення міток
+	@param {Object class Document} myDocument Поточний документ Adobe InDesign
+	@param {Object} myCurrentDocSettings Параметри та налаштування розкладки, які необхідно опрацювати
+	@param {Object class Layer} MarksLayer Шар для розміщення міток
 	@param {string} docType Тип документа
 */
-function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
+function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docType) {
 
-    if (!myCurrentDoc.CutterType.marksProperties) return;
+    if (!myCurrentDocSettings.CutterType.marksProperties) return;
 
     var marksCoordinates = [];
 
     var contoursBounds;
 
-	var pages = myDocument.pages.everyItem().getElements();
+	const pages = myDocument.pages.everyItem().getElements();
+    const firstPage = myDocument.pages.firstItem();
 
-    var firstPage = myDocument.pages.firstItem();
-
-    var anchorPoint = app.changeObjectPreferences.anchorPoint;
-    
+    var anchorPoint = app.changeObjectPreferences.anchorPoint;    
     app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
     
-    if (myCurrentDoc.CutterType.workspaceShrink && myCurrentDoc.CutterType.workspaceShrink === true) {
-        contoursBounds = myCurrentDoc.Params.contoursBounds;
+    if (myCurrentDocSettings.CutterType.workspaceShrink && myCurrentDocSettings.CutterType.workspaceShrink === true) {
+        contoursBounds = myCurrentDocSettings.Params.contoursBounds;
     } else {
         contoursBounds = [
-            firstPage.bounds[0] + myCurrentDoc.CutterType.marginTop,
-            firstPage.bounds[1] + myCurrentDoc.CutterType.marginLeft,
-            firstPage.bounds[2] - myCurrentDoc.CutterType.marginBottom,
-            firstPage.bounds[3] - myCurrentDoc.CutterType.marginRight
+            firstPage.bounds[0] + myCurrentDocSettings.CutterType.marginTop,
+            firstPage.bounds[1] + myCurrentDocSettings.CutterType.marginLeft,
+            firstPage.bounds[2] - myCurrentDocSettings.CutterType.marginBottom,
+            firstPage.bounds[3] - myCurrentDocSettings.CutterType.marginRight
         ];
     };
 
     const ItemContourSize = function() {
-        switch (myCustomDoc.Figure) {
+        switch (MY_DOC_SETTINGS.Figure) {
             case translate('Circles'):
-                return 'D=' + myCustomDoc.Diameter;
+                return 'D=' + MY_DOC_SETTINGS.Diameter;
             case translate('Rectangles'):
-                return myCustomDoc.RectWidth + 'x' + myCustomDoc.RectHeight + (myCurrentDoc.IsRoundedCorners ? ' R=' + myCurrentDoc.RoundedCornersValue : '');
+                return MY_DOC_SETTINGS.RectWidth + 'x' + MY_DOC_SETTINGS.RectHeight + (myCurrentDocSettings.IsRoundedCorners ? ' R=' + myCurrentDocSettings.RoundedCornersValue : '');
             default:
                 return '';
         }
@@ -68,15 +66,15 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
         'DocumentFolder': Folder.decode(outputFolder),
         'CurrentPage': 0,
         'TotalPages': myDocument.pages.count(),
-        'PlotterName': myCurrentDoc.CutterType.text,
-        'PlotterAlias': myCurrentDoc.CutterType.label,
+        'PlotterName': myCurrentDocSettings.CutterType.text,
+        'PlotterAlias': myCurrentDocSettings.CutterType.label,
         'ItemContourSize': ItemContourSize(),
-        'CutLength': myCurrentDoc.Params.cutLength,
-        'ContourGap': myCurrentDoc.SpaceBetween,
-        'ItemsPerPage': myCurrentDoc.Params.total,
-        'ItemsPerDocument': myCurrentDoc.Params.total * myDocument.pages.count(),
-        'SheetSize': myCurrentDoc.CutterType.widthSheet + 'x' + myCurrentDoc.CutterType.heightSheet,
-        'PaperName': myCurrentDoc.CutterType.paperName,
+        'CutLength': myCurrentDocSettings.Params.cutLength,
+        'ContourGap': myCurrentDocSettings.SpaceBetween,
+        'ItemsPerPage': myCurrentDocSettings.Params.total,
+        'ItemsPerDocument': myCurrentDocSettings.Params.total * myDocument.pages.count(),
+        'SheetSize': myCurrentDocSettings.CutterType.widthSheet + 'x' + myCurrentDocSettings.CutterType.heightSheet,
+        'PaperName': myCurrentDocSettings.CutterType.paperName,
         'CurrentTime': CurrentTime(),
         'CurrentDate': CurrentDate(),
         'UserName': app.userName || ''
@@ -86,7 +84,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
 
         // Вираховуємо координати всіх міток
 
-        for (var i = 0, props = myCurrentDoc.CutterType.marksProperties; i < props.length; i++) {
+        for (var i = 0, props = myCurrentDocSettings.CutterType.marksProperties; i < props.length; i++) {
 
             var side = props[i].position.split("-")[0] || null;
             var alignment = props[i].position.split("-")[1] || null;
@@ -236,7 +234,7 @@ function generateCutterMarks(myDocument, myCurrentDoc, MarksLayer, docType) {
 
         // Розміщуємо мітки на листі
 
-        for (var i = 0, props = myCurrentDoc.CutterType.marksProperties; i < props.length; i++) {
+        for (var i = 0, props = myCurrentDocSettings.CutterType.marksProperties; i < props.length; i++) {
 
             // Фільтруємо мітки, які не мають бути відображені на певних документах
             if (docType && props[i].appearance) {

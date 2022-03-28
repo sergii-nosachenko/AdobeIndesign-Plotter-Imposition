@@ -28,9 +28,9 @@ To quickly find the right folder:
 4. In the context menu, select `Reveal in Explorer`
 5. Explorer window will open, where you need to navigate to the folder `Scripts Panel` and paste script inside
 
-## General settings
+## Instructions
 
-*In the process of writing*
+[Open](tutorial/tutorial.md)
 
 ## Compile the package into JSBIN format
 

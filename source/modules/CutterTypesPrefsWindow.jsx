@@ -940,9 +940,20 @@ function CytterTypePrefsDialog(selectedIndex) {
     function savePlotter(callback) {
         var index = lastSelected - 1;
         var selectedCutter;
+        for (var i = 0; i < CUTTER_TYPES.length; i++) {
+            if (CUTTER_TYPES[i].text == CutterNameText.text && i != index) {
+                alert(translate('Error - Another cutter same name', {name: CutterNameText.text}));
+                return;
+            }
+        }
         if (index == -1) {
             CUTTER_TYPES.push({});
             index = CUTTER_TYPES.length - 1;
+            lastSelected = CUTTER_TYPES.length;
+            CutterTypeList.add('item', CutterNameText.text);
+            callback = function() {
+                CutterTypeList.selection = index + 1;
+            };
         };
         selectedCutter = CUTTER_TYPES[index];
         selectedCutter.text = CutterNameText.text;
@@ -974,11 +985,11 @@ function CytterTypePrefsDialog(selectedIndex) {
         isChanged = false;
         needSave();
         savePreferencesJSON(PREFS_FILE, APP_PREFERENCES);
+        CloseBtn.active = true;
         if (callback) {
             callback();
         } else {
             CutterTypeListSelected();
-            CloseBtn.active = true;
         }
     }
 

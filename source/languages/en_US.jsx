@@ -223,6 +223,7 @@ LANG['en_US'] = {
         'Error - Illustrator cannot convert': 'Adobe Illustrator can\'t convert contours file to %format%\n%error%',
         'Error - Illustrator not installed': 'Adobe Illustrator doesn\'t installed',
         'Error - Cannot export file': 'Can\'t export file %filename%.\nMaybe file is already opened or output folder doesn\'t accessible',
+        'Error - Another cutter same name': 'Can\'t save. You hane another cutter with same name "%name%".',
     }
 };
 

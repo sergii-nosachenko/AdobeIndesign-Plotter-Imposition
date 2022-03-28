@@ -223,5 +223,6 @@ LANG['uk_UA'] = {
         'Error - Illustrator cannot convert': 'Adobe Illustrator не вдалося конвертувати файл з порізкою у формат %format%\n%error%',
         'Error - Illustrator not installed': 'Adobe Illustrator не інстальовано',
         'Error - Cannot export file': 'Не вдалося експортувати файл %filename%.\nМожливо, файл відкрито іншою програмою або вихідна тека недоступна',
+        'Error - Another cutter same name': 'Неможливо зберегти. Існує інший плотер з таким же ім\'ям "%name%".',
     }
 };

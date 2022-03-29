@@ -19,6 +19,15 @@
   - [Mixed shape settings](#mixed-shape-settings)
 - [Cutters preferences editor](#cutters-preferences-editor)
 - [Edit custom mark](#edit-custom-mark)
+- [Working with the script](#working-with-the-script)
+  - [Adding a new plotter](#adding-a-new-plotter)
+  - [Imposition examples](#imposition-examples)
+    - [1. Classic imposition](#1-classic-imposition)
+    - [2. Imposition of multipage files saving each page separately](#2-imposition-of-multipage-files-saving-each-page-separately)
+    - [3. Impose all layouts evenly on 1+ pages](#3-impose-all-layouts-evenly-on-1-pages)
+    - [4. Automatic imposition of shapes of the same type with parameters extracted from file names](#4-automatic-imposition-of-shapes-of-the-same-type-with-parameters-extracted-from-file-names)
+    - [5. Imposition multiple layouts with setting the number of copies of each page](#5-imposition-multiple-layouts-with-setting-the-number-of-copies-of-each-page)
+    - [6. Automatic imposition of shapes of different types with parameters extraced from file names](#6-automatic-imposition-of-shapes-of-different-types-with-parameters-extraced-from-file-names)
 
 ## First run
 
@@ -255,7 +264,7 @@ If the checkbox is inactive (by default), the bleeds value will be equal a half 
 
 This section allows you to select one of the possible layout schemes.
     
-**(10)** This list contains available imposition shemes if all the layout settings are correct. If the checkbox `Take parameters from file names` is checked, this list is not generated and the layout scheme will be selected by the script automatically with maximum number of items per page.
+**(10)** This list contains available imposition schemes if all the layout settings are correct. If the checkbox `Take parameters from file names` is checked, this list is not generated and the layout scheme will be selected by the script automatically with maximum number of items per page.
 
 ---
 
@@ -547,3 +556,168 @@ Specifies additional parameters for the text frame (only for the `Text` marks).
 **(29)** `Save` button - saves the mark in the plotter settings.
 
 [↸ Section start](#edit-custom-mark) | [↑ Contents](#contents)
+
+## Working with the script
+
+### Adding a new plotter
+
+To create and configure a new plotter, you need to:
+- run the script;
+- press the 'Plotter and imposition settings' button (10) in the [**Main window**](#main-window);
+- press the 'Configure plotter settings' button (6) in the window [**Imposition parameters**](#imposition-parameters);
+- [Cutters preferences editor](#cutters-preferences-editor) will open.
+
+If you don't have any plotters configures, you will start with the creation of a new profile.
+
+If you already have plotter profiles created, you need to select `Add new` item in the list of available plotters (1).
+
+For example, we will create a profile for the plotter model SummaCut D60R, operating SRA3 sheet format.
+
+![Plotter setup example](images/plotter-setup-example.png?raw=true)
+
+I did not specify an external marks file because I set all the marks parameters manually. But you can use [pre-prepared file](examples/marks/SummaCutD60R_SRA3.pdf) with your plotter's optical marks as well as define custom. The important thing is that the size of the sheet and its margins must match the settings of the selected plotter.
+
+You can use a file with saved settings [preferences.json](examples/preferences.json) as a sample. Copy it to the folder where the script is located. If you already have the `preferences.json` file without any settings there, just replace it.
+
+If all the necessary settings are made, you need to save the created plotter. It is now available for selection for the current imposition and those in the future. You can add more, edit, duplicate and delete existing plotters as needed.
+
+After you [create a new plotter](#adding-a-new-plotter), close the editor window.
+
+The "SummaCutD60R (SRA3)" profile is now available for selection in the window [**Imposition parameters**](#imposition-parameters) drop-down list (5).
+
+[⇤ Article start](#adding-a-new-plotter) | [↸ Section start](#working-with-the-script) | [↑ Contents](#contents)
+
+### Imposition examples
+
+---
+
+#### **1. Classic imposition**
+
+  The following file has been prepared in the `examples\inputs` folder:
+
+  [1. circles_A_1 page.tif](examples/inputs/1.%20circles_A_1%20page.tif)
+
+  Let's prepare imposition of circles with a diameter of 50 mm for the plotter "SummaCutD60R (SRA3)":
+
+  - run the script;
+  - press the `Select` button (1) in the [**Main window**](#main-window) and select the file `1. circles_A_1 page.tif`;
+  - now specify the output folder to save the results by clicking corresponding `Select` button (6);
+  - add a prefix to the file name, for example "#12345" (let's say it's the current order number);
+  - configure the `Imposition parameters` by pressing the button (10);
+    ![Example 1](images/1-example-settings.png?raw=true)
+  - in the list of available layout schemes you need to choose the most optimal option for this order in quantity and placing. How to understand the displayed format of schemes? Look at the last option in the list:
+
+    41 @ 370x300 >> 3 ∷ 7⊙ + 2 × 7⊙ ∴ 1 × 6⊙
+  
+    41 - items count per sheet
+
+    370x300 - the size of the work area for which the imposition is calculated
+
+    3 ∷ 7⊙ - 3 rows of 7 circles in form of table (∷)
+
+    2 × 7⊙ ∴ 1 × 6⊙ - 2 large rows of 7 circles and 1 small row of 6 circles in the form of honeycombs (∴)
+
+    ![Example 2](images/1-example-variant.png?raw=true)
+  - select the variant with 41 items on the sheet, then you need to either click `Save` or double-click on the selected option;
+  - select settings for PDF export (11);
+    ![Example 3](images/1-example-main-window.png?raw=true)
+  - start the imposition process by pressing `Impose` button (14).
+
+  See [imposition result](examples/outputs/1/).
+
+[⇤ Article start](#imposition-examples) | [↸ Section start](#working-with-the-script) | [↑ Contents](#contents)
+
+---
+
+#### **2. Imposition of multipage files saving each page separately**
+
+  The following file has been prepared in the `examples\inputs` folder:
+
+  [2. circles_A,B,C,D_4 pages.pdf](examples/inputs/2.%20circles_A%2CB%2CC%2CD_4%20pages.pdf)
+
+  - Let's start with preparing imposition of circles with a diameter of 70 mm for the plotter "SummaCutD60R (SRA3)" similar to [previous parameters](#1-classic-imposition);
+  - choose a imposition variant with the amount of 20 pcs/sheet;
+  - but this time we will uncheck the `Leave multipage files as is` checkbox in the [**Main window**](#main-window) so the script will create separate files for each page;
+
+  See [imposition result](examples/outputs/2/).
+
+[⇤ Article start](#imposition-examples) | [↸ Section start](#working-with-the-script) | [↑ Contents](#contents)
+
+---
+
+#### **3. Impose all layouts evenly on 1+ pages**
+
+  The following files have been prepared in the `examples\inputs` folder:
+
+  [3. circles_A,B_2 pages.pdf](examples/inputs/3.%20circles_A%2CB_2%20pages.pdf)
+
+  [3. circles_C_1 page.pdf](examples/inputs/3.%20circles_C_1%20page.pdf)
+
+  [3. circles_D_1 page.pdf](examples/inputs/3.%20circles_D_1%20page.pdf)
+
+  - Let's start with preparing imposition of circles with a diameter of 35 mm for the plotter "SummaCutD60R (SRA3)";
+  - choose the imposition variant with the amount of 86 pcs/sheet;
+  - in the [**Main window**](#main-window) change the imposition method to `Compose all same sizes on 1+ sheets` in order to evenly fit all 4 pages on one layout;
+  - `File name format` must be specified. Give the final file a new name, eg. '#12345_Circles_A,B,C,D_combined'.
+
+  See [imposition result](examples/outputs/3/).
+
+[⇤ Article start](#imposition-examples) | [↸ Section start](#working-with-the-script) | [↑ Contents](#contents)
+
+---
+
+#### **4. Automatic imposition of shapes of the same type with parameters extracted from file names**
+
+  The following files have been prepared in the `examples\inputs` folder:
+
+  [4. circles_A,B_2 pages [D=80].pdf](examples/inputs/4.%20circles_A,B_2%20pages%20%5BD=80%5D.pdf)
+
+  [4. circles_C_1 page [D=60 (4)].pdf](examples/inputs/4.%20circles_C_1%20page%20%5BD=60%20(4)%5D.pdf)
+
+  - Let's start with preparing imposition of circles for the plotter "SummaCutD60R (SRA3)", but this time we will check the checkbox `Take parameters from file names`;
+  - imposition variants will not be displayed, but the `Save` button will be active, so you can complete setting parameters;
+  - the rest of the settings in the [**Main window**](#main-window) are the same as in [example 1](#1-classic-imposition).
+
+  See [imposition result](examples/outputs/4/).
+
+[⇤ Article start](#imposition-examples) | [↸ Section start](#working-with-the-script) | [↑ Contents](#contents)
+
+---
+
+#### **5. Imposition multiple layouts with setting the number of copies of each page**
+
+  The following file has been prepared in the `examples\inputs` folder:
+
+  [5. rectangles_A,B,C,D_4 pages.ai](examples/inputs/5.%20rectangles_A%2CB%2CC%2CD_4%20pages.ai)
+
+  - Let's start with preparing imposition of rectangles 80x45 mm for the plotter "SummaCutD60R (SRA3)";
+  - leave the rectangles settings with no fillet value;
+  - this time we will change a gap between contours to 0 mm;
+  - choose the first variant of 24 pcs/sheet;
+  - in the [**Main window**](#main-window) change the imposition method to `Manual by copies` and enter the following text in field: `2x20,8,10+`;
+  - `File name format` must be specified. Give the final file a new name '#12345_%names%' adding the %names% placeholder (it will be replaced with the original filename(s) on the layout).
+
+  View [imposition result](examples/outputs/5/).
+
+[⇤ Article start](#imposition-examples) | [↸ Section start](#working-with-the-script) | [↑ Contents](#contents)
+
+---
+
+#### **6. Automatic imposition of shapes of different types with parameters extraced from file names**
+
+  The following files have been prepared in the `examples \ inputs` folder:
+
+  [6. circles_C_1 page [D=60].pdf](examples/inputs/6.%20circles_C_1%20page%20%5BD%3D60%5D.pdf)
+
+  [6. rectangles_A,B,C_3 pages [100x50 R=5 (2)].pdf](examples/inputs/6.%20rectangles_A%2CB%2CC_3%20pages%20%5B100x50%20R%3D5%5D%20(2).pdf)
+
+  [6. rectangles_D_1 page [90x60 (0)].pdf](examples/inputs/6.%20rectangles_D_1%20page%20%5B90x60%20(0)%5D.pdf)
+
+  - Let's start with preparing imposition of mixed shapes for the plotter "SummaCutD60R (SRA3)";
+  - set the gap between the contours to 5 mm;
+  - imposition variants will not be displayed, but the `Save` button will be active, so you can complete setting parameters;
+  - the rest of the settings in the [**Main window**](#main-window) are the same as in [example 1](#1-classic-imposition).
+
+  See [imposition result](examples/outputs/6/).
+
+[⇤ Article start](#imposition-examples) | [↸ Section start](#working-with-the-script) | [↑ Contents](#contents)

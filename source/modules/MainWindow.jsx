@@ -348,12 +348,20 @@ function DialogWindow() {
 	var PresetLabel = PresetGroup2.add("statictext", undefined, undefined, {name: "PresetLabel"}); 
 		PresetLabel.text = translate('PDF Preset Label');
 
-	var PresetsList = PresetGroup2.add("dropdownlist", undefined, undefined, {name: "PresetsList", items: myPDFExportPresets}); 
+	var PresetsList = PresetGroup2.add("dropdownlist", undefined, undefined, {name: "PresetsList", items: myPDFExportPresets});
 		PresetsList.selection = 0; 
 		PresetsList.alignment = ["left","center"];
 		if (myPDFExportPresets.length > 0) {
-			isOk.preset = true;
-			MY_DOC_SETTINGS.PDFExportPreset = app.pdfExportPresets.item(0);
+			if (APP_PREFERENCES.app.PDFExportPreset) {
+				for (i = 0; i < myPDFExportPresets.length; i++) {
+					if (myPDFExportPresets[i] == APP_PREFERENCES.app.PDFExportPreset) {
+						PresetsList.selection = i;
+						break;
+					}
+				};
+			};
+			MY_DOC_SETTINGS.PDFExportPreset = app.pdfExportPresets.item(PresetsList.selection.index);
+			isOk.preset = true;			
 		};
 		PresetsList.onChange = presetSelection;		
 
@@ -518,7 +526,12 @@ function DialogWindow() {
 	
 	function presetSelection() {
 		for (i = 0; i < PresetsList.items.length; i++) {
-			if (PresetsList.items[i].selected) MY_DOC_SETTINGS.PDFExportPreset = app.pdfExportPresets.item(i);
+			if (PresetsList.items[i].selected) {
+				MY_DOC_SETTINGS.PDFExportPreset = app.pdfExportPresets.item(i);
+				APP_PREFERENCES.app.PDFExportPreset = MY_DOC_SETTINGS.PDFExportPreset.name;
+				savePreferencesJSON(PREFS_FILE, APP_PREFERENCES);
+				break;
+			}
 		}
 		totalFieldsCheckMain();
 	}	

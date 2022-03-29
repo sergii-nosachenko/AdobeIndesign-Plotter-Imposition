@@ -33,7 +33,7 @@ LANG['en_US'] = {
         'Impose Btn': 'Impose',
         'Files Dialog Title': 'Select one or more PDF, AI or TIF files',
         'Folder Dialog Title': 'Choose folder for export',
-        'Page #': 'page №%page%',
+        'Page #': 'page #%page%',
         'File Name Bad Alert': 'Invalid characters in filename!',
         'Imposition Template Settings Title': 'Imposition parameters',
         'Circles': 'Circles',

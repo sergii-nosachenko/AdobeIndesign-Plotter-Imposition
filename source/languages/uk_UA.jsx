@@ -111,7 +111,7 @@ LANG['uk_UA'] = {
         'Sheet size': 'Розміри:',
         'Sheet width tip': 'Має бути числом від 50 до 5486 мм',
         'Paper name': 'Назва формату',
-        'Paper name tip': 'Наазва формату паперу (опціонально)',
+        'Paper name tip': 'Назва формату паперу (опціонально)',
         'Margins label': 'Поля:',
         'Top label': 'Верхнє',
         'Right label': 'Праве',

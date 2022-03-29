@@ -223,7 +223,7 @@ function PlacePDF(){
 						var sizeMatch = fileName.match(RectanglePattern);
 						var size = sizeMatch ? sizeMatch[1].replace(/,/g, '.').replace('х', 'x') : 0;
 						var fillet = sizeMatch && sizeMatch[3] != undefined ? parseFloat(sizeMatch[1].replace(',', '.')) : 0;
-						var spacebetween = sizeMatch && sizeMatch[5] != undefined ? parseFloat(diameterMatch[5].replace(',', '.')) : MY_DOC_SETTINGS.SpaceBetween;
+						var spacebetween = sizeMatch && sizeMatch[5] != undefined ? parseFloat(sizeMatch[5].replace(',', '.')) : MY_DOC_SETTINGS.SpaceBetween;
 						var key = size ? size+':'+fillet+':'+spacebetween : size;
 						var files = okFilesSizes[key] || [];
 						files.push(MY_DOC_SETTINGS.okFiles[i]);
@@ -248,9 +248,10 @@ function PlacePDF(){
 							var thisSize = okSizes[i].split(':')[0];
 							var thisRadius = parseFloat(okSizes[i].split(':')[1]);
 							var thisSpaceBetween = parseFloat(okSizes[i].split(':')[2]);
-							thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
-							thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;
-							thisSpaceBetween = thisRadius && thisSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
+							if (thisRadius && thisSpaceBetween) {
+								thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
+								thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;								
+							};
 							myCurrentDocSettings.RectWidth = parseFloat(thisSize.split('x')[0]);
 							myCurrentDocSettings.RectHeight = parseFloat(thisSize.split('x')[1]);
 							if (!myCurrentDocSettings.RectWidth || !myCurrentDocSettings.RectHeight) {
@@ -282,8 +283,8 @@ function PlacePDF(){
 								for (var j = 0; j < okFilesCurrent.length; j++) {
 									MY_DOC_SETTINGS.totalPages += okFilesCurrent[j].pgCount;
 								};										
-								CreateCustomDocRectangles(myCurrentDocSettings, thisRadius > 0 ? thisRadius : false, thisRadius > 0 ? thisSpaceBetween : false);
-								ProcessRectangles(okFilesCurrent, totalOkFilesLength, thisRadius > 0 ? thisRadius : false, thisRadius > 0 ? thisSpaceBetween : false);				
+								CreateCustomDocRectangles(myCurrentDocSettings, thisRadius > 0 ? thisRadius : undefined, thisRadius > 0 ? thisSpaceBetween : undefined);
+								ProcessRectangles(okFilesCurrent, totalOkFilesLength, thisRadius > 0 ? thisRadius : undefined, thisRadius > 0 ? thisSpaceBetween : undefined);				
 							} else {
 								// Запам'ятовуємо файли, для яких не вдалося розрахувати розкладку
 								for (var k = 0; k < okFilesSizes[okSizes[i]].length; k++) {
@@ -336,7 +337,7 @@ function PlacePDF(){
 				var sizeMatch = fileName.match(RectanglePattern);
 				var size = sizeMatch ? sizeMatch[1].replace(/,/g, '.').replace('х', 'x') : 0;
 				var fillet = sizeMatch && sizeMatch[3] != undefined ? parseFloat(sizeMatch[3].replace(',', '.')) : 0;
-				var spacebetween = sizeMatch && sizeMatch[5] != undefined ? parseFloat(diameterMatch[5].replace(',', '.')) : MY_DOC_SETTINGS.SpaceBetween;
+				var spacebetween = sizeMatch && sizeMatch[5] != undefined ? parseFloat(sizeMatch[5].replace(',', '.')) : MY_DOC_SETTINGS.SpaceBetween;
 				var key = size ? size+':'+fillet+':'+spacebetween : size;
 				var files = okFilesSizes[key] || [];
 				files.push(badDiameterFiles[i]);
@@ -390,9 +391,10 @@ function PlacePDF(){
 					var thisSize = okSizes[i].split(':')[0];
 					var thisRadius = parseFloat(okSizes[i].split(':')[1]);
 					var thisSpaceBetween = parseFloat(okSizes[i].split(':')[2]);
-					thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
-					thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;
-					thisSpaceBetween = thisRadius && thisSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
+					if (thisRadius && thisSpaceBetween) {
+						thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
+						thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;								
+					};
 					myCurrentDocSettings.RectWidth = parseFloat(thisSize.split('x')[0]);
 					myCurrentDocSettings.RectHeight = parseFloat(thisSize.split('x')[1]);
 					if (!myCurrentDocSettings.RectWidth || !myCurrentDocSettings.RectHeight) {
@@ -452,7 +454,7 @@ function PlacePDF(){
 		} else {
 			app.scriptPreferences.userInteractionLevel = UserInteractionLevels.NEVER_INTERACT;
 			
-			myCurrentDocSettings.SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDocSettings.SpaceBetween;
+			myCurrentDocSettings.SpaceBetween = customSpaceBetween != undefined ? customSpaceBetween : myCurrentDocSettings.SpaceBetween;
 			
 			switch (MY_DOC_SETTINGS.ImposingMethod) {
 				case 0: // Кожен вид на окремий лист
@@ -844,9 +846,9 @@ function PlacePDF(){
 
 	function ProcessRectangles(okFilesCurrent, totalFilesLength, customRoundCornersValue, customSpaceBetween) {
 		
-		myCurrentDocSettings.RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDocSettings.RoundCornersValue;
+		myCurrentDocSettings.RoundCornersValue = customRoundCornersValue != undefined ? customRoundCornersValue : myCurrentDocSettings.RoundCornersValue;
 		myCurrentDocSettings.IsRoundedCorners = customRoundCornersValue ? true : myCurrentDocSettings.IsRoundedCorners;
-		myCurrentDocSettings.SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDocSettings.SpaceBetween;
+		myCurrentDocSettings.SpaceBetween = customSpaceBetween != undefined ? customSpaceBetween : myCurrentDocSettings.SpaceBetween;
 
 		if (!myCurrentDocSettings.Params) {
 			alert(translate('Error - Creating document'));
@@ -1759,7 +1761,7 @@ function CreateCustomDocCircles(myCurrentDocSettings, customSpaceBetween) {
 	
 	const Params = myCurrentDocSettings.Params;
 	
-	myCurrentDocSettings.SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDocSettings.SpaceBetween;
+	myCurrentDocSettings.SpaceBetween = customSpaceBetween != undefined ? customSpaceBetween : myCurrentDocSettings.SpaceBetween;
 	
 	progress(3 + Params.total, translate('Preparing document'));
 	progress.message(translate('Prepare circular cut', {Diameter: Params.Diameter}));
@@ -2397,9 +2399,9 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 	
 	const Params = myCurrentDocSettings.Params;
 	
-	myCurrentDocSettings.SpaceBetween = customSpaceBetween ? customSpaceBetween : myCurrentDocSettings.SpaceBetween;
+	myCurrentDocSettings.SpaceBetween = customSpaceBetween != undefined ? customSpaceBetween : myCurrentDocSettings.SpaceBetween;
 	const Bleeds = myCurrentDocSettings.IsZeroBleeds ? 0 : myCurrentDocSettings.CutterType.minSpaceBetween / 2;
-	myCurrentDocSettings.RoundCornersValue = customRoundCornersValue ? customRoundCornersValue : myCurrentDocSettings.RoundCornersValue;
+	myCurrentDocSettings.RoundCornersValue = customRoundCornersValue != undefined ? customRoundCornersValue : myCurrentDocSettings.RoundCornersValue;
 	myCurrentDocSettings.IsRoundedCorners = customRoundCornersValue ? true : myCurrentDocSettings.IsRoundedCorners;
 	
 	const documentRotated = Params.widthSheet != myCurrentDocSettings.CutterType.widthSheet;

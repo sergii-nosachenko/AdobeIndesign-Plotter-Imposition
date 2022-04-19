@@ -868,7 +868,7 @@ function EditMarkWindow(markToEdit) {
             };
             if (markToEdit.mark.hasOwnProperty('strokeWeight')) {
                 SWeight.text = markToEdit.mark.strokeWeight;
-                checkSWeight(SWeight);
+                checkSWeight.apply(SWeight);
             };
             if (markToEdit.mark.hasOwnProperty('strokeColor')) {
                 StrokeC.text = markToEdit.mark.strokeColor[0];

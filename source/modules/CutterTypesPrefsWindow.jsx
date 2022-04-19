@@ -722,62 +722,86 @@ function CytterTypePrefsDialog(selectedIndex) {
     }
 
     function CheckMargins() {
-        TopValue.text = TopValue.text.replace(',', '.');
-        RightValue.text = RightValue.text.replace(',', '.');
-        BottomValue.text = BottomValue.text.replace(',', '.');
-        LeftValue.text = LeftValue.text.replace(',', '.');
-        if (!isValidNumber(TopValue.text) || TopValue.text < 0) TopValue.text = 0;
-        if (!isValidNumber(RightValue.text) || RightValue.text < 0) RightValue.text = 0;
-        if (!isValidNumber(BottomValue.text) || BottomValue.text < 0) BottomValue.text = 0;
-        if (!isValidNumber(LeftValue.text) || LeftValue.text < 0) LeftValue.text = 0;
-        if (+TopValue.text + +BottomValue.text >= HeightValue.text) TopValue.text = BottomValue.text = 0;
-        if (+RightValue.text + +LeftValue.text >= WidthValue.text) RightValue.text = LeftValue.text = 0;
+        var _TopValue = TopValue.text.replace(',', '.');
+        var _RightValue = RightValue.text.replace(',', '.');
+        var _BottomValue = BottomValue.text.replace(',', '.');
+        var _LeftValue = LeftValue.text.replace(',', '.');
+        _TopValue = isValidNumber(_TopValue) ? Number(_TopValue) : 0;
+        _RightValue = isValidNumber(_RightValue) ? Number(_RightValue) : 0;
+        _BottomValue = isValidNumber(_BottomValue) ? Number(_BottomValue) : 0;
+        _LeftValue = isValidNumber(_LeftValue) ? Number(_LeftValue) : 0;
+        if (_TopValue <= 0) _TopValue = 0;
+        if (_RightValue <= 0) _RightValue = 0;
+        if (_BottomValue <= 0) _BottomValue = 0;
+        if (_LeftValue <= 0) _LeftValue = 0;
+        if (_TopValue + _BottomValue >= +HeightValue.text) _TopValue = _BottomValue = 0;
+        if (_RightValue + _LeftValue >= +WidthValue.text) _RightValue = _LeftValue = 0;
+        TopValue.text = _TopValue;
+        RightValue.text = _RightValue;
+        BottomValue.text = _BottomValue;
+        LeftValue.text = _LeftValue;
         isOk.margins = true;
     }
 
     function CheckSize() {
-        WidthValue.text = WidthValue.text.replace(',', '.');
-        HeightValue.text = HeightValue.text.replace(',', '.');
-        if (!isValidNumber(WidthValue.text) || WidthValue.text < 50) WidthValue.text = 50;
-        if (WidthValue.text > 5486) WidthValue.text = 5486;
-        if (!isValidNumber(HeightValue.text) || HeightValue.text < 50) HeightValue.text = 50;
-        if (HeightValue.text > 5486) HeightValue.text = 5486;
+        var _WidthValue = WidthValue.text.replace(',', '.');
+        var _HeightValue = HeightValue.text.replace(',', '.');
+        _WidthValue = isValidNumber(_WidthValue) ? Number(_WidthValue) : 0;
+        _HeightValue = isValidNumber(_HeightValue) ? Number(_HeightValue) : 0;
+        if (_WidthValue < 50) _WidthValue = 50;
+        if (_WidthValue > 5486) _WidthValue = 5486;
+        if (_HeightValue < 50) _HeightValue = 50;
+        if (_HeightValue > 5486) _HeightValue = 5486;
+        WidthValue.text = _WidthValue;
+        HeightValue.text = _HeightValue;
         isOk.size = true;
     }
 
     function CheckSpaceBetween() {
-        SBminValue.text = SBminValue.text.replace(',', '.');
-        SBmaxValue.text = SBmaxValue.text.replace(',', '.');
-        if (!isValidNumber(SBminValue.text) || SBminValue.text <= 0) SBminValue.text = 0.1;
-        if (SBminValue.text > 10) SBminValue.text = 10;
-        if (!isValidNumber(SBmaxValue.text) || SBmaxValue.text < SBminValue.text) SBmaxValue.text = SBminValue.text;
-        if (SBmaxValue.text > 10) SBmaxValue.text = 10;
+        var _SBminValue = SBminValue.text.replace(',', '.');
+        var _SBmaxValue = SBmaxValue.text.replace(',', '.');
+        _SBminValue = isValidNumber(_SBminValue) ? Number(_SBminValue) : 0;
+        _SBmaxValue = isValidNumber(_SBmaxValue) ? Number(_SBmaxValue) : 0;
+        if (_SBminValue <= 0) _SBminValue = 0.1;
+        if (_SBminValue > 10) _SBminValue = 10;
+        if (_SBmaxValue < _SBminValue) _SBmaxValue = _SBminValue;
+        if (_SBmaxValue > 10) _SBmaxValue = 10;
+        SBminValue.text = _SBminValue;
+        SBmaxValue.text = _SBmaxValue;        
         isOk.spaceBetween = true;
     }
 
     function CheckColor() {
-        if (!isValidNumber(CyanValue.text) || CyanValue.text < 0) CyanValue.text = 0;
-        if (CyanValue.text > 100) CyanValue.text = 100;
-        if (!isValidNumber(MagentaValue.text) || MagentaValue.text < 0) MagentaValue.text = 0;
-        if (MagentaValue.text > 100) MagentaValue.text = 100;
-        if (!isValidNumber(YellowValue.text) || YellowValue.text < 0) YellowValue.text = 0;
-        if (YellowValue.text > 100) YellowValue.text = 100;
-        if (!isValidNumber(BlackValue.text) || BlackValue.text < 0) BlackValue.text = 0;
-        if (BlackValue.text > 100) BlackValue.text = 100;                        
+        const _CyanValue = isValidNumber(CyanValue.text) ? Number(CyanValue.text) : 0;
+        const _MagentaValue = isValidNumber(MagentaValue.text) ? Number(MagentaValue.text) : 0;
+        const _YellowValue = isValidNumber(YellowValue.text) ? Number(YellowValue.text) : 0;
+        const _BlackValue = isValidNumber(BlackValue.text) ? Number(BlackValue.text) : 0;
+        if (_CyanValue <= 0) CyanValue.text = 0;
+        if (_CyanValue > 100) CyanValue.text = 100;
+        if (_MagentaValue <= 0) MagentaValue.text = 0;
+        if (_MagentaValue > 100) MagentaValue.text = 100;
+        if (_YellowValue <= 0) YellowValue.text = 0;
+        if (_YellowValue > 100) YellowValue.text = 100;
+        if (_BlackValue <= 0) BlackValue.text = 0;
+        if (_BlackValue > 100) BlackValue.text = 100;                        
         isOk.color = true;
     }
 
     function CheckOvercut() {
-        OvercutValue.text = OvercutValue.text.replace(',', '.');
-        if (!isValidNumber(OvercutValue.text) || OvercutValue.text < 0) OvercutValue.text = 0;
-        if (OvercutValue.text > 10) OvercutValue.text = 10;
+        var _OvercutValue = OvercutValue.text.replace(',', '.');
+        _OvercutValue = isValidNumber(_OvercutValue) ? Number(_OvercutValue) : 0;
+        if (_OvercutValue <= 0) _OvercutValue = 0;
+        if (_OvercutValue > 10) _OvercutValue = 10;
+        OvercutValue.text = _OvercutValue;
         isOk.overcut = true;
     }
 
     function CheckLineWidth() {
-        LineWidthValue.text = LineWidthValue.text.replace(',', '.');
-        if (!isValidNumber(LineWidthValue.text) || LineWidthValue.text <= 0) LineWidthValue.text = defaults.LineWidthValue;
-        if (LineWidthValue.text > 100) LineWidthValue.text = 100;
+        var _LineWidthValue = LineWidthValue.text.replace(',', '.');
+        _LineWidthValue = isValidNumber(_LineWidthValue) ? Number(_LineWidthValue) : 0;
+        if (_LineWidthValue <= 0) _LineWidthValue = defaults.LineWidthValue;
+        if (_LineWidthValue > 100) _LineWidthValue = 100;
+        LineWidthValue.text = _LineWidthValue;
     }
 
     function CheckMarks() {
@@ -794,7 +818,7 @@ function CytterTypePrefsDialog(selectedIndex) {
 
     function isValidNumber(cText) {
         var rg2 = /^(\d+)([\.,]\d+)?$/gm;
-        return rg2.test(cText);
+        return !isNaN(Number(cText)) && rg2.test(cText);
     }
 
     function prefsChanged() {

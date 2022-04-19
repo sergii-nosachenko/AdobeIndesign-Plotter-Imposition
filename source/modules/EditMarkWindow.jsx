@@ -653,70 +653,79 @@ function EditMarkWindow(markToEdit) {
     }
 
     function checkSWeight() {
-        if (isValidNumber(this.text)) {
-            if (this.text < 0) this.text = 0;
-            if (this.text > 1000) this.text = 1000;
-        } else this.text = 0;
-        if (this.text > 0) {
+        var _SWeight = this.text.replace(',', '.');
+        _SWeight = isValidNumber(_SWeight) ? Number(_SWeight) : 0;
+        if (_SWeight <= 0) _SWeight = 0;
+        if (_SWeight > 1000) _SWeight = 1000;
+        if (_SWeight > 0) {
             StrokeFillGroup.enabled = true;
         } else {
             StrokeFillGroup.enabled = false;
-        }
+        };
+        this.text = _SWeight;
         checkObligatoryFields();
     }
 
     function checkRotation() {
-        if (isValidAnyNumber(this.text)) {
-            if (this.text < -360 || this.text > 360) this.text = 0;
-        } else this.text = 0;
+        var _RotationValue = this.text.replace(',', '.');
+        _RotationValue = isValidAnyNumber(_RotationValue) ? Number(_RotationValue) : 0;
+        if (_RotationValue < -360 || _RotationValue > 360) _RotationValue = 0;
+        this.text = _RotationValue;
     }
 
     function checkColor() {
-        if (isValidNumber(this.text)) {
-            if (this.text < 0) this.text = 0;
-            if (this.text > 100) this.text = 100;
-        } else this.text = 0;
+        var _ColorValue = this.text.replace(',', '.');
+        _ColorValue = isValidNumber(_ColorValue) ? Number(_ColorValue) : 0;
+        if (_ColorValue <= 0) _ColorValue = 0;
+        if (_ColorValue > 100) _ColorValue = 100;
+        this.text = _ColorValue;
     }
 
     function checkTextSize() {
-        if (isValidNumber(this.text)) {
-            if (this.text < 1) this.text = 1;
-            if (this.text > 1000) this.text = 1000;
-        } else this.text = 1;
+        var _TextSize = this.text.replace(',', '.');
+        _TextSize = isValidNumber(_TextSize) ? Number(_TextSize) : 0;
+        if (_TextSize <= 1) _TextSize = 1;
+        if (_TextSize > 100) _TextSize = 100;
+        this.text = _TextSize;
     }
 
     function checkObligatoryFields() {
-        if (isValidNumber(Width.text)) {
-            if (Width.text < 0) Width.text = 0;
-            if (Width.text > 1000) Width.text = 1000;
-        } else Width.text = 0;
-        if (isValidNumber(Height.text)) {
-            if (Height.text < 0) Height.text = 0;
-            if (Height.text > 1000) Height.text = 1000;
-        } else Height.text = 0;
-        isOk.size = Width.text != 0 && Height.text != 0;
+        var _Width = Width.text.replace(',', '.');
+        var _Height = Height.text.replace(',', '.');
+        _Width = isValidNumber(_Width) ? Number(_Width) : 0;
+        _Height = isValidNumber(_Height) ? Number(_Height) : 0;
+        if (_Width <= 0) _Width = 0;
+        if (_Width > 1000) _Width = 1000;
+        if (_Height <= 0) _Height = 0;
+        if (_Height > 1000) _Height = 1000;
+        isOk.size = _Width != 0 && _Height != 0;
         if (Shape.selection.text == translate('Line mark')) {
-            isOk.size = Height.text != 0 && SWeight.text != 0;
+            isOk.size = _Height != 0 && +SWeight.text != 0;
         };
         if (Shape.selection.text == translate('Text mark')) {
             isOk.size = isOk.size && TextTemplate.text != "" && FontsList.selection.index;
         };
+        Width.text = _Width;
+        Height.text = _Height;
         isAllOk();
     }
 
     function checkMargin() {
-        if (!isValidAnyNumber(this.text)) this.text = 0;
-        if (this.text > 1000) this.text = 1000;
+        var _MarginValue = this.text.replace(',', '.');
+        _MarginValue = isValidAnyNumber(_MarginValue) ? Number(_MarginValue) : 0;
+        if (_MarginValue > 1000) _MarginValue = 1000;
+        if (_MarginValue < -1000) _MarginValue = -1000;
+        this.text = _MarginValue;
     }
 
     function isValidAnyNumber(cText) {
         var rg2 = /^(-?\d+)([\.,]\d+)?$/gm;
-        return rg2.test(cText);
+        return !isNaN(Number(cText)) && rg2.test(cText);
     }
 
     function isValidNumber(cText) {
         var rg2 = /^(\d+)([\.,]\d+)?$/gm;
-        return rg2.test(cText);
+        return !isNaN(Number(cText)) && rg2.test(cText);
     }
 
     function isAllOk() {

@@ -482,6 +482,7 @@ function EditMarkWindow(markToEdit) {
 
     var TextTemplate = TextPanel.add('edittext {properties: {name: "TextTemplate", multiline: true, scrollable: true}}'); 
         TextTemplate.helpTip = translate('Template tip');
+        TextTemplate.preferredSize.height = 60; 
         TextTemplate.alignment = ["fill","top"];
         TextTemplate.onChange = checkObligatoryFields;
 
@@ -512,7 +513,6 @@ function EditMarkWindow(markToEdit) {
         Placeholders.onChange = function() {
             if (Placeholders.selection && Placeholders.selection.index) {
                 TextTemplate.textselection = Placeholders_list[Placeholders.selection.index];
-                Placeholders.selection = 0;
             }
         }
 
@@ -830,7 +830,7 @@ function EditMarkWindow(markToEdit) {
             if (markToEdit.mark.hasOwnProperty('shape')) {
                 Shape.selection = Shape_array.indexOf(shape[markToEdit.mark.shape]) || 0;
                 shapeChanged.apply(Shape);
-            };
+            }
             if (markToEdit.mark.hasOwnProperty('position')) {
                 for (var i = 0; i < positions.length; i++) {
                     if (positions[i].value == markToEdit.mark.position) {
@@ -851,7 +851,7 @@ function EditMarkWindow(markToEdit) {
                 checkMargin.apply(MRight);
                 checkMargin.apply(MBottom);
                 checkMargin.apply(MLeft);
-            };
+            }
             if (markToEdit.mark.hasOwnProperty('rotation')) {
                 Rotation.text = markToEdit.mark.rotation;
                 checkRotation.apply(Rotation);
@@ -865,11 +865,11 @@ function EditMarkWindow(markToEdit) {
                 checkColor.apply(FillM);
                 checkColor.apply(FillY);
                 checkColor.apply(FillK);
-            };
+            }
             if (markToEdit.mark.hasOwnProperty('strokeWeight')) {
                 SWeight.text = markToEdit.mark.strokeWeight;
                 checkSWeight.apply(SWeight);
-            };
+            }
             if (markToEdit.mark.hasOwnProperty('strokeColor')) {
                 StrokeC.text = markToEdit.mark.strokeColor[0];
                 StrokeM.text = markToEdit.mark.strokeColor[1];
@@ -879,7 +879,7 @@ function EditMarkWindow(markToEdit) {
                 checkColor.apply(StrokeM);
                 checkColor.apply(StrokeY);
                 checkColor.apply(StrokeK);
-            };
+            }
             if (markToEdit.mark.hasOwnProperty('fontName')) {
                 var fontIndex = FontsList_array.indexOf(markToEdit.mark.fontName);
                 if (fontIndex > 0) {
@@ -888,7 +888,7 @@ function EditMarkWindow(markToEdit) {
                     FontsList.selection = 0;
                     Save.enabled = true;
                 }
-            };
+            }
             if (markToEdit.mark.hasOwnProperty('fontSize')) {
                 FontSize.text = markToEdit.mark.fontSize;
                 checkTextSize.apply(FontSize);

@@ -653,6 +653,7 @@ function EditMarkWindow(markToEdit) {
     }
 
     function checkSWeight() {
+        if (!this.text) return;
         var _SWeight = this.text.replace(',', '.');
         _SWeight = isValidNumber(_SWeight) ? Number(_SWeight) : 0;
         if (_SWeight <= 0) _SWeight = 0;
@@ -667,6 +668,7 @@ function EditMarkWindow(markToEdit) {
     }
 
     function checkRotation() {
+        if (!this.text) return;
         var _RotationValue = this.text.replace(',', '.');
         _RotationValue = isValidAnyNumber(_RotationValue) ? Number(_RotationValue) : 0;
         if (_RotationValue < -360 || _RotationValue > 360) _RotationValue = 0;
@@ -674,6 +676,7 @@ function EditMarkWindow(markToEdit) {
     }
 
     function checkColor() {
+        if (!this.text) return;
         var _ColorValue = this.text.replace(',', '.');
         _ColorValue = isValidNumber(_ColorValue) ? Number(_ColorValue) : 0;
         if (_ColorValue <= 0) _ColorValue = 0;
@@ -682,6 +685,7 @@ function EditMarkWindow(markToEdit) {
     }
 
     function checkTextSize() {
+        if (!this.text) return;
         var _TextSize = this.text.replace(',', '.');
         _TextSize = isValidNumber(_TextSize) ? Number(_TextSize) : 0;
         if (_TextSize <= 1) _TextSize = 1;
@@ -711,6 +715,7 @@ function EditMarkWindow(markToEdit) {
     }
 
     function checkMargin() {
+        if (!this.text) return;
         var _MarginValue = this.text.replace(',', '.');
         _MarginValue = isValidAnyNumber(_MarginValue) ? Number(_MarginValue) : 0;
         if (_MarginValue > 1000) _MarginValue = 1000;

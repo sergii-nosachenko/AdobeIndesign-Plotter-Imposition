@@ -222,7 +222,7 @@ function PlacePDF(){
 						var fileName = File.decode(theFile.name).split('.').slice(0, -1).join('.');
 						var sizeMatch = fileName.match(RectanglePattern);
 						var size = sizeMatch ? sizeMatch[1].replace(/,/g, '.').replace('х', 'x') : 0;
-						var fillet = sizeMatch && sizeMatch[3] != undefined ? parseFloat(sizeMatch[1].replace(',', '.')) : 0;
+						var fillet = sizeMatch && sizeMatch[3] != undefined ? parseFloat(sizeMatch[3].replace(',', '.')) : 0;
 						var spacebetween = sizeMatch && sizeMatch[5] != undefined ? parseFloat(sizeMatch[5].replace(',', '.')) : MY_DOC_SETTINGS.SpaceBetween;
 						var key = size ? size+':'+fillet+':'+spacebetween : size;
 						var files = okFilesSizes[key] || [];

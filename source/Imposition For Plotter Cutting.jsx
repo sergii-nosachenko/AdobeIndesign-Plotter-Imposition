@@ -13,7 +13,7 @@ github.com/sergii-nosachenko
 
 ---------------------------------------------------------------------- */
 
-const APP_VERSION = "4.0.5";
+const APP_VERSION = "4.0.6";
 
 // Debug level
 // Comment next line for production!
@@ -81,8 +81,8 @@ const CirclePattern = /\[[^d]*d=(\d+[,.]?\d*)[^\(]*(\((\d+[,.]?\d*)?\))?[^\)]*\]
 const RectanglePattern = /\[[^\d]*(\d+[,.]?\d*[xх]\d+[,.]?\d*)[^r\(]*(r\=(\d+[,.]?\d*))?[^\(]*(\((\d+[,.]?\d*)\))?.*\]/i; // "[15x10 r=3.5 (0.5)]" => 15x10, r=3.5, 3.5, (0.5), 0.5
 
 // Для коректної роботи BridgeTalk функції трансформовано в текстовий тип
-const openIllustratorToConvertAI_source = '(function openIllustratorToConvertAI(fileName){var result={success:!1};fileName=eval(fileName);try{var file=File(fileName);if(!file.exists){$.sleep(10000);if(!file.exists)throw new Error("File not found!")};app.userInteractionLevel=UserInteractionLevel.DONTDISPLAYALERTS;var w=new Window("dialog","Processing",void 0,{closeButton:!1}),t=w.add("statictext");t.preferredSize=[450,-1],t.text="Converting EPS to AI cut file...",w.onShow=function(){app.open(file);var e=new IllustratorSaveOptions;e.compatibility=Compatibility.ILLUSTRATOR8,e.compressed=!1,e.pdfCompatible=!1;var t=file.fullName.split(".").slice(0,-1).join(".")+".ai",r=new File(t);try{app.activeDocument.saveAs(r,e),app.activeDocument.close(SaveOptions.DONOTSAVECHANGES),file.remove()}catch(e){throw new Error("Export to AI failed!")}result={success:!0},w.close()};var run=w.show();return app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}catch(e){return result={success:!1,err:e.message},app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}})';
-const openIllustratorToConvertDXF_source = '(function openIllustratorToConvertDXF(fileName){var result={success:!1};fileName=eval(fileName);try{var file=File(fileName);if(!file.exists){$.sleep(10000);if(!file.exists)throw new Error("File not found!")};app.userInteractionLevel=UserInteractionLevel.DONTDISPLAYALERTS;var w=new Window("dialog","Processing",void 0,{closeButton:!1}),t=w.add("statictext");t.preferredSize=[450,-1],t.text="Converting EPS to AI cut file...",w.onShow=function(){app.open(file);var e=new ExportOptionsAutoCAD;e.exportFileFormat=AutoCADExportFileFormat.DXF;for(var t=file.fullName.split(".").slice(0,-1).join(".")+".dxf",o=new File(t),r=0,l=app.activeDocument.pathItems;r<l.length;r++)l[r].fillColor instanceof NoColor||(l[r].strokeColor=l[r].fillColor,l[r].fillColor=new NoColor);try{app.activeDocument.exportFile(o,ExportType.AUTOCAD,e),app.activeDocument.close(SaveOptions.DONOTSAVECHANGES),file.remove()}catch(e){throw new Error("Export to DXF failed!")}result={success:!0},w.close()};var run=w.show();return app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}catch(e){return result={success:!1,err:e.message},app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}})';
+const openIllustratorToConvertAI_source = '(function openIllustratorToConvertAI(fileName){var result={success:!1};fileName=File.decode(eval(fileName));try{var file=File(fileName);if(!file.exists){$.sleep(10000);if(!file.exists)throw new Error("File not found!")};app.userInteractionLevel=UserInteractionLevel.DONTDISPLAYALERTS;var w=new Window("dialog","Processing",void 0,{closeButton:!1}),t=w.add("statictext");t.preferredSize=[450,-1],t.text="Converting EPS to AI cut file...",w.onShow=function(){app.open(file);var e=new IllustratorSaveOptions;e.compatibility=Compatibility.ILLUSTRATOR8,e.compressed=!1,e.pdfCompatible=!1;var t=file.fullName.split(".").slice(0,-1).join(".")+".ai",r=new File(t);try{app.activeDocument.saveAs(r,e),app.activeDocument.close(SaveOptions.DONOTSAVECHANGES),file.remove()}catch(e){throw new Error("Export to AI failed!")}result={success:!0},w.close()};var run=w.show();return app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}catch(e){return result={success:!1,err:e.message},app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}})';
+const openIllustratorToConvertDXF_source = '(function openIllustratorToConvertDXF(fileName){var result={success:!1};fileName=File.decode(eval(fileName));try{var file=File(fileName);if(!file.exists){$.sleep(10000);if(!file.exists)throw new Error("File not found!")};app.userInteractionLevel=UserInteractionLevel.DONTDISPLAYALERTS;var w=new Window("dialog","Processing",void 0,{closeButton:!1}),t=w.add("statictext");t.preferredSize=[450,-1],t.text="Converting EPS to AI cut file...",w.onShow=function(){app.open(file);var e=new ExportOptionsAutoCAD;e.exportFileFormat=AutoCADExportFileFormat.DXF;for(var t=file.fullName.split(".").slice(0,-1).join(".")+".dxf",o=new File(t),r=0,l=app.activeDocument.pathItems;r<l.length;r++)l[r].fillColor instanceof NoColor||(l[r].strokeColor=l[r].fillColor,l[r].fillColor=new NoColor);try{app.activeDocument.exportFile(o,ExportType.AUTOCAD,e),app.activeDocument.close(SaveOptions.DONOTSAVECHANGES),file.remove()}catch(e){throw new Error("Export to DXF failed!")}result={success:!0},w.close()};var run=w.show();return app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}catch(e){return result={success:!1,err:e.message},app.userInteractionLevel=UserInteractionLevel.DISPLAYALERTS,result.toSource()}})';
 
 // Запуск головного діалогового вікна
 app.scriptPreferences.enableRedraw = true;
@@ -2284,7 +2284,8 @@ function CreateCustomDocCircles(myCurrentDocSettings, customSpaceBetween) {
 			if (myCurrentDocSettings.CutterType.plotterCutFormat == "AI") {
 				try {
 					var epsFileName = outputFileName + '.eps';
-					myDocument.exportFile(ExportFormat.epsType, File(epsFileName), false);
+					var epsFile = File(epsFileName);
+					myDocument.exportFile(ExportFormat.epsType, epsFile, false);
 					// Виклик Ілюстратора для перезбереження файлу до 8 версії AI
 					if (BridgeTalk.getStatus('illustrator') == 'ISNOTINSTALLED') {
 							alert(translate('Error - Illustrator cannot convert', {
@@ -2293,12 +2294,9 @@ function CreateCustomDocCircles(myCurrentDocSettings, customSpaceBetween) {
 								}));
 							dontCloseDocument = true;
 					} else {
-						if (!File(epsFileName).exists) {
-							$.sleep(10000); // Очікування 10с для готовності файла (при повільній мережі)
-						};
 						var bt = new BridgeTalk();
 						bt.target = 'illustrator';
-						bt.body = openIllustratorToConvertAI_source + "(" + epsFileName.toSource() + ");";
+						bt.body = openIllustratorToConvertAI_source + "(" + File.encode(epsFile.fullName).toSource() + ");";
 						bt.onError = function(resObj) {
 							const res = eval(resObj.body);
 							alert(translate('Error - Illustrator cannot convert', {
@@ -2325,8 +2323,9 @@ function CreateCustomDocCircles(myCurrentDocSettings, customSpaceBetween) {
 				}				  
 			} else if (myCurrentDocSettings.CutterType.plotterCutFormat == "DXF") {
 				try {
-					var epsFileName = outputFileName + ".eps";
-					myDocument.exportFile(ExportFormat.epsType, File(epsFileName), false);
+					var epsFileName = outputFileName + '.eps';
+					var epsFile = File(epsFileName);
+					myDocument.exportFile(ExportFormat.epsType, epsFile, false);
 					// Виклик Ілюстратора для перезбереження файлу до формату DXF	
 					if (BridgeTalk.getStatus('illustrator') == 'ISNOTINSTALLED') {
 							alert(translate('Error - Illustrator cannot convert', {
@@ -2335,12 +2334,9 @@ function CreateCustomDocCircles(myCurrentDocSettings, customSpaceBetween) {
 								}));
 							dontCloseDocument = true;
 					} else {
-						if (!File(epsFileName).exists) {
-							$.sleep(10000); // Очікування 10с для готовності файла (при повільній мережі)
-						};
 						var bt = new BridgeTalk();
 						bt.target = 'illustrator';
-						bt.body = openIllustratorToConvertDXF_source + "(" + epsFileName.toSource() + ");";
+						bt.body = openIllustratorToConvertDXF_source + "(" + File.encode(epsFile.fullName).toSource() + ");";
 						bt.onError = function(resObj) {
 							const res = eval(resObj.body);
 							alert(translate('Error - Illustrator cannot convert', {
@@ -2830,7 +2826,8 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 			if (myCurrentDocSettings.CutterType.plotterCutFormat == "AI") {
 				try {
 					var epsFileName = outputFileName + '.eps';
-					myDocument.exportFile(ExportFormat.epsType, File(epsFileName), false);
+					var epsFile = File(epsFileName);
+					myDocument.exportFile(ExportFormat.epsType, epsFile, false);
 					// Виклик Ілюстратора для перезбереження файлу до 8 версії AI
 					if (BridgeTalk.getStatus('illustrator') == 'ISNOTINSTALLED') {
 							alert(translate('Error - Illustrator cannot convert', {
@@ -2839,12 +2836,9 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 								}));
 							dontCloseDocument = true;
 					} else {
-						if (!File(epsFileName).exists) {
-							$.sleep(10000); // Очікування 10с для готовності файла (при повільній мережі)
-						};
 						var bt = new BridgeTalk();
 						bt.target = 'illustrator';
-						bt.body = openIllustratorToConvertAI_source + "(" + epsFileName.toSource() + ");";
+						bt.body = openIllustratorToConvertAI_source + "(" + File.encode(epsFile.fullName).toSource() + ");";
 						bt.onError = function(resObj) {
 							const res = eval(resObj.body);
 							alert(translate('Error - Illustrator cannot convert', {
@@ -2871,8 +2865,9 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 				}				  
 			} else if (myCurrentDocSettings.CutterType.plotterCutFormat == "DXF") {
 				try {
-					var epsFileName = outputFileName + ".eps";
-					myDocument.exportFile(ExportFormat.epsType, File(epsFileName), false);
+					var epsFileName = outputFileName + '.eps';
+					var epsFile = File(epsFileName);
+					myDocument.exportFile(ExportFormat.epsType, epsFile, false);
 					// Виклик Ілюстратора для перезбереження файлу до формату DXF	
 					if (BridgeTalk.getStatus('illustrator') == 'ISNOTINSTALLED') {
 							alert(translate('Error - Illustrator cannot convert', {
@@ -2881,12 +2876,9 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 								}));
 							dontCloseDocument = true;
 					} else {
-						if (!File(epsFileName).exists) {
-							$.sleep(10000); // Очікування 10с для готовності файла (при повільній мережі)
-						};
 						var bt = new BridgeTalk();
 						bt.target = 'illustrator';
-						bt.body = openIllustratorToConvertDXF_source + "(" + epsFileName.toSource() + ");";
+						bt.body = openIllustratorToConvertDXF_source + "(" + File.encode(epsFile.fullName).toSource() + ");";
 						bt.onError = function(resObj) {
 							const res = eval(resObj.body);
 							alert(translate('Error - Illustrator cannot convert', {
@@ -3044,7 +3036,7 @@ function openIllustratorToConvertAI(fileName) {
 		success: false
 	};
 
-	fileName = eval(fileName);
+	fileName=File.decode(eval(fileName));
 
     try {
 
@@ -3110,7 +3102,7 @@ function openIllustratorToConvertDXF(fileName) {
 	var result = {
 			success: false
 		};
-	fileName = eval(fileName);
+	fileName=File.decode(eval(fileName));
 
     try {
 

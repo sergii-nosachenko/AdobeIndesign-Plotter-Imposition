@@ -13,7 +13,7 @@ github.com/sergii-nosachenko
 
 ---------------------------------------------------------------------- */
 
-const APP_VERSION = "4.0.6";
+const APP_VERSION = "4.1.0";
 
 // Debug level
 // Comment next line for production!
@@ -125,13 +125,7 @@ function PlacePDF(){
 	
 	var fileCounter = 1;
 	var pagesTotalProcessedCounter = 0;
-	var myCurrentDocSettings = {
-		CutterType: MY_DOC_SETTINGS.CutterType,
-		SpaceBetween: MY_DOC_SETTINGS.SpaceBetween,
-		IsZeroBleeds: MY_DOC_SETTINGS.IsZeroBleeds,
-		IsSaveFileWithCut: MY_DOC_SETTINGS.IsSaveFileWithCut,
-		Params: false
-	};
+	var myCurrentDocSettings = {};
 
 	var myDocumentsProcessing = [];
 	var badFiles = [];
@@ -173,6 +167,13 @@ function PlacePDF(){
 					// Перебираємо варіанти
 					for (var i = 0; i < okDiameters.length; i++) {
 						if (okDiameters[i] !== 0) {
+							myCurrentDocSettings = {
+								CutterType: MY_DOC_SETTINGS.CutterType,
+								SpaceBetween: MY_DOC_SETTINGS.SpaceBetween,
+								IsZeroBleeds: MY_DOC_SETTINGS.IsZeroBleeds,
+								IsSaveFileWithCut: MY_DOC_SETTINGS.IsSaveFileWithCut,
+								Params: false
+							};
 							myCurrentDocSettings.Diameter = parseFloat(okDiameters[i].split(':')[0]);
 							var thisSpaceBetween = parseFloat(okDiameters[i].split(':')[1]);
 							thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
@@ -245,10 +246,17 @@ function PlacePDF(){
 					// Перебираємо варіанти
 					for (var i = 0; i < okSizes.length; i++) {
 						if (okSizes[i] !== 0) {
+							myCurrentDocSettings = {
+								CutterType: MY_DOC_SETTINGS.CutterType,
+								SpaceBetween: MY_DOC_SETTINGS.SpaceBetween,
+								IsZeroBleeds: MY_DOC_SETTINGS.IsZeroBleeds,
+								IsSaveFileWithCut: MY_DOC_SETTINGS.IsSaveFileWithCut,
+								Params: false
+							};
 							var thisSize = okSizes[i].split(':')[0];
 							var thisRadius = parseFloat(okSizes[i].split(':')[1]);
 							var thisSpaceBetween = parseFloat(okSizes[i].split(':')[2]);
-							if (thisRadius && thisSpaceBetween) {
+							if (thisRadius) {
 								thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
 								thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;								
 							};
@@ -359,6 +367,13 @@ function PlacePDF(){
 			// Перебираємо варіанти кружечків
 			for (var i = 0; i < okDiameters.length; i++) {
 				if (okDiameters[i] !== 0) {
+					myCurrentDocSettings = {
+						CutterType: MY_DOC_SETTINGS.CutterType,
+						SpaceBetween: MY_DOC_SETTINGS.SpaceBetween,
+						IsZeroBleeds: MY_DOC_SETTINGS.IsZeroBleeds,
+						IsSaveFileWithCut: MY_DOC_SETTINGS.IsSaveFileWithCut,
+						Params: false
+					};
 					myCurrentDocSettings.Diameter = parseFloat(okDiameters[i].split(':')[0]);
 					var thisSpaceBetween = parseFloat(okDiameters[i].split(':')[1]);
 					thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
@@ -388,10 +403,17 @@ function PlacePDF(){
 			// Перебираємо варіанти прямокутників
 			for (var i = 0; i < okSizes.length; i++) {
 				if (okSizes[i] !== 0) {
+					myCurrentDocSettings = {
+						CutterType: MY_DOC_SETTINGS.CutterType,
+						SpaceBetween: MY_DOC_SETTINGS.SpaceBetween,
+						IsZeroBleeds: MY_DOC_SETTINGS.IsZeroBleeds,
+						IsSaveFileWithCut: MY_DOC_SETTINGS.IsSaveFileWithCut,
+						Params: false
+					};
 					var thisSize = okSizes[i].split(':')[0];
 					var thisRadius = parseFloat(okSizes[i].split(':')[1]);
 					var thisSpaceBetween = parseFloat(okSizes[i].split(':')[2]);
-					if (thisRadius && thisSpaceBetween) {
+					if (thisRadius) {
 						thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.minSpaceBetween ? thisSpaceBetween : myCurrentDocSettings.CutterType.minSpaceBetween;
 						thisSpaceBetween = thisSpaceBetween > myCurrentDocSettings.CutterType.maxSpaceBetween ? myCurrentDocSettings.CutterType.maxSpaceBetween : thisSpaceBetween;								
 					};
@@ -845,6 +867,8 @@ function PlacePDF(){
 	}
 
 	function ProcessRectangles(okFilesCurrent, totalFilesLength, customRoundCornersValue, customSpaceBetween) {
+
+		$.writeln(customRoundCornersValue+ ', ' + customSpaceBetween);
 		
 		myCurrentDocSettings.RoundCornersValue = customRoundCornersValue != undefined ? customRoundCornersValue : myCurrentDocSettings.RoundCornersValue;
 		myCurrentDocSettings.IsRoundedCorners = customRoundCornersValue ? true : myCurrentDocSettings.IsRoundedCorners;

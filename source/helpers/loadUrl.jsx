@@ -4,6 +4,8 @@ function loadUrl(url, callback) {
 
     if (BridgeTalk.getStatus('bridge') == 'ISNOTINSTALLED') return; // Skip if Bridge is not installed
 
+    if (BridgeTalk.getStatus('bridge') == 'ISNOTRUNNING') BridgeTalk.launch('bridge', 'background'); // Launch Bridge in background
+
     var bt = new BridgeTalk();
     bt.target = 'bridge';  
 

@@ -29,6 +29,7 @@ LANG['en_US'] = {
         'Imposition Not Defined': 'Not set',
         'PDF Preset Label': 'PDF export preset',
         'Add File Name Label': 'Add file name and page counter to sheets',
+        'UpdateFound Btn': 'New version: %version%!',
         'Cancel Btn': 'Cancel',
         'Impose Btn': 'Impose',
         'Files Dialog Title': 'Select one or more PDF, AI or TIF files',
@@ -94,8 +95,8 @@ LANG['en_US'] = {
         'Adding elements': 'Adding elements...',
         'Exporting cut file': 'Exporting cut file...',
         'Prepare rectangular cut': 'Preparing imposition %widthItem%x%heightItem%mm',
-        'Language change restart': 'To apply changes manually close and open script',
-        'Language change title': 'Restart script needed',
+        'To apply changes restart': 'To apply changes manually close and open script',
+        'To apply changes title': 'Restart script needed',
         'Confirm create new json': 'Settings not found',
 
         'Cytter Prefs Window': 'Cutters preferences editor',
@@ -224,6 +225,7 @@ LANG['en_US'] = {
         'Error - Illustrator not installed': 'Adobe Illustrator doesn\'t installed',
         'Error - Cannot export file': 'Can\'t export file %filename%.\nMaybe file is already opened or output folder doesn\'t accessible',
         'Error - Another cutter same name': 'Can\'t save. You hane another cutter with same name "%name%".',
+        'Error - Script update failed': 'Can\'t update script. Download and install update manually.\n%error%',        
     }
 };
 

@@ -8,9 +8,10 @@ This script allows you to easily imposition a file or group of files for plotter
 
 ## Requirements
 
-* Adobe Indesign> = 14.0
-* Adobe Illustrator> = 19.0
-* Adobe ExtendScript Toolkit> = 4.0.0 *(for script compilation)* [Download](https://github.com/Adobe-CEP/CEP-Resources/tree/master/ExtendScript-Toolkit)
+* Adobe Indesign >= 14.0
+* Adobe Illustrator >= 19.0
+* Adobe Bridge >= 9.0 *(for script self-update)*
+* Adobe ExtendScript Toolkit >= 4.0.0 *(for script compilation)* [Download](https://github.com/Adobe-CEP/CEP-Resources/tree/master/ExtendScript-Toolkit)
 
 ## Installation
 

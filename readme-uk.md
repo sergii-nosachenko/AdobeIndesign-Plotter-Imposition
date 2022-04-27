@@ -10,6 +10,7 @@
 
 * Adobe Indesign >=14.0
 * Adobe Illustrator >=19.0
+* Adobe Bridge >= 9.0 *(для можливості самооновлення скрипта)*і
 * Adobe ExtendScript Toolkit >=4.0.0 *(для компіляції скрипта)* [Завантажити](https://github.com/Adobe-CEP/CEP-Resources/tree/master/ExtendScript-Toolkit)
 
 ## Інсталяція

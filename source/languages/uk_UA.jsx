@@ -29,6 +29,7 @@ LANG['uk_UA'] = {
         'Imposition Not Defined': 'Не налаштовано',
         'PDF Preset Label': 'Налаштування для PDF експорту',
         'Add File Name Label': 'Додати назву файла на розкладку',
+        'UpdateFound Btn': 'Нова версія: %version%!',
         'Cancel Btn': 'Відміна',
         'Impose Btn': 'Розкласти',
         'Files Dialog Title': 'Обери один або декілька PDF, AI або TIF файлів',
@@ -94,8 +95,8 @@ LANG['uk_UA'] = {
         'Adding elements': 'Додаю елементи...',
         'Exporting cut file': 'Експортую файл порізки...',
         'Prepare rectangular cut': 'Готую розкладку %widthItem%x%heightItem%мм',
-        'Language change restart': 'Щоб застосувати зміни перезапусти скрипт вручну',
-        'Language change title': 'Потрібно перезапустити скрипт',
+        'To apply changes restart': 'Щоб застосувати зміни перезапусти скрипт вручну',
+        'To apply changes title': 'Потрібно перезапустити скрипт',
         'Confirm create new json': 'Налаштування не знайдено',
 
         'Cytter Prefs Window': 'Редактор налаштувань плотерів',
@@ -224,5 +225,6 @@ LANG['uk_UA'] = {
         'Error - Illustrator not installed': 'Adobe Illustrator не інстальовано',
         'Error - Cannot export file': 'Не вдалося експортувати файл %filename%.\nМожливо, файл відкрито іншою програмою або вихідна тека недоступна',
         'Error - Another cutter same name': 'Неможливо зберегти. Існує інший плотер з таким же ім\'ям "%name%".',
+        'Error - Script update failed': 'Неможливо оновити скрипт. Потрібно завантажити та встановити оновлення вручну.\n%error%',
     }
 };

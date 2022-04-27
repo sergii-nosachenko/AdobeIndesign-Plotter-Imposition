@@ -390,8 +390,13 @@ function DialogWindow() {
 		AppLanguage.onChange = function() {
 			APP_PREFERENCES.app.lang = Languages_keys[AppLanguage.selection.index];
 			savePreferencesJSON(PREFS_FILE, APP_PREFERENCES);
-			alert(translate('Language change restart'), translate('Language change title'));
+			alert(translate('To apply changes restart'), translate('To apply changes title'));
 		}
+
+	var UpdateFound = ButtonsGroup.add("button", undefined, undefined, {name: "UpdateFound"}); 
+		UpdateFound.visible = false;
+		UpdateFound.text = translate('UpdateFound Btn', {version: ''});
+		UpdateFound.alignment = ["left","fill"];
 
 	var Cancel = ButtonsGroup.add("button", undefined, undefined, {name: "Cancel"}); 
 		Cancel.text = translate('Cancel Btn');
@@ -409,7 +414,6 @@ function DialogWindow() {
 		Start.onClick = function () {
 			MultiplePDFImposing.close(1);
 		}
-	
 
 	function getFiles() {
 		
@@ -539,6 +543,43 @@ function DialogWindow() {
 	function totalFieldsCheckMain() {
 		Start.enabled = isOk.files && isOk.folder && isOk.filename && isOk.document && isOk.preset && isOk.Imposing;
 	}
+
+	function checkNewVersionDone(err, data) {
+		app.activate();
+		if (!err && data) {
+			try {
+				const parsedJson = JSON.parse(data);
+				if (parsedJson.version && parsedJson.updateSource) {
+					if (versionCompare(parsedJson.version, APP_VERSION) > 0) {
+						UpdateFound.visible = true;
+						UpdateFound.text = translate('UpdateFound Btn', {version: parsedJson.version});
+						UpdateFound.onClick = function() {
+							loadUrl(parsedJson.updateSource, updateApp);
+						}						
+					}
+				}
+			} catch (error) {
+				// skip
+			}
+		}
+	}
+
+	function updateApp(err, data) {
+		if (!err && data) {
+			try {
+				var scriptFile = File($.fileName);
+				writeFile(scriptFile, data, 'MS-ANSI');
+				alert(translate('To apply changes restart'), translate('To apply changes title'));
+				UpdateFound.visible = false;
+			} catch (error) {
+				translate('Error - Script update failed', {error: error});
+			}
+		} else {
+			translate('Error - Script update failed', {error: err});
+		}
+	}
+
+	loadUrl(PACKAGE_URL, checkNewVersionDone); // Перевіряємо наявність нової версії
 	
 	var myResult = MultiplePDFImposing.show();
 

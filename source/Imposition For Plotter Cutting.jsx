@@ -13,7 +13,7 @@ github.com/sergii-nosachenko
 
 ---------------------------------------------------------------------- */
 
-const APP_VERSION = "4.1.0";
+const APP_VERSION = "4.2.0";
 
 // Debug level
 // Comment next line for production!
@@ -24,7 +24,11 @@ const APP_VERSION = "4.1.0";
 //@include "helpers/Array.indexOf.polyfill.jsx"
 //@include "helpers/Array.fill.polyfill.jsx"
 //@include "helpers/Array.reduce.polyfill.jsx"
+//@include "helpers/Array.every.polyfill.jsx"
+//@include "helpers/Array.map.polyfill.jsx"
 //@include "helpers/PDFmultipage.jsx"
+//@include "helpers/versionComparer.jsx"
+//@include "helpers/loadUrl.jsx"
 
 // Підтримка багатомовності
 //@include "languages/uk_UA.jsx"
@@ -74,6 +78,8 @@ const MY_DOC_SETTINGS = {
 		CUT: "CUT"
 	}
 };
+const PACKAGE_URL = 'https://raw.githubusercontent.com/sergii-nosachenko/AdobeIndesign-Plotter-Imposition/master/package.json';
+const RELEASE_URL = 'https://github.com/sergii-nosachenko/AdobeIndesign-Plotter-Imposition/releases/latest';
 
 //Global RegExp patterns
 const BracketsPattern = /\[.*\]/;

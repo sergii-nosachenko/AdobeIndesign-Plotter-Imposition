@@ -579,7 +579,7 @@ function DialogWindow() {
 		}
 	}
 
-	loadUrl(PACKAGE_URL, checkNewVersionDone); // Перевіряємо наявність нової версії
+	loadUrl(PACKAGE_URL + '?' + Math.round(new Date().getTime() / 1000).toString(), checkNewVersionDone); // Перевіряємо наявність нової версії (додаємо поточний штамп часу, щоб уникнинути кешування запиту)
 	
 	var myResult = MultiplePDFImposing.show();
 

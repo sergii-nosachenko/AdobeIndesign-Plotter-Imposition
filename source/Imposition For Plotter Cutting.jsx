@@ -13,7 +13,7 @@ github.com/sergii-nosachenko
 
 ---------------------------------------------------------------------- */
 
-const APP_VERSION = "4.2.1";
+const APP_VERSION = "4.2.2";
 
 // Debug level
 // Comment next line for production!
@@ -873,8 +873,6 @@ function PlacePDF(){
 	}
 
 	function ProcessRectangles(okFilesCurrent, totalFilesLength, customRoundCornersValue, customSpaceBetween) {
-
-		$.writeln(customRoundCornersValue+ ', ' + customSpaceBetween);
 		
 		myCurrentDocSettings.RoundCornersValue = customRoundCornersValue != undefined ? customRoundCornersValue : myCurrentDocSettings.RoundCornersValue;
 		myCurrentDocSettings.IsRoundedCorners = customRoundCornersValue ? true : myCurrentDocSettings.IsRoundedCorners;

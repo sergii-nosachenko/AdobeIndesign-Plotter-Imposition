@@ -13,7 +13,7 @@ github.com/sergii-nosachenko
 
 ---------------------------------------------------------------------- */
 
-const APP_VERSION = "4.2.2";
+const APP_VERSION = "4.2.3";
 
 // Debug level
 // Comment next line for production!
@@ -1018,7 +1018,8 @@ function PlacePDF(){
 											curBounds[2] + myCurrentDocSettings.Params.bleedCompensation[b - 1][2],
 											curBounds[3] + myCurrentDocSettings.Params.bleedCompensation[b - 1][3]
 										];
-									} else if (b == itemsCopies - 1) {
+									};
+									if (b == itemsCopies - 1) {
 										curBounds = newbie.geometricBounds;
 										newbie.geometricBounds = [
 											curBounds[0] + myCurrentDocSettings.Params.bleedCompensation[b][0],
@@ -1026,7 +1027,7 @@ function PlacePDF(){
 											curBounds[2] + myCurrentDocSettings.Params.bleedCompensation[b][2],
 											curBounds[3] + myCurrentDocSettings.Params.bleedCompensation[b][3]
 										];
-									}									
+									};				
 								}
 
 								last = newbie;				
@@ -1304,7 +1305,8 @@ function PlacePDF(){
 									curBounds[2] + myCurrentDocSettings.Params.bleedCompensation[b - 1][2],
 									curBounds[3] + myCurrentDocSettings.Params.bleedCompensation[b - 1][3]
 								];
-							} else if (b == (itemsCount / pagesCount) - 1) {
+							};
+							if (b == (itemsCount / pagesCount) - 1) {
 								curBounds = newbie.geometricBounds;
 								newbie.geometricBounds = [
 									curBounds[0] + myCurrentDocSettings.Params.bleedCompensation[b][0],
@@ -1312,7 +1314,7 @@ function PlacePDF(){
 									curBounds[2] + myCurrentDocSettings.Params.bleedCompensation[b][2],
 									curBounds[3] + myCurrentDocSettings.Params.bleedCompensation[b][3]
 								];
-							}									
+							};									
 						}
 
 						last = newbie;				

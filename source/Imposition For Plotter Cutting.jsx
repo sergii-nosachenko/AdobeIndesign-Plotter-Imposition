@@ -770,7 +770,7 @@ function PlacePDF(){
 					progress.message(translate('Processing file', {
 								fileCounter: fileCounter,
 								totalFilesLength: totalFilesLength,
-								currentPage: currentPage,
+								currentPage: page,
 								pgCount: pgCount
 							}));
 					
@@ -1231,7 +1231,7 @@ function PlacePDF(){
 					progress.message(translate('Processing file', {
 								fileCounter: fileCounter,
 								totalFilesLength: totalFilesLength,
-								currentPage: currentPage,
+								currentPage: page,
 								pgCount: pgCount
 							}));					
 						

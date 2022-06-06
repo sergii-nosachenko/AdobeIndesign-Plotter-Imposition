@@ -451,12 +451,11 @@ function DialogWindow() {
 	}	
 	
 	function checkValidImposingCustom() {
-		if (ImposingCustom.text == translate('Imposing Method 3 Text')) {
+		if (ImposingCustom.text != translate('Imposing Method 3 Text')) {
 			isOk.Imposing = true;
 			MY_DOC_SETTINGS.customItemsCount = "";
 		} else {
-			isOk.Imposing = isValidImposingCustom(ImposingCustom.text);
-			if (isOk.Imposing) {
+			if (isValidImposingCustom(ImposingCustom.text)) {
 				var countCustomPages = 0;
 				for (var i = 0, items = ImposingCustom.text.split(','); i < items.length; i++) {
 					if (items[i].indexOf('x') != -1) {
@@ -466,12 +465,15 @@ function DialogWindow() {
 					}
 				}
 				if (countCustomPages != MY_DOC_SETTINGS.totalPages) {
+					isOk.Imposing = false;					
 					ImposingCustomLabel.text = countCustomPages + " / " + (MY_DOC_SETTINGS.totalPages ? MY_DOC_SETTINGS.totalPages : '-') + ' (!)';
 				} else {
+					isOk.Imposing = true;
 					ImposingCustomLabel.text = countCustomPages + " / " + MY_DOC_SETTINGS.totalPages;
 					MY_DOC_SETTINGS.customItemsCount = ImposingCustom.text;
 				}
 			} else {
+				isOk.Imposing = false;
 				ImposingCustomLabel.text = "- / " + (MY_DOC_SETTINGS.totalPages ? MY_DOC_SETTINGS.totalPages : '-')  + ' (!)';
 			}
 		}

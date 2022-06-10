@@ -451,7 +451,7 @@ function DialogWindow() {
 	}	
 	
 	function checkValidImposingCustom() {
-		if (ImposingCustom.text != translate('Imposing Method 3 Text')) {
+		if (MY_DOC_SETTINGS.ImposingMethod != 2) {
 			isOk.Imposing = true;
 			MY_DOC_SETTINGS.customItemsCount = "";
 		} else {

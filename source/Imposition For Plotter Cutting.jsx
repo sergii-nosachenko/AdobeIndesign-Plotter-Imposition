@@ -945,9 +945,11 @@ function PlacePDF(){
               var newbie;
               var last;
 
-              var refPoint = app.changeObjectPreferences.anchorPoint;
-
-                app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
+              const appAnchorPoint = app.changeObjectPreferences.anchorPoint;
+              const docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
+          
+              app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
+              myDocument.anchoredObjectSettings.anchorPoint = AnchorPoint.CENTER_ANCHOR;
 
               for (var b = 0; b < itemsCopies; b++) {
 
@@ -1035,7 +1037,8 @@ function PlacePDF(){
                 progress.increment();
               }
 
-              app.changeObjectPreferences.anchorPoint = refPoint;
+              app.changeObjectPreferences.anchorPoint = appAnchorPoint;
+              myDocument.anchoredObjectSettings.anchorPoint = docAnchorPoint;
 
               // Якщо не вибрано опцію "Зберегти багатосторінковий файл" - зберігаємо лише поточну сторінку
               if (!MY_DOC_SETTINGS.SaveMultipageFilesAsOneFile) {
@@ -1215,9 +1218,11 @@ function PlacePDF(){
       var newbie;
       var last;
 
-      var refPoint = app.changeObjectPreferences.anchorPoint;
-
+      const appAnchorPoint = app.changeObjectPreferences.anchorPoint;
+      const docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
+  
       app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
+      myDocument.anchoredObjectSettings.anchorPoint = AnchorPoint.CENTER_ANCHOR;
 
       for (var i = 0, itemIndex = pagesTotalProcessedCounter, countDone = 0, currentPage = 1, lastItem = -1; i < okFilesCurrent.length; i++, fileCounter++) {
         // Parse the PDF file and extract needed info
@@ -1347,7 +1352,8 @@ function PlacePDF(){
         }
       }
 
-      app.changeObjectPreferences.anchorPoint = refPoint;
+      app.changeObjectPreferences.anchorPoint = appAnchorPoint;
+      myDocument.anchoredObjectSettings.anchorPoint = docAnchorPoint;
 
       var outputFileName = MY_DOC_SETTINGS.customFileName
                 .replace(BracketsPattern, '')
@@ -2746,9 +2752,11 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 
     var contourOffset = myCurrentDocSettings.CutterType.contourOffset;
 
-    var refPoint = app.changeObjectPreferences.anchorPoint;
+    const appAnchorPoint = app.changeObjectPreferences.anchorPoint;
+    const docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
 
     app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
+    myDocument.anchoredObjectSettings.anchorPoint = AnchorPoint.CENTER_ANCHOR;
 
     // Контур порізки задається лініями, якщо макети покладено встик
     if (myCurrentDocSettings.SpaceBetween == 0) {
@@ -2844,7 +2852,8 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
       }
     };
 
-    app.changeObjectPreferences.anchorPoint = refPoint;
+    app.changeObjectPreferences.anchorPoint = appAnchorPoint;
+    myDocument.anchoredObjectSettings.anchorPoint = docAnchorPoint;
 
     // Створємо вікно для документа (інакше буде експортовано порожній дркумент!)
     myDocument.windows.add().maximize();

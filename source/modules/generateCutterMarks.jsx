@@ -1,9 +1,9 @@
 /**
-	Генерація міток порізки, якщо така опція прописана в налаштуваннях плоттера.
-	@param {Object class Document} myDocument Поточний документ Adobe InDesign
-	@param {Object} myCurrentDocSettings Параметри та налаштування розкладки, які необхідно опрацювати
-	@param {Object class Layer} MarksLayer Шар для розміщення міток
-	@param {string} docType Тип документа
+  Генерація міток порізки, якщо така опція прописана в налаштуваннях плоттера.
+  @param {Object class Document} myDocument Поточний документ Adobe InDesign
+  @param {Object} myCurrentDocSettings Параметри та налаштування розкладки, які необхідно опрацювати
+  @param {Object class Layer} MarksLayer Шар для розміщення міток
+  @param {string} docType Тип документа
 */
 function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docType) {
 
@@ -13,12 +13,12 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
 
     var contoursBounds;
 
-	const pages = myDocument.pages.everyItem().getElements();
+  const pages = myDocument.pages.everyItem().getElements();
     const firstPage = myDocument.pages.firstItem();
 
-    var anchorPoint = app.changeObjectPreferences.anchorPoint;    
+    var anchorPoint = app.changeObjectPreferences.anchorPoint;
     app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
-    
+
     if (myCurrentDocSettings.CutterType.workspaceShrink && myCurrentDocSettings.CutterType.workspaceShrink === true) {
         contoursBounds = myCurrentDocSettings.Params.contoursBounds;
     } else {
@@ -174,7 +174,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
                                 y1 - mb - h,
                                 x1 + ml,
                                 y1 - mb,
-                                x1 + ml + w 
+                                x1 + ml + w
                             ]);
                             break;
                         case "middle":
@@ -204,7 +204,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
                                 y2 + mt,
                                 x1 + ml,
                                 y2 + mt + h,
-                                x1 + ml + w 
+                                x1 + ml + w
                             ]);
                             break;
                         case "middle":
@@ -246,7 +246,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
 
             var shapeProperties = {
                 'fillColor': 'None',
-                'strokeColor': 'None',						
+                'strokeColor': 'None',
                 'geometricBounds': marksCoordinates[i]
             };
 
@@ -260,11 +260,11 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
                         "model": ColorModel.PROCESS,
                         "space": ColorSpace.CMYK,
                         "name": props[i].strokeColor.join(',')
-                    });	
+                    });
                 shapeProperties['strokeWeight'] = props[i].strokeWeight;
                 shapeProperties['strokeColor'] = contourColor;
                 shapeProperties['strokeType'] = 'Solid';
-                shapeProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;			
+                shapeProperties['strokeAlignment'] = StrokeAlignment.CENTER_ALIGNMENT;
             }
 
             if (props[i].rotation && Math.abs(props[i].rotation) <= 360) {
@@ -280,7 +280,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
                         "space": ColorSpace.CMYK,
                         "name": props[i].fillColor.join(',')
                     });
-                shapeProperties['fillColor'] = fillColor;		
+                shapeProperties['fillColor'] = fillColor;
             }
 
             for (var k = 0, current = 1; k < pages.length; k++) {
@@ -307,7 +307,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
 
                             var side = props[i].position.split("-")[0] || null;
                             var rotation;
-                            
+
                             switch (side) {
                                 case 'top':
                                     rotation = props[i].orientation ? 180 : 0;
@@ -335,7 +335,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
                                 'appliedFont': props[i].fontName,
                                 'pointSize': props[i].fontSize,
                                 'fillColor': fillColor,
-                                'fillTint': 100,			
+                                'fillTint': 100,
                             };
                             if (rotation != 0) {
                                 pageText.absoluteRotationAngle = rotation;

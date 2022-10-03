@@ -40,11 +40,11 @@ function versionCompare(v1, v2, options) {
 
   if (!lexicographical) {
     v1parts = v1parts.map(function(x){
-     var match = (/[A-Za-zαß]/).exec(x);  
+     var match = (/[A-Za-zαß]/).exec(x);
      return Number(match ? x.replace(match[0], "." + x.charCodeAt(match.index)):x);
     });
     v2parts = v2parts.map(function(x){
-     var match = (/[A-Za-zαß]/).exec(x);  
+     var match = (/[A-Za-zαß]/).exec(x);
      return Number(match ? x.replace(match[0], "." + x.charCodeAt(match.index)):x);
     });
   }

@@ -11,439 +11,439 @@ function EditMarkWindow(markToEdit) {
 
     // EDITMARK
     // ========
-    var EditMark = new Window("dialog"); 
-        EditMark.text = translate('Edit Mark Window'); 
-        EditMark.orientation = "column"; 
-        EditMark.alignChildren = ["center","top"]; 
-        EditMark.spacing = 10; 
-        EditMark.margins = 16; 
+    var EditMark = new Window("dialog");
+        EditMark.text = translate('Edit Mark Window');
+        EditMark.orientation = "column";
+        EditMark.alignChildren = ["center","top"];
+        EditMark.spacing = 10;
+        EditMark.margins = 16;
 
-    var Shape_array = [translate('Oval mark'), translate('Rectangle mark'), translate('Line mark'), translate('Text mark')]; 
-    var Shape = EditMark.add("dropdownlist", undefined, undefined, {name: "Shape", items: Shape_array}); 
-        Shape.selection = 0; 
-        Shape.alignment = ["fill","top"]; 
-        Shape.onChange = shapeChanged; 
+    var Shape_array = [translate('Oval mark'), translate('Rectangle mark'), translate('Line mark'), translate('Text mark')];
+    var Shape = EditMark.add("dropdownlist", undefined, undefined, {name: "Shape", items: Shape_array});
+        Shape.selection = 0;
+        Shape.alignment = ["fill","top"];
+        Shape.onChange = shapeChanged;
 
     // SETTINGS
     // ========
-    var Settings = EditMark.add("group", undefined, {name: "Settings"}); 
-        Settings.orientation = "column"; 
-        Settings.alignChildren = ["center","top"]; 
-        Settings.spacing = 5; 
-        Settings.margins = 0; 
-        Settings.alignment = ["fill","top"]; 
+    var Settings = EditMark.add("group", undefined, {name: "Settings"});
+        Settings.orientation = "column";
+        Settings.alignChildren = ["center","top"];
+        Settings.spacing = 5;
+        Settings.margins = 0;
+        Settings.alignment = ["fill","top"];
 
     // POSITIONPANEL
     // =============
-    var PositionPanel = Settings.add("panel", undefined, undefined, {name: "PositionPanel"}); 
+    var PositionPanel = Settings.add("panel", undefined, undefined, {name: "PositionPanel"});
         PositionPanel.text = translate('Position Panel');
-        PositionPanel.alignChildren = ["left","top"]; 
-        PositionPanel.spacing = 0; 
-        PositionPanel.margins = 10; 
-        PositionPanel.alignment = ["fill","top"]; 
+        PositionPanel.alignChildren = ["left","top"];
+        PositionPanel.spacing = 0;
+        PositionPanel.margins = 10;
+        PositionPanel.alignment = ["fill","top"];
 
     // POSITION
     // ========
 
-    var SheetPanel = PositionPanel.add("panel", undefined, undefined, {name: "SheetPanel"}); 
+    var SheetPanel = PositionPanel.add("panel", undefined, undefined, {name: "SheetPanel"});
         SheetPanel.text = translate('Sheet');
-        SheetPanel.orientation = "column"; 
-        SheetPanel.alignChildren = ["center","center"]; 
-        SheetPanel.spacing = 10; 
-        SheetPanel.margins = 10; 
-        SheetPanel.alignment = ["center","fill"]; 
+        SheetPanel.orientation = "column";
+        SheetPanel.alignChildren = ["center","center"];
+        SheetPanel.spacing = 10;
+        SheetPanel.margins = 10;
+        SheetPanel.alignment = ["center","fill"];
 
-    var Position = SheetPanel.add("group", undefined, {name: "Position"}); 
-        Position.orientation = "column"; 
-        Position.alignChildren = ["center","top"]; 
-        Position.spacing = 0; 
-        Position.margins = 0; 
+    var Position = SheetPanel.add("group", undefined, {name: "Position"});
+        Position.orientation = "column";
+        Position.alignChildren = ["center","top"];
+        Position.spacing = 0;
+        Position.margins = 0;
         Position.alignment = ["center","top"];
 
     // TOPROW
     // ======
-    var TopRow = Position.add("group", undefined, {name: "TopRow"}); 
-        TopRow.preferredSize.height = 20; 
-        TopRow.orientation = "row"; 
-        TopRow.alignChildren = ["left","center"]; 
-        TopRow.spacing = 20; 
-        TopRow.margins = [35,0,0,0]; 
-        TopRow.alignment = ["fill","top"]; 
+    var TopRow = Position.add("group", undefined, {name: "TopRow"});
+        TopRow.preferredSize.height = 20;
+        TopRow.orientation = "row";
+        TopRow.alignChildren = ["left","center"];
+        TopRow.spacing = 20;
+        TopRow.margins = [35,0,0,0];
+        TopRow.alignment = ["fill","top"];
 
-    var TopLeft = TopRow.add("radiobutton", undefined, undefined, {name: "TopLeft"}); 
+    var TopLeft = TopRow.add("radiobutton", undefined, undefined, {name: "TopLeft"});
         TopLeft.preferredSize.width = 30;
         TopLeft.helpTip = translate('TopLeft');
         TopLeft.onClick = positionChanged;
 
-    var TopMiddle = TopRow.add("radiobutton", undefined, undefined, {name: "TopMiddle"}); 
-        TopMiddle.preferredSize.width = 30; 
+    var TopMiddle = TopRow.add("radiobutton", undefined, undefined, {name: "TopMiddle"});
+        TopMiddle.preferredSize.width = 30;
         TopMiddle.helpTip = translate('TopMiddle');
         TopMiddle.onClick = positionChanged;
 
-    var TopRight = TopRow.add("radiobutton", undefined, undefined, {name: "TopRight"}); 
-        TopRight.preferredSize.width = 30; 
+    var TopRight = TopRow.add("radiobutton", undefined, undefined, {name: "TopRight"});
+        TopRight.preferredSize.width = 30;
         TopRight.helpTip = translate('TopRight');
         TopRight.onClick = positionChanged;
 
     // CENTRALROW
     // ==========
-    var CentralRow = Position.add("group", undefined, {name: "CentralRow"}); 
-        CentralRow.orientation = "row"; 
-        CentralRow.alignChildren = ["left","top"]; 
-        CentralRow.spacing = 0; 
-        CentralRow.margins = 0; 
-        CentralRow.alignment = ["fill","top"]; 
+    var CentralRow = Position.add("group", undefined, {name: "CentralRow"});
+        CentralRow.orientation = "row";
+        CentralRow.alignChildren = ["left","top"];
+        CentralRow.spacing = 0;
+        CentralRow.margins = 0;
+        CentralRow.alignment = ["fill","top"];
 
     // LEFTCOL
     // =======
-    var LeftCol = CentralRow.add("group", undefined, {name: "LeftCol"}); 
-        LeftCol.preferredSize.width = 25; 
-        LeftCol.preferredSize.height = 90; 
-        LeftCol.orientation = "column"; 
-        LeftCol.alignChildren = ["right","center"]; 
-        LeftCol.spacing = 12; 
-        LeftCol.margins = [0,10,0,0]; 
+    var LeftCol = CentralRow.add("group", undefined, {name: "LeftCol"});
+        LeftCol.preferredSize.width = 25;
+        LeftCol.preferredSize.height = 90;
+        LeftCol.orientation = "column";
+        LeftCol.alignChildren = ["right","center"];
+        LeftCol.spacing = 12;
+        LeftCol.margins = [0,10,0,0];
 
-    var LeftTop = LeftCol.add("radiobutton", undefined, undefined, {name: "LeftTop"}); 
-        LeftTop.preferredSize.height = 15; 
+    var LeftTop = LeftCol.add("radiobutton", undefined, undefined, {name: "LeftTop"});
+        LeftTop.preferredSize.height = 15;
         LeftTop.helpTip = translate('LeftTop');
         LeftTop.onClick = positionChanged;
 
-    var LeftMiddle = LeftCol.add("radiobutton", undefined, undefined, {name: "LeftMiddle"}); 
-        LeftMiddle.preferredSize.height = 15; 
+    var LeftMiddle = LeftCol.add("radiobutton", undefined, undefined, {name: "LeftMiddle"});
+        LeftMiddle.preferredSize.height = 15;
         LeftMiddle.helpTip = translate('LeftMiddle');
         LeftMiddle.onClick = positionChanged;
 
-    var LeftBottom = LeftCol.add("radiobutton", undefined, undefined, {name: "LeftBottom"}); 
-        LeftBottom.preferredSize.height = 15; 
+    var LeftBottom = LeftCol.add("radiobutton", undefined, undefined, {name: "LeftBottom"});
+        LeftBottom.preferredSize.height = 15;
         LeftBottom.helpTip = translate('LeftBottom');
         LeftBottom.onClick = positionChanged;
 
     // WORKINGFRAME
     // ============
-    var WorkingFramePanel = CentralRow.add("panel", undefined, undefined, {name: "WorkingFramePanel"}); 
+    var WorkingFramePanel = CentralRow.add("panel", undefined, undefined, {name: "WorkingFramePanel"});
         WorkingFramePanel.text = translate('Frame');
-        WorkingFramePanel.preferredSize.width = 130; 
-        WorkingFramePanel.preferredSize.height = 90; 
-        WorkingFramePanel.orientation = "column"; 
-        WorkingFramePanel.alignChildren = ["center","center"]; 
-        WorkingFramePanel.spacing = 10; 
-        WorkingFramePanel.margins = 10; 
-        WorkingFramePanel.alignment = ["left","fill"]; 
+        WorkingFramePanel.preferredSize.width = 130;
+        WorkingFramePanel.preferredSize.height = 90;
+        WorkingFramePanel.orientation = "column";
+        WorkingFramePanel.alignChildren = ["center","center"];
+        WorkingFramePanel.spacing = 10;
+        WorkingFramePanel.margins = 10;
+        WorkingFramePanel.alignment = ["left","fill"];
 
-    var SheetMargins = WorkingFramePanel.add("group"); 
-        SheetMargins.orientation = "column"; 
-        SheetMargins.alignChildren = ["center","center"]; 
-        SheetMargins.spacing = 5; 
-        SheetMargins.alignment = ["center","center"]; 
+    var SheetMargins = WorkingFramePanel.add("group");
+        SheetMargins.orientation = "column";
+        SheetMargins.alignChildren = ["center","center"];
+        SheetMargins.spacing = 5;
+        SheetMargins.alignment = ["center","center"];
 
-    var TopMargin = SheetMargins.add("statictext", undefined, "", {name: "TopMargin"}); 
-    var LeftRightMargins = SheetMargins.add("statictext", undefined, "", {name: "LeftRightMargins"}); 
+    var TopMargin = SheetMargins.add("statictext", undefined, "", {name: "TopMargin"});
+    var LeftRightMargins = SheetMargins.add("statictext", undefined, "", {name: "LeftRightMargins"});
     var BottomMargin = SheetMargins.add("statictext", undefined, "", {name: "BottomMargin"});
 
     // RIGHTCOL
     // ========
-    var RightCol = CentralRow.add("group", undefined, {name: "RightCol"}); 
-        RightCol.preferredSize.width = 25; 
-        RightCol.preferredSize.height = 90; 
-        RightCol.orientation = "column"; 
-        RightCol.alignChildren = ["left","center"]; 
-        RightCol.spacing = 12; 
-        RightCol.margins = [7,10,0,0]; 
+    var RightCol = CentralRow.add("group", undefined, {name: "RightCol"});
+        RightCol.preferredSize.width = 25;
+        RightCol.preferredSize.height = 90;
+        RightCol.orientation = "column";
+        RightCol.alignChildren = ["left","center"];
+        RightCol.spacing = 12;
+        RightCol.margins = [7,10,0,0];
 
-    var RightTop = RightCol.add("radiobutton", undefined, undefined, {name: "RightTop"}); 
-        RightTop.preferredSize.height = 15; 
+    var RightTop = RightCol.add("radiobutton", undefined, undefined, {name: "RightTop"});
+        RightTop.preferredSize.height = 15;
         RightTop.helpTip = translate('RightTop');
         RightTop.onClick = positionChanged;
 
-    var RightMiddle = RightCol.add("radiobutton", undefined, undefined, {name: "RightMiddle"}); 
-        RightMiddle.preferredSize.height = 15; 
+    var RightMiddle = RightCol.add("radiobutton", undefined, undefined, {name: "RightMiddle"});
+        RightMiddle.preferredSize.height = 15;
         RightMiddle.helpTip = translate('RightMiddle');
         RightMiddle.onClick = positionChanged;
 
-    var RightBottom = RightCol.add("radiobutton", undefined, undefined, {name: "RightBottom"}); 
-        RightBottom.preferredSize.height = 15; 
+    var RightBottom = RightCol.add("radiobutton", undefined, undefined, {name: "RightBottom"});
+        RightBottom.preferredSize.height = 15;
         RightBottom.helpTip = translate('RightBottom');
         RightBottom.onClick = positionChanged;
 
     // BOTTOMROW
     // =========
-    var BottomRow = Position.add("group", undefined, {name: "BottomRow"}); 
-        BottomRow.preferredSize.height = 20; 
-        BottomRow.orientation = "row"; 
-        BottomRow.alignChildren = ["left","center"]; 
-        BottomRow.spacing = 20; 
-        BottomRow.margins = [35,5,0,0]; 
-        BottomRow.alignment = ["fill","top"]; 
+    var BottomRow = Position.add("group", undefined, {name: "BottomRow"});
+        BottomRow.preferredSize.height = 20;
+        BottomRow.orientation = "row";
+        BottomRow.alignChildren = ["left","center"];
+        BottomRow.spacing = 20;
+        BottomRow.margins = [35,5,0,0];
+        BottomRow.alignment = ["fill","top"];
 
-    var BottomLeft = BottomRow.add("radiobutton", undefined, undefined, {name: "BottomLeft"}); 
-        BottomLeft.preferredSize.width = 30; 
+    var BottomLeft = BottomRow.add("radiobutton", undefined, undefined, {name: "BottomLeft"});
+        BottomLeft.preferredSize.width = 30;
         BottomLeft.helpTip = translate('BottomLeft');
         BottomLeft.onClick = positionChanged;
 
-    var BottomMiddle = BottomRow.add("radiobutton", undefined, undefined, {name: "BottomMiddle"}); 
-        BottomMiddle.preferredSize.width = 30; 
+    var BottomMiddle = BottomRow.add("radiobutton", undefined, undefined, {name: "BottomMiddle"});
+        BottomMiddle.preferredSize.width = 30;
         BottomMiddle.helpTip = translate('BottomMiddle');
         BottomMiddle.onClick = positionChanged;
 
-    var BottomRight = BottomRow.add("radiobutton", undefined, undefined, {name: "BottomRight"}); 
-        BottomRight.preferredSize.width = 30; 
+    var BottomRight = BottomRow.add("radiobutton", undefined, undefined, {name: "BottomRight"});
+        BottomRight.preferredSize.width = 30;
         BottomRight.helpTip = translate('BottomRight');
         BottomRight.onClick = positionChanged;
 
     // SETTINGSROW
     // ===========
-    var SettingsRow = Settings.add("group", undefined, {name: "SettingsRow"}); 
-        SettingsRow.orientation = "row"; 
-        SettingsRow.alignChildren = ["left","fill"]; 
-        SettingsRow.spacing = 5; 
-        SettingsRow.margins = 0; 
-        SettingsRow.alignment = ["fill","top"]; 
+    var SettingsRow = Settings.add("group", undefined, {name: "SettingsRow"});
+        SettingsRow.orientation = "row";
+        SettingsRow.alignChildren = ["left","fill"];
+        SettingsRow.spacing = 5;
+        SettingsRow.margins = 0;
+        SettingsRow.alignment = ["fill","top"];
 
     // DIMENSIONSPANEL
     // ===============
-    var DimensionsPanel = SettingsRow.add("panel", undefined, undefined, {name: "DimensionsPanel"}); 
+    var DimensionsPanel = SettingsRow.add("panel", undefined, undefined, {name: "DimensionsPanel"});
         DimensionsPanel.text = translate('Dimensions Panel');
-        DimensionsPanel.orientation = "column"; 
-        DimensionsPanel.alignChildren = ["left","top"]; 
-        DimensionsPanel.spacing = 5; 
-        DimensionsPanel.margins = 10; 
+        DimensionsPanel.orientation = "column";
+        DimensionsPanel.alignChildren = ["left","top"];
+        DimensionsPanel.spacing = 5;
+        DimensionsPanel.margins = 10;
 
     // ROW1
     // ====
-    var DimensionsRow = DimensionsPanel.add("group", undefined, {name: "DimensionsRow"}); 
-        DimensionsRow.orientation = "row"; 
-        DimensionsRow.alignChildren = ["left","center"]; 
-        DimensionsRow.spacing = 5; 
-        DimensionsRow.margins = 0; 
-        DimensionsRow.alignment = ["fill","top"]; 
+    var DimensionsRow = DimensionsPanel.add("group", undefined, {name: "DimensionsRow"});
+        DimensionsRow.orientation = "row";
+        DimensionsRow.alignChildren = ["left","center"];
+        DimensionsRow.spacing = 5;
+        DimensionsRow.margins = 0;
+        DimensionsRow.alignment = ["fill","top"];
 
-    var SizeLabel = DimensionsRow.add("statictext", undefined, undefined, {name: "SizeLabel"}); 
-        SizeLabel.text = translate('Size Label'); 
+    var SizeLabel = DimensionsRow.add("statictext", undefined, undefined, {name: "SizeLabel"});
+        SizeLabel.text = translate('Size Label');
 
-    var Width = DimensionsRow.add('edittext {properties: {name: "Width"}}'); 
-        Width.helpTip = translate('Width Tip'); 
-        Width.text = "0"; 
-        Width.preferredSize.width = 40; 
-        Width.alignment = ["left","fill"]; 
-        Width.onChange = checkObligatoryFields; 
+    var Width = DimensionsRow.add('edittext {properties: {name: "Width"}}');
+        Width.helpTip = translate('Width Tip');
+        Width.text = "0";
+        Width.preferredSize.width = 40;
+        Width.alignment = ["left","fill"];
+        Width.onChange = checkObligatoryFields;
 
-    var XLabel = DimensionsRow.add("statictext", undefined, undefined, {name: "XLabel"}); 
-        XLabel.text = "x"; 
+    var XLabel = DimensionsRow.add("statictext", undefined, undefined, {name: "XLabel"});
+        XLabel.text = "x";
 
-    var Height = DimensionsRow.add('edittext {properties: {name: "Height"}}'); 
-        Height.helpTip = translate('Height Tip'); 
-        Height.text = "0"; 
-        Height.preferredSize.width = 40; 
-        Height.alignment = ["left","fill"]; 
-        Height.onChange = checkObligatoryFields; 
+    var Height = DimensionsRow.add('edittext {properties: {name: "Height"}}');
+        Height.helpTip = translate('Height Tip');
+        Height.text = "0";
+        Height.preferredSize.width = 40;
+        Height.alignment = ["left","fill"];
+        Height.onChange = checkObligatoryFields;
 
-    var MMLabel = DimensionsRow.add("statictext", undefined, undefined, {name: "MMLabel"}); 
-        MMLabel.text = translate('Units mm'); 
+    var MMLabel = DimensionsRow.add("statictext", undefined, undefined, {name: "MMLabel"});
+        MMLabel.text = translate('Units mm');
 
     // DIMENSIONSPANEL
     // ===============
-    var MarginsLabel = DimensionsPanel.add("statictext", undefined, undefined, {name: "MarginsLabel"}); 
-        MarginsLabel.text = translate('Margins Label'); 
+    var MarginsLabel = DimensionsPanel.add("statictext", undefined, undefined, {name: "MarginsLabel"});
+        MarginsLabel.text = translate('Margins Label');
 
     // ROW2
     // ====
-    var Row2 = DimensionsPanel.add("group", undefined, {name: "Row2"}); 
-        Row2.orientation = "row"; 
-        Row2.alignChildren = ["left","center"]; 
-        Row2.spacing = 5; 
-        Row2.margins = 0; 
-        Row2.alignment = ["fill","top"]; 
+    var Row2 = DimensionsPanel.add("group", undefined, {name: "Row2"});
+        Row2.orientation = "row";
+        Row2.alignChildren = ["left","center"];
+        Row2.spacing = 5;
+        Row2.margins = 0;
+        Row2.alignment = ["fill","top"];
 
-    var MTop = Row2.add('edittext {properties: {name: "MTop"}}'); 
-        MTop.helpTip = translate('Margins top tip'); 
-        MTop.text = "0"; 
-        MTop.preferredSize.width = 40; 
-        MTop.alignment = ["left","fill"]; 
-        MTop.onChange = checkMargin; 
+    var MTop = Row2.add('edittext {properties: {name: "MTop"}}');
+        MTop.helpTip = translate('Margins top tip');
+        MTop.text = "0";
+        MTop.preferredSize.width = 40;
+        MTop.alignment = ["left","fill"];
+        MTop.onChange = checkMargin;
 
-    var MRight = Row2.add('edittext {properties: {name: "MRight"}}'); 
-        MRight.helpTip = translate('Margins right tip'); 
-        MRight.text = "0"; 
-        MRight.preferredSize.width = 40; 
-        MRight.alignment = ["left","fill"]; 
-        MRight.onChange = checkMargin; 
+    var MRight = Row2.add('edittext {properties: {name: "MRight"}}');
+        MRight.helpTip = translate('Margins right tip');
+        MRight.text = "0";
+        MRight.preferredSize.width = 40;
+        MRight.alignment = ["left","fill"];
+        MRight.onChange = checkMargin;
 
-    var MBottom = Row2.add('edittext {properties: {name: "MBottom"}}'); 
-        MBottom.helpTip = translate('Margins bottom tip'); 
-        MBottom.text = "0"; 
-        MBottom.preferredSize.width = 40; 
-        MBottom.alignment = ["left","fill"]; 
-        MBottom.onChange = checkMargin; 
+    var MBottom = Row2.add('edittext {properties: {name: "MBottom"}}');
+        MBottom.helpTip = translate('Margins bottom tip');
+        MBottom.text = "0";
+        MBottom.preferredSize.width = 40;
+        MBottom.alignment = ["left","fill"];
+        MBottom.onChange = checkMargin;
 
-    var MLeft = Row2.add('edittext {properties: {name: "MLeft"}}'); 
-        MLeft.helpTip = translate('Margins left tip'); 
-        MLeft.text = "0"; 
-        MLeft.preferredSize.width = 40; 
-        MLeft.alignment = ["left","fill"]; 
-        MLeft.onChange = checkMargin; 
+    var MLeft = Row2.add('edittext {properties: {name: "MLeft"}}');
+        MLeft.helpTip = translate('Margins left tip');
+        MLeft.text = "0";
+        MLeft.preferredSize.width = 40;
+        MLeft.alignment = ["left","fill"];
+        MLeft.onChange = checkMargin;
 
     // RotationRow
     // ===========
-    var RotationRow = DimensionsPanel.add("group", undefined, {name: "RotationRow"}); 
-        RotationRow.orientation = "row"; 
-        RotationRow.alignChildren = ["left","center"]; 
-        RotationRow.spacing = 5; 
-        RotationRow.margins = 0; 
-        RotationRow.alignment = ["fill","top"]; 
+    var RotationRow = DimensionsPanel.add("group", undefined, {name: "RotationRow"});
+        RotationRow.orientation = "row";
+        RotationRow.alignChildren = ["left","center"];
+        RotationRow.spacing = 5;
+        RotationRow.margins = 0;
+        RotationRow.alignment = ["fill","top"];
 
-    var RotationLabel = RotationRow.add("statictext", undefined, undefined, {name: "RotationLabel"}); 
+    var RotationLabel = RotationRow.add("statictext", undefined, undefined, {name: "RotationLabel"});
         RotationLabel.text = translate('Rotation Label');
 
-    var Rotation = RotationRow.add('edittext {properties: {name: "Rotation"}}'); 
-        Rotation.helpTip = translate('Rotation tip'); 
-        Rotation.text = "0"; 
-        Rotation.preferredSize.width = 40; 
+    var Rotation = RotationRow.add('edittext {properties: {name: "Rotation"}}');
+        Rotation.helpTip = translate('Rotation tip');
+        Rotation.text = "0";
+        Rotation.preferredSize.width = 40;
         Rotation.alignment = ["left","fill"];
         Rotation.onChange = checkRotation;
 
-    var RotationDegree = RotationRow.add("statictext", undefined, undefined, {name: "RotationDegree"}); 
+    var RotationDegree = RotationRow.add("statictext", undefined, undefined, {name: "RotationDegree"});
         RotationDegree.text = "\u00b0";
 
     // STYLEPANEL
     // ==========
-    var StylePanel = SettingsRow.add("panel", undefined, undefined, {name: "StylePanel"}); 
+    var StylePanel = SettingsRow.add("panel", undefined, undefined, {name: "StylePanel"});
         StylePanel.text = translate('Style panel');
-        StylePanel.orientation = "column"; 
-        StylePanel.alignChildren = ["left","top"]; 
-        StylePanel.spacing = 5; 
-        StylePanel.margins = 10; 
+        StylePanel.orientation = "column";
+        StylePanel.alignChildren = ["left","top"];
+        StylePanel.spacing = 5;
+        StylePanel.margins = 10;
 
-    var FColorLabel = StylePanel.add("statictext", undefined, undefined, {name: "FColorLabel"}); 
+    var FColorLabel = StylePanel.add("statictext", undefined, undefined, {name: "FColorLabel"});
         FColorLabel.text = translate('Fill color label');
 
     // ROW5
     // ====
-    var FColorGroup = StylePanel.add("group", undefined, {name: "FColorGroup"}); 
-        FColorGroup.orientation = "row"; 
-        FColorGroup.alignChildren = ["left","center"]; 
-        FColorGroup.spacing = 5; 
-        FColorGroup.margins = 0; 
-        FColorGroup.alignment = ["fill","top"]; 
+    var FColorGroup = StylePanel.add("group", undefined, {name: "FColorGroup"});
+        FColorGroup.orientation = "row";
+        FColorGroup.alignChildren = ["left","center"];
+        FColorGroup.spacing = 5;
+        FColorGroup.margins = 0;
+        FColorGroup.alignment = ["fill","top"];
 
-    var FillC = FColorGroup.add('edittext {properties: {name: "FillC"}}'); 
-        FillC.helpTip = "Cyan" + '\n' + translate('Contour color tip'); 
-        FillC.text = "0"; 
-        FillC.preferredSize.width = 40; 
-        FillC.alignment = ["left","fill"]; 
-        FillC.onChange = checkColor; 
+    var FillC = FColorGroup.add('edittext {properties: {name: "FillC"}}');
+        FillC.helpTip = "Cyan" + '\n' + translate('Contour color tip');
+        FillC.text = "0";
+        FillC.preferredSize.width = 40;
+        FillC.alignment = ["left","fill"];
+        FillC.onChange = checkColor;
 
-    var FillM = FColorGroup.add('edittext {properties: {name: "FillM"}}'); 
-        FillM.helpTip = "Magenta" + '\n' + translate('Contour color tip'); 
-        FillM.text = "0"; 
-        FillM.preferredSize.width = 40; 
-        FillM.alignment = ["left","fill"]; 
-        FillM.onChange = checkColor; 
+    var FillM = FColorGroup.add('edittext {properties: {name: "FillM"}}');
+        FillM.helpTip = "Magenta" + '\n' + translate('Contour color tip');
+        FillM.text = "0";
+        FillM.preferredSize.width = 40;
+        FillM.alignment = ["left","fill"];
+        FillM.onChange = checkColor;
 
-    var FillY = FColorGroup.add('edittext {properties: {name: "FillY"}}'); 
-        FillY.helpTip = "Yellow" + '\n' + translate('Contour color tip'); 
-        FillY.text = "0"; 
-        FillY.preferredSize.width = 40; 
-        FillY.alignment = ["left","fill"]; 
-        FillY.onChange = checkColor;  
+    var FillY = FColorGroup.add('edittext {properties: {name: "FillY"}}');
+        FillY.helpTip = "Yellow" + '\n' + translate('Contour color tip');
+        FillY.text = "0";
+        FillY.preferredSize.width = 40;
+        FillY.alignment = ["left","fill"];
+        FillY.onChange = checkColor;
 
-    var FillK = FColorGroup.add('edittext {properties: {name: "FillK"}}'); 
-        FillK.helpTip = "Black" + '\n' + translate('Contour color tip'); 
-        FillK.text = "0"; 
-        FillK.preferredSize.width = 40; 
-        FillK.alignment = ["left","fill"]; 
-        FillK.onChange = checkColor; 
+    var FillK = FColorGroup.add('edittext {properties: {name: "FillK"}}');
+        FillK.helpTip = "Black" + '\n' + translate('Contour color tip');
+        FillK.text = "0";
+        FillK.preferredSize.width = 40;
+        FillK.alignment = ["left","fill"];
+        FillK.onChange = checkColor;
 
     // ROW3
     // ====
-    var Row3 = StylePanel.add("group", undefined, {name: "Row3"}); 
-        Row3.orientation = "row"; 
-        Row3.alignChildren = ["left","center"]; 
-        Row3.spacing = 5; 
-        Row3.margins = 0; 
-        Row3.alignment = ["fill","top"]; 
+    var Row3 = StylePanel.add("group", undefined, {name: "Row3"});
+        Row3.orientation = "row";
+        Row3.alignChildren = ["left","center"];
+        Row3.spacing = 5;
+        Row3.margins = 0;
+        Row3.alignment = ["fill","top"];
 
-    var StrokeLabel = Row3.add("statictext", undefined, undefined, {name: "StrokeLabel"}); 
+    var StrokeLabel = Row3.add("statictext", undefined, undefined, {name: "StrokeLabel"});
         StrokeLabel.text = translate('Stroke weight label');
 
-    var SWeight = Row3.add('edittext {properties: {name: "SWeight"}}'); 
+    var SWeight = Row3.add('edittext {properties: {name: "SWeight"}}');
         SWeight.helpTip = translate('Stroke weight tip');
-        SWeight.text = "0"; 
-        SWeight.preferredSize.width = 40; 
-        SWeight.alignment = ["left","fill"]; 
-        SWeight.onChange = checkSWeight; 
+        SWeight.text = "0";
+        SWeight.preferredSize.width = 40;
+        SWeight.alignment = ["left","fill"];
+        SWeight.onChange = checkSWeight;
 
-    var MMLabel1 = Row3.add("statictext", undefined, undefined, {name: "MMLabel1"}); 
+    var MMLabel1 = Row3.add("statictext", undefined, undefined, {name: "MMLabel1"});
         MMLabel1.text = translate('Units mm');
 
     // STYLEPANEL
     // ==========
-    var SColorLabel = StylePanel.add("statictext", undefined, undefined, {name: "SColorLabel"}); 
+    var SColorLabel = StylePanel.add("statictext", undefined, undefined, {name: "SColorLabel"});
         SColorLabel.text = translate('Stroke color label');
 
     // STROKEFILLGROUP
     // ===============
-    var StrokeFillGroup = StylePanel.add("group", undefined, {name: "StrokeFillGroup"}); 
-        StrokeFillGroup.enabled = false; 
-        StrokeFillGroup.orientation = "row"; 
-        StrokeFillGroup.alignChildren = ["left","center"]; 
-        StrokeFillGroup.spacing = 5; 
-        StrokeFillGroup.margins = 0; 
-        StrokeFillGroup.alignment = ["fill","top"]; 
+    var StrokeFillGroup = StylePanel.add("group", undefined, {name: "StrokeFillGroup"});
+        StrokeFillGroup.enabled = false;
+        StrokeFillGroup.orientation = "row";
+        StrokeFillGroup.alignChildren = ["left","center"];
+        StrokeFillGroup.spacing = 5;
+        StrokeFillGroup.margins = 0;
+        StrokeFillGroup.alignment = ["fill","top"];
 
-    var StrokeC = StrokeFillGroup.add('edittext {properties: {name: "StrokeC"}}'); 
-        StrokeC.helpTip = "Cyan" + '\n' + translate('Contour color tip'); 
-        StrokeC.text = "0"; 
-        StrokeC.preferredSize.width = 40; 
-        StrokeC.alignment = ["left","fill"]; 
-        StrokeC.onChange = checkColor; 
+    var StrokeC = StrokeFillGroup.add('edittext {properties: {name: "StrokeC"}}');
+        StrokeC.helpTip = "Cyan" + '\n' + translate('Contour color tip');
+        StrokeC.text = "0";
+        StrokeC.preferredSize.width = 40;
+        StrokeC.alignment = ["left","fill"];
+        StrokeC.onChange = checkColor;
 
-    var StrokeM = StrokeFillGroup.add('edittext {properties: {name: "StrokeM"}}'); 
-        StrokeM.helpTip = "Magenta" + '\n' + translate('Contour color tip'); 
-        StrokeM.text = "0"; 
-        StrokeM.preferredSize.width = 40; 
-        StrokeM.alignment = ["left","fill"]; 
-        StrokeM.onChange = checkColor; 
+    var StrokeM = StrokeFillGroup.add('edittext {properties: {name: "StrokeM"}}');
+        StrokeM.helpTip = "Magenta" + '\n' + translate('Contour color tip');
+        StrokeM.text = "0";
+        StrokeM.preferredSize.width = 40;
+        StrokeM.alignment = ["left","fill"];
+        StrokeM.onChange = checkColor;
 
-    var StrokeY = StrokeFillGroup.add('edittext {properties: {name: "StrokeY"}}'); 
-        StrokeY.helpTip = "Yellow" + '\n' + translate('Contour color tip'); 
-        StrokeY.text = "0"; 
-        StrokeY.preferredSize.width = 40; 
-        StrokeY.alignment = ["left","fill"]; 
-        StrokeY.onChange = checkColor; 
+    var StrokeY = StrokeFillGroup.add('edittext {properties: {name: "StrokeY"}}');
+        StrokeY.helpTip = "Yellow" + '\n' + translate('Contour color tip');
+        StrokeY.text = "0";
+        StrokeY.preferredSize.width = 40;
+        StrokeY.alignment = ["left","fill"];
+        StrokeY.onChange = checkColor;
 
-    var StrokeK = StrokeFillGroup.add('edittext {properties: {name: "StrokeK"}}'); 
-        StrokeK.helpTip = "Black" + '\n' + translate('Contour color tip'); 
-        StrokeK.text = "0"; 
-        StrokeK.preferredSize.width = 40; 
-        StrokeK.alignment = ["left","fill"]; 
-        StrokeK.onChange = checkColor; 
+    var StrokeK = StrokeFillGroup.add('edittext {properties: {name: "StrokeK"}}');
+        StrokeK.helpTip = "Black" + '\n' + translate('Contour color tip');
+        StrokeK.text = "0";
+        StrokeK.preferredSize.width = 40;
+        StrokeK.alignment = ["left","fill"];
+        StrokeK.onChange = checkColor;
 
     // TEXTPANEL
     // =========
-    var TextPanel = EditMark.add("panel", undefined, undefined, {name: "TextPanel"}); 
-        TextPanel.enabled = false; 
+    var TextPanel = EditMark.add("panel", undefined, undefined, {name: "TextPanel"});
+        TextPanel.enabled = false;
         TextPanel.text = translate('Text panel');
-        TextPanel.orientation = "column"; 
-        TextPanel.alignChildren = ["left","top"]; 
-        TextPanel.spacing = 5; 
-        TextPanel.margins = 10; 
-        TextPanel.alignment = ["fill","top"]; 
+        TextPanel.orientation = "column";
+        TextPanel.alignChildren = ["left","top"];
+        TextPanel.spacing = 5;
+        TextPanel.margins = 10;
+        TextPanel.alignment = ["fill","top"];
 
     // ROW6
     // ====
-    var Row2 = TextPanel.add("group", undefined, {name: "Row2"}); 
-        Row2.orientation = "row"; 
-        Row2.alignChildren = ["left","center"]; 
-        Row2.spacing = 5; 
-        Row2.margins = 0; 
+    var Row2 = TextPanel.add("group", undefined, {name: "Row2"});
+        Row2.orientation = "row";
+        Row2.alignChildren = ["left","center"];
+        Row2.spacing = 5;
+        Row2.margins = 0;
         Row2.alignment = ["fill","top"];
 
-    var FontName = Row2.add("statictext", undefined, undefined, {name: "FontName"}); 
+    var FontName = Row2.add("statictext", undefined, undefined, {name: "FontName"});
         FontName.text = translate('Font Name label');
 
     var FontsList_array = [translate('Not defined')];
-    
+
     if (FontsList_array.length == 1)
         for (var i = 0; i < fontsAll.length; i++) {
             try {
@@ -458,31 +458,31 @@ function EditMarkWindow(markToEdit) {
             }
         }
 
-    var FontsList = Row2.add("dropdownlist", undefined, undefined, {items: FontsList_array, name: "FontsList"}); 
+    var FontsList = Row2.add("dropdownlist", undefined, undefined, {items: FontsList_array, name: "FontsList"});
         FontsList.selection = 0;
         FontsList.preferredSize.width = 180;
-        FontsList.alignment = ["left","fill"]; 
-        FontsList.onChange = checkObligatoryFields; 
+        FontsList.alignment = ["left","fill"];
+        FontsList.onChange = checkObligatoryFields;
 
-    var FontSizeLabel = Row2.add("statictext", undefined, undefined, {name: "FontSizeLabel"}); 
-        FontSizeLabel.text = translate('Size Label'); 
+    var FontSizeLabel = Row2.add("statictext", undefined, undefined, {name: "FontSizeLabel"});
+        FontSizeLabel.text = translate('Size Label');
 
-    var FontSize = Row2.add('edittext {properties: {name: "FontSize"}}'); 
+    var FontSize = Row2.add('edittext {properties: {name: "FontSize"}}');
         FontSize.helpTip = translate('Font Size tip');
-        FontSize.text = "1"; 
-        FontSize.preferredSize.width = 40; 
-        FontSize.alignment = ["left","fill"]; 
-        FontSize.onChange = checkTextSize; 
+        FontSize.text = "1";
+        FontSize.preferredSize.width = 40;
+        FontSize.alignment = ["left","fill"];
+        FontSize.onChange = checkTextSize;
 
-    var PTLabel = Row2.add("statictext", undefined, undefined, {name: "PTLabel"}); 
+    var PTLabel = Row2.add("statictext", undefined, undefined, {name: "PTLabel"});
         PTLabel.text = "pt";
 
-    var TextTemplateLabel = TextPanel.add("statictext", undefined, undefined, {name: "TextTemplateLabel"}); 
+    var TextTemplateLabel = TextPanel.add("statictext", undefined, undefined, {name: "TextTemplateLabel"});
         TextTemplateLabel.text = translate('Template label');
 
-    var TextTemplate = TextPanel.add('edittext {properties: {name: "TextTemplate", multiline: true, scrollable: true}}'); 
+    var TextTemplate = TextPanel.add('edittext {properties: {name: "TextTemplate", multiline: true, scrollable: true}}');
         TextTemplate.helpTip = translate('Template tip');
-        TextTemplate.preferredSize.height = 60; 
+        TextTemplate.preferredSize.height = 60;
         TextTemplate.alignment = ["fill","top"];
         TextTemplate.onChange = checkObligatoryFields;
 
@@ -506,7 +506,7 @@ function EditMarkWindow(markToEdit) {
         '%UserName%'
     ];
 
-    var Placeholders = TextPanel.add("dropdownlist", undefined, undefined, {items: Placeholders_list, name: "Placeholders"}); 
+    var Placeholders = TextPanel.add("dropdownlist", undefined, undefined, {items: Placeholders_list, name: "Placeholders"});
         Placeholders.selection = 0;
         Placeholders.preferredSize.width = 140;
         Placeholders.alignment = ["left","fill"];
@@ -518,57 +518,57 @@ function EditMarkWindow(markToEdit) {
 
     // ROW6
     // ====
-    var Row6 = TextPanel.add("group", undefined, {name: "Row6"}); 
-        Row6.orientation = "row"; 
-        Row6.alignChildren = ["left","center"]; 
-        Row6.spacing = 5; 
-        Row6.margins = 0; 
+    var Row6 = TextPanel.add("group", undefined, {name: "Row6"});
+        Row6.orientation = "row";
+        Row6.alignChildren = ["left","center"];
+        Row6.spacing = 5;
+        Row6.margins = 0;
         Row6.alignment = ["fill","top"];
-        
-    var TextOrientationLabel = Row6.add("statictext", undefined, undefined, {name: "TextOrientationLabel"}); 
+
+    var TextOrientationLabel = Row6.add("statictext", undefined, undefined, {name: "TextOrientationLabel"});
         TextOrientationLabel.text = translate('Text Orientation Label');
-        
-    var TextOrientation = Row6.add("dropdownlist", undefined, undefined, {items: [translate('Text to border orientation'), translate('Text to frame orientation')], name: "TextOrientation"}); 
+
+    var TextOrientation = Row6.add("dropdownlist", undefined, undefined, {items: [translate('Text to border orientation'), translate('Text to frame orientation')], name: "TextOrientation"});
         TextOrientation.selection = 0;
         TextOrientation.preferredSize.width = 210;
         TextOrientation.alignment = ["left","fill"];
-        
+
     // ROW6
     // ====
-    var Row7 = EditMark.add("group", undefined, {name: "Row7"}); 
-        Row7.orientation = "row"; 
-        Row7.alignChildren = ["left","center"]; 
-        Row7.spacing = 5; 
-        Row7.margins = 0; 
+    var Row7 = EditMark.add("group", undefined, {name: "Row7"});
+        Row7.orientation = "row";
+        Row7.alignChildren = ["left","center"];
+        Row7.spacing = 5;
+        Row7.margins = 0;
         Row7.alignment = ["fill","top"];
-        
-    var MarkAppearanceLabel = Row7.add("statictext", undefined, undefined, {name: "MarkAppearanceLabel"}); 
+
+    var MarkAppearanceLabel = Row7.add("statictext", undefined, undefined, {name: "MarkAppearanceLabel"});
         MarkAppearanceLabel.text = translate('Mark Appearance Label');
-        
-    var MarkAppearance = Row7.add("dropdownlist", undefined, undefined, {items: [translate("Cut & Print files"), translate("Cut file"), translate("Print file")], name: "MarkAppearance"}); 
+
+    var MarkAppearance = Row7.add("dropdownlist", undefined, undefined, {items: [translate("Cut & Print files"), translate("Cut file"), translate("Print file")], name: "MarkAppearance"});
         MarkAppearance.selection = 0;
         MarkAppearance.preferredSize.width = 220;
         MarkAppearance.alignment = ["left","fill"];
 
     // BUTTONSGROUP
     // ============
-    var ButtonsGroup = EditMark.add("group", undefined, {name: "ButtonsGroup"}); 
-        ButtonsGroup.orientation = "row"; 
-        ButtonsGroup.alignChildren = ["right","fill"]; 
-        ButtonsGroup.spacing = 10; 
-        ButtonsGroup.margins = 0; 
-        ButtonsGroup.alignment = ["right","top"]; 
+    var ButtonsGroup = EditMark.add("group", undefined, {name: "ButtonsGroup"});
+        ButtonsGroup.orientation = "row";
+        ButtonsGroup.alignChildren = ["right","fill"];
+        ButtonsGroup.spacing = 10;
+        ButtonsGroup.margins = 0;
+        ButtonsGroup.alignment = ["right","top"];
 
-    var Cancel = ButtonsGroup.add("button", undefined, undefined, {name: "Cancel"}); 
-        Cancel.text = translate('Cancel Btn'); 
+    var Cancel = ButtonsGroup.add("button", undefined, undefined, {name: "Cancel"});
+        Cancel.text = translate('Cancel Btn');
         Cancel.onClick = function() {
             EditMark.close();
-        }; 
+        };
 
-    var Save = ButtonsGroup.add("button", undefined, undefined, {name: "Save"}); 
-        Save.enabled = false; 
+    var Save = ButtonsGroup.add("button", undefined, undefined, {name: "Save"});
+        Save.enabled = false;
         Save.text = translate('Save Btn');
-        Save.onClick = saveMark; 
+        Save.onClick = saveMark;
 
     const positions = [
         {
@@ -825,7 +825,7 @@ function EditMarkWindow(markToEdit) {
             TopMargin.text = "\u2191 " + markToEdit.frameMargins[0];
             LeftRightMargins.text = "\u27f5 " + markToEdit.frameMargins[3] + "  " + markToEdit.frameMargins[1] + " \u27f6";
             BottomMargin.text = "\u2193 " + markToEdit.frameMargins[2];
-        };      
+        };
         if (markToEdit.mark) {
             if (markToEdit.mark.hasOwnProperty('shape')) {
                 Shape.selection = Shape_array.indexOf(shape[markToEdit.mark.shape]) || 0;
@@ -902,14 +902,14 @@ function EditMarkWindow(markToEdit) {
                 Save.enabled = true;
             }
         };
-        checkObligatoryFields();        
+        checkObligatoryFields();
     }
 
     var myResult = EditMark.show();
 
     EditMark = null;
 
-	return {
+  return {
         newMark: newMark
     };
 

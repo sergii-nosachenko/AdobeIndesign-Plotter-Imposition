@@ -16,7 +16,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
   const pages = myDocument.pages.everyItem().getElements();
   const firstPage = myDocument.pages.firstItem();
 
-  const appAnchorPoint = app.changeObjectPreferences.anchorPoint;
+  const appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
   const docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
 
   app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
@@ -360,7 +360,7 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
         }
     }
 
-    app.changeObjectPreferences.anchorPoint = appAnchorPoint;
+    app.changeObjectPreferences.anchorPoint = appChangeObjAnchorPoint;
     myDocument.anchoredObjectSettings.anchorPoint = docAnchorPoint;
 
   } catch (err) {

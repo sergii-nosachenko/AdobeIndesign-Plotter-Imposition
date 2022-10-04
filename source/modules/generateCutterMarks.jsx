@@ -16,8 +16,8 @@ function generateCutterMarks(myDocument, myCurrentDocSettings, MarksLayer, docTy
   const pages = myDocument.pages.everyItem().getElements();
   const firstPage = myDocument.pages.firstItem();
 
-  const appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
-  const docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
+  var appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
+  var docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
 
   app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
   myDocument.anchoredObjectSettings.anchorPoint = AnchorPoint.CENTER_ANCHOR;

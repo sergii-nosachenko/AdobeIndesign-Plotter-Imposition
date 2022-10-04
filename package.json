@@ -1,6 +1,6 @@
 {
   "name": "indesign_rozkladka_plotter",
-  "version": "4.3.0",
+  "version": "4.3.1",
   "updateSource": "https://raw.githubusercontent.com/sergii-nosachenko/AdobeIndesign-Plotter-Imposition/master/dist/Imposition%20For%20Plotter%20Cutting.jsxbin",
   "description": "Script for imposign designs for plotter cutting",
   "main": "Rozkladka na plotter.jsx",

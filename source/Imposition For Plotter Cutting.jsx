@@ -13,7 +13,7 @@ github.com/sergii-nosachenko
 
 ---------------------------------------------------------------------- */
 
-const APP_VERSION = "4.3.0";
+const APP_VERSION = "4.3.1";
 
 // Debug level
 // Comment next line for production!
@@ -945,8 +945,8 @@ function PlacePDF(){
               var newbie;
               var last;
 
-              const appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
-              const docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
+              var appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
+              var docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
           
               app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
               myDocument.anchoredObjectSettings.anchorPoint = AnchorPoint.CENTER_ANCHOR;
@@ -1218,8 +1218,8 @@ function PlacePDF(){
       var newbie;
       var last;
 
-      const appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
-      const docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
+      var appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
+      var docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
   
       app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
       myDocument.anchoredObjectSettings.anchorPoint = AnchorPoint.CENTER_ANCHOR;
@@ -2752,8 +2752,8 @@ function CreateCustomDocRectangles(myCurrentDocSettings, customRoundCornersValue
 
     var contourOffset = myCurrentDocSettings.CutterType.contourOffset;
 
-    const appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
-    const docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
+    var appChangeObjAnchorPoint = app.changeObjectPreferences.anchorPoint;
+    var docAnchorPoint = myDocument.anchoredObjectSettings.anchorPoint;
 
     app.changeObjectPreferences.anchorPoint = AnchorPoint.CENTER_ANCHOR;
     myDocument.anchoredObjectSettings.anchorPoint = AnchorPoint.CENTER_ANCHOR;
